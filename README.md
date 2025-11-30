@@ -1,5 +1,7 @@
 # Document Management System
 
+![logo](https://i.imgur.com/VoAVfyI.jpeg)
+
 A modern, hierarchical document management system with professional drag-and-drop, Google Docs integration, and persistent storage.
 
 ## ✨ Features
