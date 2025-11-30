@@ -7,17 +7,19 @@ import { SearchModal } from '@/components/SearchModal';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Index = () => {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('yana-view-mode', 'tree');
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('yana-documents', [
     {
       id: '1',
       title: 'Welcome to Yana',
-      content: '# Welcome to Yana\n\nA powerful note-taking app with nested documents.\n\n## Features\n\n- **Rich text editing** with markdown support\n- **Nested documents** for better organization\n- **Full-text search** to find notes quickly\n- **Local storage** - your notes stay private\n- **Mobile-friendly** with responsive drawer navigation\n\n## Getting Started\n\nOn mobile, tap the menu icon to access your notes.\n\nClick the "New Note" button to create your first note, or select this note to start editing.\n\nYou can also create child notes by hovering over a note and clicking the + button.\n\nPress the search icon (or Ctrl+K) to quickly find any note.',
+      content: '# Welcome to Yana\n\nA powerful note-taking app with nested documents.\n\n## Features\n\n- **Rich text editing** with markdown support\n- **Nested documents** for better organization\n- **Full-text search** to find notes quickly\n- **Drag and drop** to reorganize notes\n- **Right-click menus** for quick actions\n- **Document outline** view\n- **Local storage** - your notes stay private\n- **Mobile-friendly** with responsive drawer navigation\n\n## Getting Started\n\nOn mobile, tap the menu icon to access your notes.\n\nClick the "New Note" button to create your first note, or select this note to start editing.\n\nYou can also create child notes by right-clicking a note.\n\n### Drag and Drop\n\nDrag notes to reorder them or move them under different parent notes.\n\n### Outline View\n\nClick the outline icon to see all headings in the current document.\n\nPress the search icon (or Ctrl+K) to quickly find any note.',
       parentId: null,
       children: [],
       isExpanded: true,
@@ -93,6 +95,8 @@ const Index = () => {
         )
       );
     }
+
+    toast.success('Note created');
   };
 
   const handleDeleteDocument = (id: string) => {
@@ -113,6 +117,24 @@ const Index = () => {
     if (activeDocId && idsToDelete.includes(activeDocId)) {
       setActiveDocId(remaining.length > 0 ? remaining[0].id : null);
     }
+
+    toast.success('Note deleted');
+  };
+
+  const handleDuplicateDocument = (id: string) => {
+    const doc = documents.find((d) => d.id === id);
+    if (!doc) return;
+
+    const newDoc: Document = {
+      ...doc,
+      id: Date.now().toString(),
+      title: doc.title + ' (Copy)',
+      children: [],
+    };
+
+    setDocuments([...documents, newDoc]);
+    setActiveDocId(newDoc.id);
+    toast.success('Note duplicated');
   };
 
   const handleUpdateDocument = (id: string, updates: Partial<Document>) => {
@@ -127,6 +149,46 @@ const Index = () => {
         doc.id === id ? { ...doc, isExpanded: !doc.isExpanded } : doc
       )
     );
+  };
+
+  const handleMoveDocument = (
+    draggedId: string,
+    targetId: string | null,
+    position: 'before' | 'after' | 'child'
+  ) => {
+    const draggedDoc = documents.find((d) => d.id === draggedId);
+    const targetDoc = documents.find((d) => d.id === targetId);
+
+    if (!draggedDoc || draggedId === targetId) return;
+
+    // Prevent moving a parent into its own child
+    const isDescendant = (parentId: string, childId: string): boolean => {
+      const children = documents.filter((d) => d.parentId === parentId);
+      return children.some(
+        (child) => child.id === childId || isDescendant(child.id, childId)
+      );
+    };
+
+    if (targetId && isDescendant(draggedId, targetId)) {
+      toast.error('Cannot move a note into its own child');
+      return;
+    }
+
+    let newParentId: string | null;
+    
+    if (position === 'child') {
+      newParentId = targetId;
+    } else {
+      newParentId = targetDoc?.parentId || null;
+    }
+
+    setDocuments((docs) =>
+      docs.map((doc) =>
+        doc.id === draggedId ? { ...doc, parentId: newParentId } : doc
+      )
+    );
+
+    toast.success('Note moved');
   };
 
   // Keyboard shortcut for search modal (Ctrl+K or Cmd+K)
@@ -162,16 +224,22 @@ const Index = () => {
         <Sidebar
           documents={filteredTree}
           activeId={activeDocId}
+          activeDocument={activeDocument}
           onSelect={setActiveDocId}
           onAdd={handleAddDocument}
           onDelete={handleDeleteDocument}
+          onDuplicate={handleDuplicateDocument}
           onToggleExpand={handleToggleExpand}
+          onMove={handleMoveDocument}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onSearchClear={() => setSearchQuery('')}
+          onSearchFocus={() => !isMobile && setIsSearchModalOpen(true)}
           isOpen={isSidebarOpen}
           onOpenChange={setIsSidebarOpen}
           isMobile={isMobile}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
 
         <main className="flex-1 overflow-hidden">
