@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Document } from '@/components/DocumentTree';
-import { NoteEditor } from '@/components/NoteEditor';
+import { TiptapEditor } from '@/components/TiptapEditor';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { SearchModal } from '@/components/SearchModal';
@@ -19,7 +19,7 @@ const Index = () => {
     {
       id: '1',
       title: 'Welcome to Yana',
-      content: '# Welcome to Yana\n\nA powerful note-taking app with nested documents.\n\n## Features\n\n- **Rich text editing** with markdown support\n- **Nested documents** for better organization\n- **Full-text search** to find notes quickly\n- **Drag and drop** to reorganize notes\n- **Right-click menus** for quick actions\n- **Document outline** view\n- **Local storage** - your notes stay private\n- **Mobile-friendly** with responsive drawer navigation\n\n## Getting Started\n\nOn mobile, tap the menu icon to access your notes.\n\nClick the "New Note" button to create your first note, or select this note to start editing.\n\nYou can also create child notes by right-clicking a note.\n\n### Drag and Drop\n\nDrag notes to reorder them or move them under different parent notes.\n\n### Outline View\n\nClick the outline icon to see all headings in the current document.\n\nPress the search icon (or Ctrl+K) to quickly find any note.',
+      content: '<h1>Welcome to Yana</h1><p>A powerful note-taking app with nested documents.</p><h2>Features</h2><ul><li><p><strong>Rich text editing</strong> with WYSIWYG editor</p></li><li><p><strong>Nested documents</strong> for better organization</p></li><li><p><strong>Full-text search</strong> to find notes quickly</p></li><li><p><strong>Drag and drop</strong> to reorganize notes</p></li><li><p><strong>Right-click menus</strong> for quick actions</p></li><li><p><strong>Document outline</strong> view</p></li><li><p><strong>Local storage</strong> - your notes stay private</p></li><li><p><strong>Mobile-friendly</strong> with responsive drawer navigation</p></li></ul><h2>Getting Started</h2><p>On mobile, tap the menu icon to access your notes.</p><p>Click the "New Note" button to create your first note, or select this note to start editing.</p><p>You can also create child notes by right-clicking a note.</p><h3>Drag and Drop</h3><p>Drag notes to reorder them or move them under different parent notes.</p><h3>Outline View</h3><p>Click the outline icon to see all headings in the current document.</p><p>Press the search icon (or Ctrl+K) to quickly find any note.</p>',
       parentId: null,
       children: [],
       isExpanded: true,
@@ -244,7 +244,7 @@ const Index = () => {
 
         <main className="flex-1 overflow-hidden">
           {activeDocument ? (
-            <NoteEditor
+            <TiptapEditor
               content={activeDocument.content}
               onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
               title={activeDocument.title}
