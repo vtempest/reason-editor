@@ -1,6 +1,6 @@
 import { Document } from '@/components/DocumentTree';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -145,5 +145,124 @@ export const documentsApi = {
     }
 
     return result.data || [];
+  },
+};
+
+// Google Docs Integration API
+export const googleDocsApi = {
+  // Get OAuth authorization URL
+  async getAuthUrl(): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/google-docs/auth`);
+    const result: ApiResponse<{ authUrl: string }> = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to get auth URL');
+    }
+
+    return result.data!.authUrl;
+  },
+
+  // Export document to Google Docs
+  async exportToGoogleDocs(
+    documentId: string,
+    accessToken: string,
+    refreshToken?: string
+  ): Promise<{ googleDocId: string; url: string }> {
+    const response = await fetch(`${API_BASE_URL}/google-docs/export`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ documentId, accessToken, refreshToken }),
+    });
+
+    const result: ApiResponse<{ googleDocId: string; url: string }> = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to export to Google Docs');
+    }
+
+    return result.data!;
+  },
+
+  // Import document from Google Docs
+  async importFromGoogleDocs(
+    googleDocId: string,
+    accessToken: string,
+    refreshToken?: string,
+    parentId?: string | null
+  ): Promise<Document> {
+    const response = await fetch(`${API_BASE_URL}/google-docs/import`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ googleDocId, accessToken, refreshToken, parentId }),
+    });
+
+    const result: ApiResponse<Document> = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to import from Google Docs');
+    }
+
+    return result.data!;
+  },
+
+  // Share Google Doc with specific user
+  async shareWithUser(
+    googleDocId: string,
+    emailAddress: string,
+    accessToken: string,
+    role: 'reader' | 'writer' | 'commenter' = 'reader',
+    refreshToken?: string
+  ): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/google-docs/share`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        googleDocId,
+        emailAddress,
+        role,
+        accessToken,
+        refreshToken,
+      }),
+    });
+
+    const result: ApiResponse = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to share document');
+    }
+  },
+
+  // Get shareable link for Google Doc
+  async getShareableLink(
+    googleDocId: string,
+    accessToken: string,
+    refreshToken?: string
+  ): Promise<string> {
+    const response = await fetch(`${API_BASE_URL}/google-docs/share`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        googleDocId,
+        accessToken,
+        refreshToken,
+        publicLink: true,
+      }),
+    });
+
+    const result: ApiResponse<{ shareableLink: string }> = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to get shareable link');
+    }
+
+    return result.data!.shareableLink;
   },
 };
