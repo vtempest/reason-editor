@@ -7,7 +7,8 @@ import TextAlign from '@tiptap/extension-text-align';
 import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
-import { useEffect } from 'react';
+import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
+import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -42,6 +43,8 @@ interface TiptapEditorProps {
 }
 
 export const TiptapEditor = ({ content, onChange, title, onTitleChange }: TiptapEditorProps) => {
+  const bubbleMenuRef = useRef<HTMLDivElement>(null);
+  
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -68,6 +71,9 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
       TaskList,
       TaskItem.configure({
         nested: true,
+      }),
+      BubbleMenuExtension.configure({
+        element: bubbleMenuRef.current,
       }),
     ],
     content,
@@ -379,8 +385,90 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
 
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto relative">
         <EditorContent editor={editor} className="h-full" />
+        
+        {/* Bubble Menu */}
+        <div 
+          ref={bubbleMenuRef}
+          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('bold') && 'bg-accent'
+            )}
+            title="Bold"
+          >
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('italic') && 'bg-accent'
+            )}
+            title="Italic"
+          >
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('underline') && 'bg-accent'
+            )}
+            title="Underline"
+          >
+            <UnderlineIcon className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('strike') && 'bg-accent'
+            )}
+            title="Strikethrough"
+          >
+            <Strikethrough className="h-4 w-4" />
+          </Button>
+          
+          <Separator orientation="vertical" className="mx-1 h-6" />
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleHighlight().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('highlight') && 'bg-accent'
+            )}
+            title="Highlight"
+          >
+            <Highlighter className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={addLink}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('link') && 'bg-accent'
+            )}
+            title="Add Link"
+          >
+            <Link2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Tiptap Styles */}
