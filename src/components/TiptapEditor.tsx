@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -377,93 +377,6 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
         </Button>
       </div>
 
-      {/* Bubble Menu - appears when text is selected */}
-      {editor && (
-        <BubbleMenu
-          editor={editor}
-          tippyOptions={{ duration: 100 }}
-          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            className={cn(
-              'h-7 w-7 p-0',
-              editor.isActive('bold') && 'bg-muted'
-            )}
-          >
-            <Bold className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            className={cn(
-              'h-7 w-7 p-0',
-              editor.isActive('italic') && 'bg-muted'
-            )}
-          >
-            <Italic className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            className={cn(
-              'h-7 w-7 p-0',
-              editor.isActive('underline') && 'bg-muted'
-            )}
-          >
-            <UnderlineIcon className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-            className={cn(
-              'h-7 w-7 p-0',
-              editor.isActive('strike') && 'bg-muted'
-            )}
-          >
-            <Strikethrough className="h-3.5 w-3.5" />
-          </Button>
-          <Separator orientation="vertical" className="mx-0.5 h-5" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleHighlight().run()}
-            className={cn(
-              'h-7 w-7 p-0',
-              editor.isActive('highlight') && 'bg-muted'
-            )}
-          >
-            <Highlighter className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addLink}
-            className={cn(
-              'h-7 w-7 p-0',
-              editor.isActive('link') && 'bg-muted'
-            )}
-          >
-            <Link2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleCode().run()}
-            className={cn(
-              'h-7 w-7 p-0',
-              editor.isActive('code') && 'bg-muted'
-            )}
-          >
-            <Code className="h-3.5 w-3.5" />
-          </Button>
-        </BubbleMenu>
-      )}
 
       {/* Editor Content */}
       <div className="flex-1 overflow-auto">
