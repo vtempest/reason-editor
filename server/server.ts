@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { apiReference } from '@scalar/express-api-reference';
 import documentsRouter from './routes/documents';
+import teamsRouter from './routes/teams';
+import organizationsRouter from './routes/organizations';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,8 +23,32 @@ app.use((req, res, next) => {
   next();
 });
 
+// API Documentation with Scalar
+app.use(
+  '/api/docs',
+  apiReference({
+    spec: {
+      url: '/openapi.yaml',
+    },
+    theme: 'purple',
+    layout: 'modern',
+    darkMode: true,
+    defaultHttpClient: {
+      targetKey: 'javascript',
+      clientKey: 'fetch',
+    },
+  })
+);
+
+// Serve OpenAPI spec
+app.get('/openapi.yaml', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'openapi.yaml'));
+});
+
 // Routes
 app.use('/api/documents', documentsRouter);
+app.use('/api/teams', teamsRouter);
+app.use('/api/organizations', organizationsRouter);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -47,8 +75,11 @@ app.use((req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 API Server running on http://localhost:${PORT}`);
-  console.log(`📝 Documents API available at http://localhost:${PORT}/api/documents`);
-  console.log(`❤️  Health check at http://localhost:${PORT}/health`);
+  console.log(`📚 API Documentation at http://localhost:${PORT}/api/docs`);
+  console.log(`📝 Documents API: http://localhost:${PORT}/api/documents`);
+  console.log(`👥 Teams API: http://localhost:${PORT}/api/teams`);
+  console.log(`🏢 Organizations API: http://localhost:${PORT}/api/organizations`);
+  console.log(`❤️  Health check: http://localhost:${PORT}/health`);
 });
 
 export default app;

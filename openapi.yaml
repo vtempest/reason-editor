@@ -1,0 +1,783 @@
+openapi: 3.0.3
+info:
+  title: Yana Note-Taking API
+  description: |
+    A comprehensive API for the Yana note-taking application. This API provides endpoints for managing documents, teams, organizations, and user settings.
+
+    ## Features
+    - 📝 Document management with hierarchical structure
+    - 👥 Team and organization collaboration
+    - 🔍 Full-text search capabilities
+    - 🔄 Bulk operations and syncing
+    - 🎨 Theme and settings management
+
+  version: 1.0.0
+  contact:
+    name: Yana API Support
+    email: support@yana.app
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: http://localhost:5173
+    description: Vite dev server (frontend)
+
+tags:
+  - name: Documents
+    description: Document management operations
+  - name: Teams
+    description: Team and collaboration management
+  - name: Organizations
+    description: Organization management
+  - name: Health
+    description: System health and status
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API server is running and healthy
+      operationId: getHealth
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-12-01T12:00:00.000Z"
+
+  /api/documents:
+    get:
+      tags:
+        - Documents
+      summary: Get all documents
+      description: Retrieve a list of all documents in the system
+      operationId: getAllDocuments
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Documents
+      summary: Create a new document
+      description: Create a new document with optional parent
+      operationId: createDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDocumentRequest'
+            examples:
+              root-document:
+                summary: Create root document
+                value:
+                  title: "My New Note"
+                  content: "<p>This is my note content</p>"
+              child-document:
+                summary: Create child document
+                value:
+                  title: "Child Note"
+                  content: "<p>This is a child note</p>"
+                  parentId: "123"
+      responses:
+        '201':
+          description: Document created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '400':
+          description: Bad request (missing required fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/documents/{id}:
+    get:
+      tags:
+        - Documents
+      summary: Get a document by ID
+      description: Retrieve a single document by its unique identifier
+      operationId: getDocumentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The document ID
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Documents
+      summary: Update a document
+      description: Update an existing document's properties
+      operationId: updateDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The document ID
+          schema:
+            type: string
+            example: "1"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDocumentRequest'
+            examples:
+              update-title:
+                summary: Update title only
+                value:
+                  title: "Updated Title"
+              update-content:
+                summary: Update content
+                value:
+                  content: "<p>Updated content</p>"
+              full-update:
+                summary: Update multiple fields
+                value:
+                  title: "New Title"
+                  content: "<p>New content</p>"
+                  isExpanded: true
+      responses:
+        '200':
+          description: Document updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Documents
+      summary: Delete a document
+      description: Delete a document and all its children
+      operationId: deleteDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The document ID
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '200':
+          description: Document deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "1"
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/documents/{id}/duplicate:
+    post:
+      tags:
+        - Documents
+      summary: Duplicate a document
+      description: Create a copy of an existing document
+      operationId: duplicateDocument
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The document ID to duplicate
+          schema:
+            type: string
+            example: "1"
+      responses:
+        '201':
+          description: Document duplicated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/documents/move:
+    post:
+      tags:
+        - Documents
+      summary: Move a document
+      description: Move a document to a new position in the hierarchy
+      operationId: moveDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveDocumentRequest'
+            examples:
+              move-as-child:
+                summary: Move as child
+                value:
+                  draggedId: "2"
+                  targetId: "1"
+                  position: "child"
+              move-before:
+                summary: Move before sibling
+                value:
+                  draggedId: "3"
+                  targetId: "2"
+                  position: "before"
+      responses:
+        '200':
+          description: Document moved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/MoveDocumentRequest'
+        '400':
+          description: Bad request (invalid operation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/documents/search/{query}:
+    get:
+      tags:
+        - Documents
+      summary: Search documents
+      description: Search for documents by title or content
+      operationId: searchDocuments
+      parameters:
+        - name: query
+          in: path
+          required: true
+          description: The search query
+          schema:
+            type: string
+            example: "meeting notes"
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentListResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/documents/bulk:
+    post:
+      tags:
+        - Documents
+      summary: Bulk update documents
+      description: Update multiple documents at once (useful for syncing)
+      operationId: bulkUpdateDocuments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                documents:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Document'
+              required:
+                - documents
+            example:
+              documents:
+                - id: "1"
+                  title: "Updated Document 1"
+                  content: "<p>Content 1</p>"
+                  parentId: null
+                - id: "2"
+                  title: "Updated Document 2"
+                  content: "<p>Content 2</p>"
+                  parentId: "1"
+      responses:
+        '200':
+          description: Documents updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentListResponse'
+        '400':
+          description: Bad request (invalid data)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/teams:
+    get:
+      tags:
+        - Teams
+      summary: Get all teams
+      description: Retrieve all teams the user has access to
+      operationId: getAllTeams
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Team'
+
+    post:
+      tags:
+        - Teams
+      summary: Create a new team
+      description: Create a new team within an organization
+      operationId: createTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Engineering Team"
+                description:
+                  type: string
+                  example: "Team for engineering collaboration"
+                organizationId:
+                  type: string
+                  example: "1"
+              required:
+                - name
+                - organizationId
+      responses:
+        '201':
+          description: Team created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Team'
+
+  /api/teams/{id}/members:
+    post:
+      tags:
+        - Teams
+      summary: Add a team member
+      description: Invite a new member to the team
+      operationId: addTeamMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The team ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                role:
+                  $ref: '#/components/schemas/UserRole'
+              required:
+                - email
+                - role
+      responses:
+        '201':
+          description: Member added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/TeamMember'
+
+  /api/organizations:
+    get:
+      tags:
+        - Organizations
+      summary: Get all organizations
+      description: Retrieve all organizations the user belongs to
+      operationId: getAllOrganizations
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Organization'
+
+components:
+  schemas:
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the document
+          example: "1"
+        title:
+          type: string
+          description: Document title
+          example: "My Note"
+        content:
+          type: string
+          description: HTML content of the document
+          example: "<p>This is my note content</p>"
+        parentId:
+          type: string
+          nullable: true
+          description: ID of the parent document (null for root documents)
+          example: null
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+          description: Child documents
+        isExpanded:
+          type: boolean
+          description: Whether the document is expanded in the tree view
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Document creation timestamp
+          example: "2025-12-01T12:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Document last update timestamp
+          example: "2025-12-01T12:00:00.000Z"
+      required:
+        - id
+        - title
+        - content
+        - parentId
+
+    CreateDocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Document title
+          example: "New Note"
+        content:
+          type: string
+          description: HTML content of the document
+          example: "<p>Content</p>"
+          default: ""
+        parentId:
+          type: string
+          nullable: true
+          description: ID of the parent document
+          example: null
+      required:
+        - title
+
+    UpdateDocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Document title
+          example: "Updated Title"
+        content:
+          type: string
+          description: HTML content of the document
+          example: "<p>Updated content</p>"
+        parentId:
+          type: string
+          nullable: true
+          description: ID of the parent document
+          example: "1"
+        isExpanded:
+          type: boolean
+          description: Whether the document is expanded
+          example: true
+
+    MoveDocumentRequest:
+      type: object
+      properties:
+        draggedId:
+          type: string
+          description: ID of the document being moved
+          example: "2"
+        targetId:
+          type: string
+          nullable: true
+          description: ID of the target document (null for root)
+          example: "1"
+        position:
+          type: string
+          enum: [before, after, child]
+          description: Position relative to target
+          example: "child"
+      required:
+        - draggedId
+        - position
+
+    UserRole:
+      type: string
+      enum: [owner, admin, member, viewer]
+      description: User role within a team
+      example: "member"
+
+    TeamMember:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        avatarUrl:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        joinedAt:
+          type: string
+          format: date-time
+          example: "2025-12-01T12:00:00.000Z"
+
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: "Engineering Team"
+        description:
+          type: string
+          example: "Team for engineering collaboration"
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMember'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-12-01T12:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-12-01T12:00:00.000Z"
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        name:
+          type: string
+          example: "Acme Corp"
+        slug:
+          type: string
+          example: "acme-corp"
+        description:
+          type: string
+          example: "Acme Corporation workspace"
+        logoUrl:
+          type: string
+          format: uri
+          example: "https://example.com/logo.png"
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-12-01T12:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-12-01T12:00:00.000Z"
+
+    DocumentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Document'
+
+    DocumentListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "An error occurred"
+      required:
+        - success
+        - error
