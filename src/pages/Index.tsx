@@ -4,15 +4,21 @@ import { TiptapEditor } from '@/components/TiptapEditor';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { SearchModal } from '@/components/SearchModal';
+import { Settings } from '@/components/Settings';
+import { TeamManagement } from '@/components/TeamManagement';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTheme } from 'next-themes';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const { theme, setTheme } = useTheme();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTeamsOpen, setIsTeamsOpen] = useState(false);
   const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('yana-view-mode', 'tree');
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('yana-documents', [
@@ -204,6 +210,10 @@ const Index = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleToggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   useEffect(() => {
     // Ensure active document exists
     if (activeDocId && !documents.find((d) => d.id === activeDocId)) {
@@ -271,7 +281,15 @@ const Index = () => {
         onOpenChange={setIsSearchModalOpen}
         documents={documents}
         onSelectDocument={setActiveDocId}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenTeams={() => setIsTeamsOpen(true)}
+        onToggleTheme={handleToggleTheme}
+        currentTheme={theme}
       />
+
+      <Settings open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+
+      <TeamManagement open={isTeamsOpen} onOpenChange={setIsTeamsOpen} />
     </div>
   );
 };
