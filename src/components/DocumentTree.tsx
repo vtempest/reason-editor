@@ -10,6 +10,7 @@ export interface Document {
   parentId: string | null;
   children?: Document[];
   isExpanded?: boolean;
+  tags?: string[];
 }
 
 interface DocumentTreeProps {
