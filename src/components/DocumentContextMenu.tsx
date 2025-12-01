@@ -5,7 +5,7 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator,
 } from '@/components/ui/context-menu';
-import { Plus, Trash2, Copy, Edit, FolderPlus } from 'lucide-react';
+import { Plus, Trash2, Copy, Edit, FolderPlus, Tag } from 'lucide-react';
 
 interface DocumentContextMenuProps {
   children: React.ReactNode;
@@ -14,6 +14,7 @@ interface DocumentContextMenuProps {
   onRename: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onManageTags: () => void;
 }
 
 export const DocumentContextMenu = ({
@@ -23,6 +24,7 @@ export const DocumentContextMenu = ({
   onRename,
   onDuplicate,
   onDelete,
+  onManageTags,
 }: DocumentContextMenuProps) => {
   return (
     <ContextMenu>
@@ -44,6 +46,11 @@ export const DocumentContextMenu = ({
         <ContextMenuItem onClick={onDuplicate}>
           <Copy className="mr-2 h-4 w-4" />
           Duplicate
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={onManageTags}>
+          <Tag className="mr-2 h-4 w-4" />
+          Manage Tags
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">

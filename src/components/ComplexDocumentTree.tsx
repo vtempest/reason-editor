@@ -22,6 +22,7 @@ interface ComplexDocumentTreeProps {
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;
   onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
+  onManageTags?: (id: string) => void;
 }
 
 // Transform flat document array to tree structure for react-complex-tree
@@ -67,6 +68,7 @@ export const ComplexDocumentTree = ({
   onDuplicate,
   onToggleExpand,
   onMove,
+  onManageTags,
 }: ComplexDocumentTreeProps) => {
   const treeRef = useRef<TreeEnvironmentRef>(null);
 
@@ -280,6 +282,7 @@ export const ComplexDocumentTree = ({
               }}
               onDuplicate={() => onDuplicate(doc.id)}
               onDelete={() => onDelete(doc.id)}
+              onManageTags={() => onManageTags?.(doc.id)}
             >
               <li
                 {...(context.itemContainerWithChildrenProps as any)}

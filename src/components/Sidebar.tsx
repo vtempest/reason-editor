@@ -4,7 +4,7 @@ import { OutlineView } from '@/components/OutlineView';
 import { FloatingSearch } from '@/components/FloatingSearch';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { FolderOpen, List, Plus } from 'lucide-react';
+import { FolderOpen, List, Plus, FileText, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -17,6 +17,7 @@ interface SidebarProps {
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;
   onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
+  onManageTags?: (id: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onSearchClear: () => void;
@@ -28,6 +29,8 @@ interface SidebarProps {
   // View mode
   viewMode: 'tree' | 'outline';
   onViewModeChange: (mode: 'tree' | 'outline') => void;
+  // Settings
+  onSettingsClick?: () => void;
 }
 
 export const Sidebar = ({
@@ -40,6 +43,7 @@ export const Sidebar = ({
   onDuplicate,
   onToggleExpand,
   onMove,
+  onManageTags,
   searchQuery,
   onSearchChange,
   onSearchClear,
@@ -49,6 +53,7 @@ export const Sidebar = ({
   isMobile,
   viewMode,
   onViewModeChange,
+  onSettingsClick,
 }: SidebarProps) => {
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col bg-sidebar-background relative">
@@ -101,6 +106,17 @@ export const Sidebar = ({
             >
               <List className="h-4 w-4" />
             </Button>
+            {!isMobile && onSettingsClick && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onSettingsClick}
+                className="h-8 w-8 p-0 text-primary"
+                title="Settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -122,6 +138,12 @@ export const Sidebar = ({
             onDuplicate={onDuplicate}
             onToggleExpand={onToggleExpand}
             onMove={onMove}
+            onManageTags={(id) => {
+              onManageTags?.(id);
+              if (isMobile && onOpenChange) {
+                onOpenChange(false);
+              }
+            }}
           />
         ) : (
           <OutlineView content={activeDocument?.content || ''} />
@@ -130,13 +152,13 @@ export const Sidebar = ({
 
       {/* Footer with new note button (only in tree view) */}
       {viewMode === 'tree' && (
-        <div className="border-t border-sidebar-border p-3">
+        <div className="border-t border-sidebar-border p-3 space-y-2">
           <Button
             onClick={() => onAdd(null)}
             className="w-full bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
             size="sm"
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <FileText className="mr-2 h-4 w-4" />
             New Note
           </Button>
         </div>

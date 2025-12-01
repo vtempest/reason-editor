@@ -14,6 +14,7 @@ interface DraggableDocumentTreeProps {
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;
   onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
+  onManageTags?: (id: string) => void;
 }
 
 interface TreeNodeProps {
@@ -32,6 +33,7 @@ interface TreeNodeProps {
   onDrop: () => void;
   draggedId: string | null;
   dropTarget: { id: string; position: 'before' | 'after' | 'child' } | null;
+  onManageTags?: (id: string) => void;
 }
 
 const TreeNode = ({
@@ -50,6 +52,7 @@ const TreeNode = ({
   onDrop,
   draggedId,
   dropTarget,
+  onManageTags,
 }: TreeNodeProps) => {
   const hasChildren = document.children && document.children.length > 0;
   const isDragging = draggedId === document.id;
@@ -95,6 +98,7 @@ const TreeNode = ({
         }}
         onDuplicate={() => onDuplicate(document.id)}
         onDelete={() => onDelete(document.id)}
+        onManageTags={() => onManageTags?.(document.id)}
       >
         <div
           draggable
@@ -171,6 +175,7 @@ const TreeNode = ({
               onDrop={onDrop}
               draggedId={draggedId}
               dropTarget={dropTarget}
+              onManageTags={onManageTags}
             />
           ))}
         </div>
@@ -188,6 +193,7 @@ export const DraggableDocumentTree = ({
   onDuplicate,
   onToggleExpand,
   onMove,
+  onManageTags,
 }: DraggableDocumentTreeProps) => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string; position: 'before' | 'after' | 'child' } | null>(null);

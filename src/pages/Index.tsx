@@ -6,6 +6,8 @@ import { Header } from '@/components/Header';
 import { SearchModal } from '@/components/SearchModal';
 import { Settings } from '@/components/Settings';
 import { TeamManagement } from '@/components/TeamManagement';
+import { TagBar } from '@/components/TagBar';
+import { TagManagementDialog } from '@/components/TagManagementDialog';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
@@ -19,6 +21,8 @@ const Index = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTeamsOpen, setIsTeamsOpen] = useState(false);
+  const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
+  const [tagManagementDocId, setTagManagementDocId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('yana-view-mode', 'tree');
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('yana-documents', [
@@ -29,6 +33,7 @@ const Index = () => {
       parentId: null,
       children: [],
       isExpanded: true,
+      tags: []
     },
   ]);
 
@@ -88,6 +93,7 @@ const Index = () => {
       parentId,
       children: [],
       isExpanded: false,
+      tags: [],
     };
 
     setDocuments([...documents, newDoc]);
@@ -214,6 +220,42 @@ const Index = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  const handleAddTag = (docId: string, tag: string) => {
+    setDocuments((docs) =>
+      docs.map((doc) =>
+        doc.id === docId
+          ? { ...doc, tags: [...(doc.tags || []), tag] }
+          : doc
+      )
+    );
+  };
+
+  const handleRemoveTag = (docId: string, tag: string) => {
+    setDocuments((docs) =>
+      docs.map((doc) =>
+        doc.id === docId
+          ? { ...doc, tags: (doc.tags || []).filter((t) => t !== tag) }
+          : doc
+      )
+    );
+  };
+
+  const handleManageTags = (docId: string) => {
+    setTagManagementDocId(docId);
+    setIsTagDialogOpen(true);
+  };
+
+  const handleUpdateTags = (tags: string[]) => {
+    if (tagManagementDocId) {
+      setDocuments((docs) =>
+        docs.map((doc) =>
+          doc.id === tagManagementDocId ? { ...doc, tags } : doc
+        )
+      );
+      toast.success('Tags updated');
+    }
+  };
+
   useEffect(() => {
     // Ensure active document exists
     if (activeDocId && !documents.find((d) => d.id === activeDocId)) {
@@ -227,6 +269,7 @@ const Index = () => {
         <Header
           onMenuClick={() => setIsSidebarOpen(true)}
           onSearchClick={() => setIsSearchModalOpen(true)}
+          onSettingsClick={() => setIsSettingsOpen(true)}
         />
       )}
 
@@ -241,6 +284,7 @@ const Index = () => {
           onDuplicate={handleDuplicateDocument}
           onToggleExpand={handleToggleExpand}
           onMove={handleMoveDocument}
+          onManageTags={handleManageTags}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onSearchClear={() => setSearchQuery('')}
@@ -250,16 +294,28 @@ const Index = () => {
           isMobile={isMobile}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          onSettingsClick={() => setIsSettingsOpen(true)}
         />
 
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden flex flex-col">
           {activeDocument ? (
-            <TiptapEditor
-              content={activeDocument.content}
-              onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
-              title={activeDocument.title}
-              onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-            />
+            <>
+              {activeDocument.tags && activeDocument.tags.length > 0 && (
+                <TagBar
+                  tags={activeDocument.tags}
+                  onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
+                  onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+                />
+              )}
+              <div className="flex-1 overflow-hidden">
+                <TiptapEditor
+                  content={activeDocument.content}
+                  onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                  title={activeDocument.title}
+                  onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                />
+              </div>
+            </>
           ) : (
             <div className="flex h-full items-center justify-center bg-editor-bg">
               <div className="text-center">
@@ -290,6 +346,13 @@ const Index = () => {
       <Settings open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
 
       <TeamManagement open={isTeamsOpen} onOpenChange={setIsTeamsOpen} />
+
+      <TagManagementDialog
+        open={isTagDialogOpen}
+        onOpenChange={setIsTagDialogOpen}
+        currentTags={tagManagementDocId ? (documents.find(d => d.id === tagManagementDocId)?.tags || []) : []}
+        onUpdateTags={handleUpdateTags}
+      />
     </div>
   );
 };
