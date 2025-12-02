@@ -266,11 +266,12 @@ const Index = () => {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {isMobile && (
-        <Header
-          onMenuClick={() => setIsSidebarOpen(true)}
-          onSearchClick={() => setIsSearchModalOpen(true)}
-          onSettingsClick={() => setIsSettingsOpen(true)}
-        />
+      <Header
+        onMenuClick={() => setIsSidebarOpen(true)}
+        onSearchClick={() => setIsSearchModalOpen(true)}
+        onSettingsClick={() => setIsSettingsOpen(true)}
+        documentTitle={activeDocument?.title}
+      />
       )}
 
       <div className="flex flex-1 overflow-hidden">
