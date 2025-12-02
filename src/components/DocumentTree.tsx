@@ -11,6 +11,16 @@ export interface Document {
   children?: Document[];
   isExpanded?: boolean;
   tags?: string[];
+  sharing?: {
+    isPublic: boolean;
+    sharedWith?: Array<{
+      email: string;
+      role: 'viewer' | 'editor';
+      sharedAt: string;
+    }>;
+    shareLink?: string;
+    googleDocId?: string;
+  };
 }
 
 interface DocumentTreeProps {

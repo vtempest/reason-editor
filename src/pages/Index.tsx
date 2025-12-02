@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { SearchModal } from '@/components/SearchModal';
 import { Settings } from '@/components/Settings';
 import { TeamManagement } from '@/components/TeamManagement';
+import { InviteModal } from '@/components/InviteModal';
 import { TagBar } from '@/components/TagBar';
 import { TagManagementDialog } from '@/components/TagManagementDialog';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -21,6 +22,7 @@ const Index = () => {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTeamsOpen, setIsTeamsOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [tagManagementDocId, setTagManagementDocId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('yana-view-mode', 'tree');
@@ -270,6 +272,7 @@ const Index = () => {
         onMenuClick={() => setIsSidebarOpen(true)}
         onSearchClick={() => setIsSearchModalOpen(true)}
         onSettingsClick={() => setIsSettingsOpen(true)}
+        onShareClick={() => setIsInviteModalOpen(true)}
         documentTitle={activeDocument?.title}
       />
       )}
@@ -347,6 +350,24 @@ const Index = () => {
       <Settings open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
 
       <TeamManagement open={isTeamsOpen} onOpenChange={setIsTeamsOpen} />
+
+      <InviteModal
+        open={isInviteModalOpen}
+        onOpenChange={setIsInviteModalOpen}
+        documentTitle={activeDocument?.title || 'Untitled'}
+        sharingInfo={activeDocument?.sharing}
+        onUpdateSharing={(sharing) => {
+          if (activeDocument) {
+            setDocuments(docs =>
+              docs.map(doc =>
+                doc.id === activeDocument.id
+                  ? { ...doc, sharing }
+                  : doc
+              )
+            );
+          }
+        }}
+      />
 
       <TagManagementDialog
         open={isTagDialogOpen}
