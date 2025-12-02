@@ -6,10 +6,11 @@ interface HeaderProps {
   onMenuClick: () => void;
   onSearchClick: () => void;
   onSettingsClick: () => void;
+  onShareClick?: () => void;
   documentTitle?: string;
 }
 
-export const Header = ({ onMenuClick, onSearchClick, onSettingsClick, documentTitle }: HeaderProps) => {
+export const Header = ({ onMenuClick, onSearchClick, onSettingsClick, onShareClick, documentTitle }: HeaderProps) => {
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4">
       {/* Left section - Mobile menu + breadcrumb */}
@@ -58,6 +59,7 @@ export const Header = ({ onMenuClick, onSearchClick, onSettingsClick, documentTi
           variant="outline"
           size="sm"
           className="hidden lg:flex h-9"
+          onClick={onShareClick}
         >
           <Share2 className="mr-2 h-4 w-4" />
           Share
