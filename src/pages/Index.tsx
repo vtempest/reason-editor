@@ -299,6 +299,7 @@ const Index = () => {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           onSettingsClick={() => setIsSettingsOpen(true)}
+          onInviteClick={() => setIsInviteModalOpen(true)}
         />
 
         <main className="flex-1 overflow-hidden flex flex-col">

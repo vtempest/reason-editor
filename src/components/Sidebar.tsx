@@ -5,7 +5,7 @@ import { FloatingSearch } from '@/components/FloatingSearch';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Home, Search, Star, Layout, FileEdit, FolderOpen, List, Plus, FileText, Settings, Archive, Trash2, UserPlus } from 'lucide-react';
+import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -32,6 +32,7 @@ interface SidebarProps {
   onViewModeChange: (mode: 'tree' | 'outline') => void;
   // Settings
   onSettingsClick?: () => void;
+  onInviteClick?: () => void;
 }
 
 export const Sidebar = ({
@@ -55,6 +56,7 @@ export const Sidebar = ({
   viewMode,
   onViewModeChange,
   onSettingsClick,
+  onInviteClick,
 }: SidebarProps) => {
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col bg-sidebar-background relative">
@@ -68,55 +70,8 @@ export const Sidebar = ({
         />
       </div>
 
-      {/* Navigation items */}
-      <div className="border-b border-sidebar-border px-3 py-2 pt-16">
-        <nav className="space-y-0.5">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Home className="mr-2 h-4 w-4" />
-            Home
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSearchFocus}
-            className="w-full justify-start h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Search className="mr-2 h-4 w-4" />
-            Search
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Star className="mr-2 h-4 w-4" />
-            Starred
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Layout className="mr-2 h-4 w-4" />
-            Templates
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <FileEdit className="mr-2 h-4 w-4" />
-            Drafts
-          </Button>
-        </nav>
-      </div>
-
       {/* Header with view toggle */}
-      <div className="border-b border-sidebar-border px-4 py-3">
+      <div className="border-b border-sidebar-border px-4 py-3 pt-16">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {viewMode === 'tree' ? (
@@ -232,6 +187,7 @@ export const Sidebar = ({
             <Button
               variant="ghost"
               size="sm"
+              onClick={onInviteClick}
               className="w-full justify-start h-8 px-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <UserPlus className="mr-2 h-4 w-4" />
