@@ -1,4 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react';
+import { FloatingMenu, BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -7,8 +8,9 @@ import TextAlign from '@tiptap/extension-text-align';
 import Highlight from '@tiptap/extension-highlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -43,8 +45,6 @@ interface TiptapEditorProps {
 }
 
 export const TiptapEditor = ({ content, onChange, title, onTitleChange }: TiptapEditorProps) => {
-  const bubbleMenuRef = useRef<HTMLDivElement>(null);
-  
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -72,9 +72,8 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
       TaskItem.configure({
         nested: true,
       }),
-      BubbleMenuExtension.configure({
-        element: bubbleMenuRef.current,
-      }),
+      FloatingMenuExtension,
+      BubbleMenuExtension,
     ],
     content,
     editorProps: {
@@ -387,10 +386,64 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
       {/* Editor Content */}
       <div className="flex-1 overflow-auto relative">
         <EditorContent editor={editor} className="h-full" />
-        
-        {/* Bubble Menu */}
-        <div 
-          ref={bubbleMenuRef}
+
+        {/* Floating Menu - appears on empty lines */}
+        <FloatingMenu
+          editor={editor}
+          shouldShow={({ state }) => {
+            const { $from } = state.selection;
+            const isEmptyParagraph = $from.parent.type.name === 'paragraph' &&
+                                    $from.parent.textContent.length === 0;
+            return isEmptyParagraph;
+          }}
+          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            className="h-8 px-2 text-xs"
+            title="Heading 1"
+          >
+            H1
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            className="h-8 px-2 text-xs"
+            title="Heading 2"
+          >
+            H2
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className="h-8 w-8 p-0"
+            title="Bullet List"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className="h-8 w-8 p-0"
+            title="Task List"
+          >
+            <ListTodo className="h-4 w-4" />
+          </Button>
+        </FloatingMenu>
+
+        {/* Bubble Menu - appears on text selection */}
+        <BubbleMenu
+          editor={editor}
+          shouldShow={({ editor, state }) => {
+            const { from, to } = state.selection;
+            const hasSelection = from !== to;
+            return hasSelection && !editor.isActive('codeBlock');
+          }}
           className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
         >
           <Button
@@ -441,9 +494,9 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
           >
             <Strikethrough className="h-4 w-4" />
           </Button>
-          
+
           <Separator orientation="vertical" className="mx-1 h-6" />
-          
+
           <Button
             variant="ghost"
             size="sm"
@@ -468,7 +521,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
           >
             <Link2 className="h-4 w-4" />
           </Button>
-        </div>
+        </BubbleMenu>
       </div>
 
       {/* Tiptap Styles */}
