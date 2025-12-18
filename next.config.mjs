@@ -1,10 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only build API routes, not pages
-  pageExtensions: ['api.ts', 'api.tsx'],
-
   // Standalone output for Vercel deployment
   output: 'standalone',
+
+  // Disable static page generation since we're only using API routes
+  // and serving the Vite frontend separately
+  distDir: '.next',
+
+  // Turbopack config with @ alias pointing to project root
+  turbopack: {
+    resolveAlias: {
+      '@': './',
+    },
+  },
 
   // Custom server configuration
   experimental: {
@@ -19,6 +27,11 @@ const nextConfig = {
       config.externals = config.externals || [];
       config.externals.push('better-sqlite3');
     }
+
+    // Override @ alias to point to project root instead of src/
+    const path = require('path');
+    config.resolve.alias['@'] = path.resolve(__dirname);
+
     return config;
   },
 

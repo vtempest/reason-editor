@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { statements } from '@/lib/db/sqlite';
+import { statements } from '@/lib/db/turso';
 
 // PUT /api/quotes/[id] - Update a quote
 export async function PUT(

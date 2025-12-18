@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { statements } from '@/lib/db/sqlite';
+import { statements } from '@/lib/db/turso';
 
 // GET /api/quotes?documentId=xxx - Get all quotes for a document
 export async function GET(request: NextRequest) {
