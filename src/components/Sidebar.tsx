@@ -91,19 +91,7 @@ export const Sidebar = ({
 
       {/* Header with view toggle */}
       <div className="border-b border-sidebar-border px-4 py-3 pt-16">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {viewMode === 'tree' ? (
-              <FolderOpen className="h-5 w-5 text-sidebar-primary" />
-            ) : viewMode === 'outline' ? (
-              <List className="h-5 w-5 text-sidebar-primary" />
-            ) : (
-              <Columns2 className="h-5 w-5 text-sidebar-primary" />
-            )}
-            <h2 className="font-serif text-lg font-semibold text-sidebar-foreground">
-              {viewMode === 'tree' ? 'Notes' : viewMode === 'outline' ? 'Outline' : 'Split View'}
-            </h2>
-          </div>
+        <div className="flex items-center justify-end">
 
           <div className="flex items-center gap-1">
             <Button
@@ -211,7 +199,7 @@ export const Sidebar = ({
                 </div>
               </div>
             </Panel>
-            <PanelResizeHandle className="h-1 bg-sidebar-border hover:bg-sidebar-primary/50 transition-colors" />
+            <PanelResizeHandle className="h-px bg-sidebar-border hover:bg-sidebar-primary/50 transition-colors" />
             <Panel defaultSize={50} minSize={20}>
               <div className="h-full overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-auto">
