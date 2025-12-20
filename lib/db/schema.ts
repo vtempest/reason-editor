@@ -2,11 +2,19 @@ import { sqliteTable, text, integer, index, unique } from 'drizzle-orm/sqlite-co
 import { sql } from 'drizzle-orm';
 
 export const documents = sqliteTable('documents', {
-  id: text('id').primaryKey(),
-  title: text('title').notNull(),
-  content: text('content').default('').notNull(),
-  parentId: text('parentId').references((): any => documents.id, { onDelete: 'cascade' }),
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  title: text('title'),
+  content: text('content').default(''),
+  parentId: integer('parentId').references((): any => documents.id, { onDelete: 'cascade' }),
   isExpanded: integer('isExpanded').default(0),
+  isFolder: integer('isFolder').default(0),
+  type: integer('type').default(0),
+  summary: text('summary'),
+  cite: text('cite'),
+  author: text('author'),
+  html: text('html'),
+  url: text('url'),
   createdAt: text('createdAt').notNull(),
   updatedAt: text('updatedAt').notNull(),
   userId: text('userId'),
@@ -61,3 +69,6 @@ export const shareTokens = sqliteTable('share_tokens', {
     documentIdIdx: index('idx_share_tokens_documentId').on(table.documentId),
   };
 });
+
+// Type inference for Document
+export type Document = typeof documents.$inferSelect;
