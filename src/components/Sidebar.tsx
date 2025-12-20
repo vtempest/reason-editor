@@ -158,9 +158,6 @@ export const Sidebar = ({
           <PanelGroup direction="vertical" className="h-full">
             <Panel defaultSize={50} minSize={20}>
               <div className="h-full overflow-hidden flex flex-col">
-                <div className="px-3 py-2 border-b border-sidebar-border">
-                  <h3 className="text-xs font-semibold text-sidebar-foreground/70">FILES</h3>
-                </div>
                 <div className="flex-1 overflow-auto">
                   <ComplexDocumentTree
                     documents={documents}
@@ -189,9 +186,6 @@ export const Sidebar = ({
             <PanelResizeHandle className="h-1 bg-sidebar-border hover:bg-sidebar-primary/50 transition-colors" />
             <Panel defaultSize={50} minSize={20}>
               <div className="h-full overflow-hidden flex flex-col">
-                <div className="px-3 py-2 border-b border-sidebar-border">
-                  <h3 className="text-xs font-semibold text-sidebar-foreground/70">OUTLINE</h3>
-                </div>
                 <div className="flex-1 overflow-auto">
                   <OutlineView content={activeDocument?.content || ''} />
                 </div>
