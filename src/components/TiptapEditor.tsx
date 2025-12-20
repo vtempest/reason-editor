@@ -13,12 +13,17 @@ import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import { TableKit } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
 import CharacterCount from '@tiptap/extension-character-count';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { FontFamily } from '@tiptap/extension-font-family';
+import { FontSize } from '@/lib/tiptap/fontSize';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { SearchReplaceBar } from '@/components/SearchReplaceBar';
+import { FontFamilyDropdown } from '@/components/FontFamilyDropdown';
+import { FontSizeDropdown } from '@/components/FontSizeDropdown';
 import {
   Bold,
   Italic,
@@ -140,6 +145,9 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       CharacterCount.configure({
         limit: null,
       }),
+      TextStyle,
+      FontFamily,
+      FontSize,
       SearchAndReplace.configure({
         searchResultClass: 'search-result',
         caseSensitive: false,
@@ -438,6 +446,12 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         >
           <Redo className="h-4 w-4" />
         </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Font Family and Size */}
+        <FontFamilyDropdown editor={editor} />
+        <FontSizeDropdown editor={editor} />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
