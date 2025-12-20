@@ -365,6 +365,7 @@ const Index = () => {
               )}
               <div className="flex-1 overflow-hidden">
                 <TiptapEditor
+                  key={activeDocument.id}
                   content={activeDocument.content}
                   onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                   title={activeDocument.title}
