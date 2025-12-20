@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Standalone output for Vercel deployment
-  output: 'standalone',
-
   // Disable static page generation since we're only using API routes
   // and serving the Vite frontend separately
   distDir: '.next',
