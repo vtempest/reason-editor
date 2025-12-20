@@ -58,7 +58,7 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
             <div>
               <h3 className="text-lg font-semibold mb-1">Appearance</h3>
               <p className="text-sm text-muted-foreground">
-                Choose how Yana looks to you
+                Choose how REASON looks to you
               </p>
             </div>
 
@@ -106,7 +106,7 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">About</h3>
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>Yana - A powerful note-taking application</p>
+              <p>REASON - A powerful note-taking application</p>
               <p>Version 1.0.0</p>
             </div>
           </div>

@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Yana Note-Taking API
+  title: REASON Note-Taking API
   description: |
-    A comprehensive API for the Yana note-taking application. This API provides endpoints for managing documents, teams, organizations, and user settings.
+    A comprehensive API for the REASON note-taking application. This API provides endpoints for managing documents, teams, organizations, and user settings.
 
     ## Features
     - 📝 Document management with hierarchical structure
@@ -13,8 +13,8 @@ info:
 
   version: 1.0.0
   contact:
-    name: Yana API Support
-    email: support@yana.app
+    name: REASON API Support
+    email: support@REASON.app
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT

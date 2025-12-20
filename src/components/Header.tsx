@@ -26,7 +26,7 @@ export const Header = ({ onMenuClick, onSearchClick, onSettingsClick, onShareCli
 
         {/* Desktop breadcrumb */}
         <div className="hidden lg:flex items-center gap-1 text-sm text-muted-foreground min-w-0">
-          <span className="font-serif font-semibold text-foreground">Yana</span>
+          <span className="font-serif font-semibold text-foreground">REASON</span>
           {documentTitle && (
             <>
               <ChevronRight className="h-4 w-4 flex-shrink-0" />
@@ -36,7 +36,7 @@ export const Header = ({ onMenuClick, onSearchClick, onSettingsClick, onShareCli
         </div>
 
         {/* Mobile title */}
-        <h1 className="font-serif text-lg font-semibold lg:hidden truncate">Yana</h1>
+        <h1 className="font-serif text-lg font-semibold lg:hidden truncate">REASON</h1>
       </div>
 
       {/* Right section - Actions */}

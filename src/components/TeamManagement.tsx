@@ -56,7 +56,7 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export const TeamManagement = ({ open, onOpenChange }: TeamManagementProps) => {
-  const [organizations, setOrganizations] = useLocalStorage<Organization[]>('yana-organizations', [
+  const [organizations, setOrganizations] = useLocalStorage<Organization[]>('REASON-organizations', [
     {
       id: '1',
       name: 'My Organization',
@@ -110,17 +110,17 @@ export const TeamManagement = ({ open, onOpenChange }: TeamManagementProps) => {
       orgs.map((org) =>
         org.id === selectedOrgId
           ? {
-              ...org,
-              teams: org.teams.map((team) =>
-                team.id === selectedTeamId
-                  ? {
-                      ...team,
-                      members: [...team.members, newMember],
-                      updatedAt: new Date(),
-                    }
-                  : team
-              ),
-            }
+            ...org,
+            teams: org.teams.map((team) =>
+              team.id === selectedTeamId
+                ? {
+                  ...team,
+                  members: [...team.members, newMember],
+                  updatedAt: new Date(),
+                }
+                : team
+            ),
+          }
           : org
       )
     );
@@ -138,17 +138,17 @@ export const TeamManagement = ({ open, onOpenChange }: TeamManagementProps) => {
       orgs.map((org) =>
         org.id === selectedOrgId
           ? {
-              ...org,
-              teams: org.teams.map((team) =>
-                team.id === selectedTeamId
-                  ? {
-                      ...team,
-                      members: team.members.filter((m) => m.id !== memberId),
-                      updatedAt: new Date(),
-                    }
-                  : team
-              ),
-            }
+            ...org,
+            teams: org.teams.map((team) =>
+              team.id === selectedTeamId
+                ? {
+                  ...team,
+                  members: team.members.filter((m) => m.id !== memberId),
+                  updatedAt: new Date(),
+                }
+                : team
+            ),
+          }
           : org
       )
     );
@@ -164,19 +164,19 @@ export const TeamManagement = ({ open, onOpenChange }: TeamManagementProps) => {
       orgs.map((org) =>
         org.id === selectedOrgId
           ? {
-              ...org,
-              teams: org.teams.map((team) =>
-                team.id === selectedTeamId
-                  ? {
-                      ...team,
-                      members: team.members.map((m) =>
-                        m.id === memberId ? { ...m, role: newRole } : m
-                      ),
-                      updatedAt: new Date(),
-                    }
-                  : team
-              ),
-            }
+            ...org,
+            teams: org.teams.map((team) =>
+              team.id === selectedTeamId
+                ? {
+                  ...team,
+                  members: team.members.map((m) =>
+                    m.id === memberId ? { ...m, role: newRole } : m
+                  ),
+                  updatedAt: new Date(),
+                }
+                : team
+            ),
+          }
           : org
       )
     );
@@ -199,10 +199,10 @@ export const TeamManagement = ({ open, onOpenChange }: TeamManagementProps) => {
       orgs.map((org) =>
         org.id === selectedOrgId
           ? {
-              ...org,
-              teams: [...org.teams, newTeam],
-              updatedAt: new Date(),
-            }
+            ...org,
+            teams: [...org.teams, newTeam],
+            updatedAt: new Date(),
+          }
           : org
       )
     );

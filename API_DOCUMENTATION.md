@@ -1,6 +1,6 @@
-# Yana API Documentation
+# REASON API Documentation
 
-A comprehensive REST API for the Yana note-taking application with full OpenAPI 3.0 specification and interactive Scalar UI documentation.
+A comprehensive REST API for the REASON note-taking application with full OpenAPI 3.0 specification and interactive Scalar UI documentation.
 
 ## 🚀 Quick Start
 

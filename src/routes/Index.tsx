@@ -25,13 +25,13 @@ const Index = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [tagManagementDocId, setTagManagementDocId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('yana-view-mode', 'tree');
+  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('REASON-view-mode', 'tree');
 
-  const [documents, setDocuments] = useLocalStorage<Document[]>('yana-documents', [
+  const [documents, setDocuments] = useLocalStorage<Document[]>('REASON-documents', [
     {
       id: '1',
-      title: 'Welcome to Yana',
-      content: '<h1>Welcome to Yana</h1><p>A powerful note-taking app with nested documents.</p><h2>Features</h2><ul><li><p><strong>Rich text editing</strong> with WYSIWYG editor</p></li><li><p><strong>Nested documents</strong> for better organization</p></li><li><p><strong>Full-text search</strong> to find notes quickly</p></li><li><p><strong>Drag and drop</strong> to reorganize notes</p></li><li><p><strong>Right-click menus</strong> for quick actions</p></li><li><p><strong>Document outline</strong> view</p></li><li><p><strong>Local storage</strong> - your notes stay private</p></li><li><p><strong>Mobile-friendly</strong> with responsive drawer navigation</p></li></ul><h2>Getting Started</h2><p>On mobile, tap the menu icon to access your notes.</p><p>Click the "New Note" button to create your first note, or select this note to start editing.</p><p>You can also create child notes by right-clicking a note.</p><h3>Drag and Drop</h3><p>Drag notes to reorder them or move them under different parent notes.</p><h3>Outline View</h3><p>Click the outline icon to see all headings in the current document.</p><p>Press the search icon (or Ctrl+K) to quickly find any note.</p>',
+      title: 'Welcome to REASON',
+      content: '<h1>Welcome to REASON</h1><p>A powerful note-taking app with nested documents.</p><h2>Features</h2><ul><li><p><strong>Rich text editing</strong> with WYSIWYG editor</p></li><li><p><strong>Nested documents</strong> for better organization</p></li><li><p><strong>Full-text search</strong> to find notes quickly</p></li><li><p><strong>Drag and drop</strong> to reorganize notes</p></li><li><p><strong>Right-click menus</strong> for quick actions</p></li><li><p><strong>Document outline</strong> view</p></li><li><p><strong>Local storage</strong> - your notes stay private</p></li><li><p><strong>Mobile-friendly</strong> with responsive drawer navigation</p></li></ul><h2>Getting Started</h2><p>On mobile, tap the menu icon to access your notes.</p><p>Click the "New Note" button to create your first note, or select this note to start editing.</p><p>You can also create child notes by right-clicking a note.</p><h3>Drag and Drop</h3><p>Drag notes to reorder them or move them under different parent notes.</p><h3>Outline View</h3><p>Click the outline icon to see all headings in the current document.</p><p>Press the search icon (or Ctrl+K) to quickly find any note.</p>',
       parentId: null,
       children: [],
       isExpanded: true,
@@ -40,7 +40,7 @@ const Index = () => {
   ]);
 
   const [activeDocId, setActiveDocId] = useLocalStorage<string | null>(
-    'yana-active-doc',
+    'REASON-active-doc',
     documents.length > 0 ? documents[0].id : null
   );
 
@@ -73,7 +73,7 @@ const Index = () => {
 
   const filteredDocuments = useMemo(() => {
     if (!searchQuery.trim()) return documents;
-    
+
     const query = searchQuery.toLowerCase();
     return documents.filter(
       (doc) =>
@@ -125,9 +125,9 @@ const Index = () => {
 
     const idsToDelete = collectDescendants(id);
     const remaining = documents.filter((doc) => !idsToDelete.includes(doc.id));
-    
+
     setDocuments(remaining);
-    
+
     if (activeDocId && idsToDelete.includes(activeDocId)) {
       setActiveDocId(remaining.length > 0 ? remaining[0].id : null);
     }
@@ -189,7 +189,7 @@ const Index = () => {
     }
 
     let newParentId: string | null;
-    
+
     if (position === 'child') {
       newParentId = targetId;
     } else {
@@ -268,13 +268,13 @@ const Index = () => {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {isMobile && (
-      <Header
-        onMenuClick={() => setIsSidebarOpen(true)}
-        onSearchClick={() => setIsSearchModalOpen(true)}
-        onSettingsClick={() => setIsSettingsOpen(true)}
-        onShareClick={() => setIsInviteModalOpen(true)}
-        documentTitle={activeDocument?.title}
-      />
+        <Header
+          onMenuClick={() => setIsSidebarOpen(true)}
+          onSearchClick={() => setIsSearchModalOpen(true)}
+          onSettingsClick={() => setIsSettingsOpen(true)}
+          onShareClick={() => setIsInviteModalOpen(true)}
+          documentTitle={activeDocument?.title}
+        />
       )}
 
       <div className="flex flex-1 overflow-hidden">
