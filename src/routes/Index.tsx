@@ -439,6 +439,7 @@ const Index = () => {
                       onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                       title={activeDocument.title}
                       onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                      scrollToHeading={() => {}}
                     />
                   </div>
                 </>
@@ -516,6 +517,7 @@ const Index = () => {
                         onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                         title={activeDocument.title}
                         onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                        scrollToHeading={() => {}}
                       />
                     </div>
                   </>

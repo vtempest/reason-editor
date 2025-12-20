@@ -52,14 +52,16 @@ interface TiptapEditorProps {
   onChange: (content: string) => void;
   title: string;
   onTitleChange: (title: string) => void;
+  scrollToHeading?: (headingText: string) => void;
 }
 
-export const TiptapEditor = ({ content, onChange, title, onTitleChange }: TiptapEditorProps) => {
+export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollToHeading }: TiptapEditorProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<{
     originalText: string;
     suggestedText: string;
     range: { from: number; to: number };
+    mode?: string;
   } | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('formatted');
@@ -131,6 +133,58 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Scroll to heading functionality
+  useEffect(() => {
+    if (scrollToHeading && editor) {
+      // Store the function to be called from parent
+      (window as any).__scrollToHeading = (headingText: string) => {
+        // Find all headings in the editor
+        const editorElement = editor.view.dom;
+        const headings = editorElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+        // Find the matching heading
+        const targetHeading = Array.from(headings).find(
+          h => h.textContent?.trim() === headingText.trim()
+        ) as HTMLElement;
+
+        if (targetHeading) {
+          // Scroll the heading into view
+          targetHeading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Add blinking border animation
+          targetHeading.style.border = '2px solid #9ca3af';
+          targetHeading.style.borderRadius = '4px';
+          targetHeading.style.padding = '4px';
+          targetHeading.style.transition = 'border-color 0.3s ease-in-out';
+
+          // Animate the border (blink effect)
+          let blinkCount = 0;
+          const blinkInterval = setInterval(() => {
+            targetHeading.style.borderColor = blinkCount % 2 === 0 ? 'transparent' : '#9ca3af';
+            blinkCount++;
+
+            // Stop after 1 second (approximately 3 blinks at 300ms interval)
+            if (blinkCount >= 6) {
+              clearInterval(blinkInterval);
+              // Remove the border after animation
+              setTimeout(() => {
+                targetHeading.style.border = '';
+                targetHeading.style.borderRadius = '';
+                targetHeading.style.padding = '';
+              }, 300);
+            }
+          }, 150);
+        }
+      };
+    }
+
+    return () => {
+      if ((window as any).__scrollToHeading) {
+        delete (window as any).__scrollToHeading;
+      }
+    };
+  }, [editor, scrollToHeading]);
+
   if (!editor) {
     return null;
   }
@@ -146,7 +200,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     editor.chain().focus().toggleHeading({ level }).run();
   };
 
-  const handleAIRewrite = async () => {
+  const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
     if (!editor) return;
 
     const { from, to } = editor.state.selection;
@@ -181,11 +235,13 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     setAiSuggestion(null);
 
     try {
-      const suggestion = await rewriteText(textToRewrite);
+      const fullPrompt = customPrompt ? `${customPrompt}\n\n"${textToRewrite}"` : undefined;
+      const suggestion = await rewriteText(textToRewrite, fullPrompt);
       setAiSuggestion({
         originalText: textToRewrite,
         suggestedText: suggestion,
         range: selectionRange,
+        mode: modeId,
       });
     } catch (error) {
       console.error('AI rewrite error:', error);
@@ -193,6 +249,11 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     } finally {
       setIsAiLoading(false);
     }
+  };
+
+  const handleRegenerateWithMode = async (mode: any) => {
+    if (!aiSuggestion) return;
+    await handleAIRewrite(mode.prompt, mode.id);
   };
 
   const handleApproveSuggestion = () => {
@@ -745,6 +806,8 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
               suggestedText={aiSuggestion?.suggestedText || ''}
               onApprove={handleApproveSuggestion}
               onReject={handleRejectSuggestion}
+              onRegenerate={handleRegenerateWithMode}
+              currentMode={aiSuggestion?.mode}
               isLoading={isAiLoading}
             />
           </div>

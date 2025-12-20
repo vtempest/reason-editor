@@ -172,7 +172,15 @@ export const Sidebar = ({
             onRename={onRename}
           />
         ) : viewMode === 'outline' ? (
-          <OutlineView content={activeDocument?.content || ''} />
+          <OutlineView
+            content={activeDocument?.content || ''}
+            onNavigate={(headingText) => {
+              // Call the global scroll function set by TiptapEditor
+              if ((window as any).__scrollToHeading) {
+                (window as any).__scrollToHeading(headingText);
+              }
+            }}
+          />
         ) : (
           <PanelGroup direction="vertical" className="h-full">
             <Panel defaultSize={50} minSize={20}>
@@ -207,7 +215,15 @@ export const Sidebar = ({
             <Panel defaultSize={50} minSize={20}>
               <div className="h-full overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-auto">
-                  <OutlineView content={activeDocument?.content || ''} />
+                  <OutlineView
+                    content={activeDocument?.content || ''}
+                    onNavigate={(headingText) => {
+                      // Call the global scroll function set by TiptapEditor
+                      if ((window as any).__scrollToHeading) {
+                        (window as any).__scrollToHeading(headingText);
+                      }
+                    }}
+                  />
                 </div>
               </div>
             </Panel>

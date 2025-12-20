@@ -1,5 +1,6 @@
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Monitor, Settings as SettingsIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Moon, Sun, Monitor, Settings as SettingsIcon, Plus, Trash2, RotateCcw, Edit2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,12 @@ import {
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { getRewriteModes, saveRewriteModes, resetRewriteModes, RewriteMode } from '@/lib/ai/rewriteModes';
+import { toast } from 'sonner';
 
 interface SettingsProps {
   open: boolean;
@@ -18,6 +25,15 @@ interface SettingsProps {
 
 export const Settings = ({ open, onOpenChange }: SettingsProps) => {
   const { theme, setTheme } = useTheme();
+  const [rewriteModes, setRewriteModes] = useState<RewriteMode[]>([]);
+  const [editingMode, setEditingMode] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<RewriteMode>>({});
+
+  useEffect(() => {
+    if (open) {
+      setRewriteModes(getRewriteModes());
+    }
+  }, [open]);
 
   const themes = [
     {
@@ -39,6 +55,55 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
       description: 'Sync with your system preferences',
     },
   ];
+
+  const handleSaveMode = (mode: RewriteMode) => {
+    const updatedModes = rewriteModes.map((m) =>
+      m.id === mode.id ? mode : m
+    );
+    setRewriteModes(updatedModes);
+    saveRewriteModes(updatedModes);
+    setEditingMode(null);
+    setEditForm({});
+    toast.success('Mode updated');
+  };
+
+  const handleAddMode = () => {
+    const newMode: RewriteMode = {
+      id: `custom-${Date.now()}`,
+      name: editForm.name || 'New Mode',
+      prompt: editForm.prompt || 'Rewrite this text:',
+      color: editForm.color || 'blue',
+    };
+    const updatedModes = [...rewriteModes, newMode];
+    setRewriteModes(updatedModes);
+    saveRewriteModes(updatedModes);
+    setEditingMode(null);
+    setEditForm({});
+    toast.success('Mode added');
+  };
+
+  const handleDeleteMode = (id: string) => {
+    const updatedModes = rewriteModes.filter((m) => m.id !== id);
+    setRewriteModes(updatedModes);
+    saveRewriteModes(updatedModes);
+    toast.success('Mode deleted');
+  };
+
+  const handleResetModes = () => {
+    resetRewriteModes();
+    setRewriteModes(getRewriteModes());
+    toast.success('Modes reset to defaults');
+  };
+
+  const startEditing = (mode: RewriteMode) => {
+    setEditingMode(mode.id);
+    setEditForm(mode);
+  };
+
+  const cancelEditing = () => {
+    setEditingMode(null);
+    setEditForm({});
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,6 +164,198 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
                 ))}
               </RadioGroup>
             </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-1">AI Rewrite Modes</h3>
+                <p className="text-sm text-muted-foreground">
+                  Customize AI rewrite prompts and add your own modes
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetModes}
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset
+              </Button>
+            </div>
+
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              {rewriteModes.map((mode) => (
+                <div
+                  key={mode.id}
+                  className="border rounded-lg p-3 space-y-2"
+                >
+                  {editingMode === mode.id ? (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor={`name-${mode.id}`}>Mode Name</Label>
+                        <Input
+                          id={`name-${mode.id}`}
+                          value={editForm.name || ''}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, name: e.target.value })
+                          }
+                          placeholder="Mode name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`prompt-${mode.id}`}>Prompt</Label>
+                        <Textarea
+                          id={`prompt-${mode.id}`}
+                          value={editForm.prompt || ''}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, prompt: e.target.value })
+                          }
+                          placeholder="Rewrite prompt..."
+                          rows={4}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`color-${mode.id}`}>Color</Label>
+                        <select
+                          id={`color-${mode.id}`}
+                          value={editForm.color || 'blue'}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, color: e.target.value })
+                          }
+                          className="w-full border rounded-md px-3 py-2 text-sm"
+                        >
+                          <option value="blue">Blue</option>
+                          <option value="purple">Purple</option>
+                          <option value="green">Green</option>
+                          <option value="orange">Orange</option>
+                          <option value="pink">Pink</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleSaveMode(editForm as RewriteMode)}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={cancelEditing}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-sm">
+                          {mode.name}
+                        </Badge>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => startEditing(mode)}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-destructive"
+                            onClick={() => handleDeleteMode(mode.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {mode.prompt}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {editingMode === 'new' && (
+                <div className="border rounded-lg p-3 space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-name">Mode Name</Label>
+                    <Input
+                      id="new-name"
+                      value={editForm.name || ''}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, name: e.target.value })
+                      }
+                      placeholder="Mode name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-prompt">Prompt</Label>
+                    <Textarea
+                      id="new-prompt"
+                      value={editForm.prompt || ''}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, prompt: e.target.value })
+                      }
+                      placeholder="Rewrite prompt..."
+                      rows={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-color">Color</Label>
+                    <select
+                      id="new-color"
+                      value={editForm.color || 'blue'}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, color: e.target.value })
+                      }
+                      className="w-full border rounded-md px-3 py-2 text-sm"
+                    >
+                      <option value="blue">Blue</option>
+                      <option value="purple">Purple</option>
+                      <option value="green">Green</option>
+                      <option value="orange">Orange</option>
+                      <option value="pink">Pink</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleAddMode}>
+                      Add Mode
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={cancelEditing}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {editingMode !== 'new' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setEditingMode('new');
+                  setEditForm({ name: '', prompt: '', color: 'blue' });
+                }}
+                className="w-full gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add New Mode
+              </Button>
+            )}
           </div>
 
           <Separator />
