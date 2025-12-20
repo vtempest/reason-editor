@@ -32,6 +32,12 @@ tags:
     description: Team and collaboration management
   - name: Organizations
     description: Organization management
+  - name: AI
+    description: AI-powered features and text rewriting
+  - name: Google Docs
+    description: Google Docs integration and synchronization
+  - name: Quotes
+    description: Quote and citation management
   - name: Health
     description: System health and status
 
@@ -553,6 +559,393 @@ paths:
                     items:
                       $ref: '#/components/schemas/Organization'
 
+  /api/ai/rewrite:
+    post:
+      tags:
+        - AI
+      summary: Rewrite text using AI
+      description: Use AI to rewrite and improve text for clarity, grammar, and style
+      operationId: rewriteText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: The text to rewrite
+                  example: "This is text that needs rewriting."
+              required:
+                - text
+      responses:
+        '200':
+          description: Successful rewrite
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rewrittenText:
+                    type: string
+                    description: The AI-rewritten text
+                    example: "This is text that has been rewritten."
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: AI service error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/google-docs/auth:
+    get:
+      tags:
+        - Google Docs
+      summary: Initiate Google OAuth flow
+      description: Redirect to Google OAuth consent screen for authorization
+      operationId: googleDocsAuth
+      responses:
+        '302':
+          description: Redirect to Google OAuth
+
+  /api/google-docs/callback:
+    get:
+      tags:
+        - Google Docs
+      summary: Google OAuth callback
+      description: Handle OAuth callback from Google
+      operationId: googleDocsCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: OAuth authorization code
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                      refreshToken:
+                        type: string
+
+  /api/google-docs/export:
+    post:
+      tags:
+        - Google Docs
+      summary: Export document to Google Docs
+      description: Export a REASON document to Google Docs
+      operationId: exportToGoogleDocs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                documentId:
+                  type: string
+                  description: ID of the document to export
+                accessToken:
+                  type: string
+                  description: Google OAuth access token
+                refreshToken:
+                  type: string
+                  description: Google OAuth refresh token
+              required:
+                - documentId
+                - accessToken
+      responses:
+        '200':
+          description: Successfully exported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      documentId:
+                        type: string
+                      webViewLink:
+                        type: string
+                      webContentLink:
+                        type: string
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/google-docs/import:
+    post:
+      tags:
+        - Google Docs
+      summary: Import document from Google Docs
+      description: Import a Google Docs document into REASON
+      operationId: importFromGoogleDocs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                googleDocId:
+                  type: string
+                  description: Google Docs document ID
+                accessToken:
+                  type: string
+                  description: Google OAuth access token
+                refreshToken:
+                  type: string
+                  description: Google OAuth refresh token
+              required:
+                - googleDocId
+                - accessToken
+      responses:
+        '200':
+          description: Successfully imported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Document'
+
+  /api/google-docs/share:
+    post:
+      tags:
+        - Google Docs
+      summary: Share Google Doc
+      description: Share a Google Docs document with other users
+      operationId: shareGoogleDoc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                googleDocId:
+                  type: string
+                  description: Google Docs document ID
+                email:
+                  type: string
+                  format: email
+                  description: Email of user to share with
+                role:
+                  type: string
+                  enum: [reader, commenter, writer]
+                  description: Permission level
+                accessToken:
+                  type: string
+                  description: Google OAuth access token
+              required:
+                - googleDocId
+                - email
+                - role
+                - accessToken
+      responses:
+        '200':
+          description: Successfully shared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/quotes:
+    get:
+      tags:
+        - Quotes
+      summary: Get quotes for a document
+      description: Retrieve all quotes associated with a document
+      operationId: getQuotes
+      parameters:
+        - name: documentId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Document ID to get quotes for
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Quote'
+        '400':
+          description: Missing documentId parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Quotes
+      summary: Create a new quote
+      description: Add a new quote or citation to a document
+      operationId: createQuote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                documentId:
+                  type: string
+                  description: Document ID to add quote to
+                text:
+                  type: string
+                  description: Quote text
+                source:
+                  type: string
+                  description: Source of the quote
+                author:
+                  type: string
+                  description: Author of the quote
+                url:
+                  type: string
+                  description: URL reference
+                pageNumber:
+                  type: integer
+                  description: Page number reference
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Tags for categorization
+              required:
+                - documentId
+                - text
+      responses:
+        '201':
+          description: Quote created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Quote'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/quotes/{id}:
+    put:
+      tags:
+        - Quotes
+      summary: Update a quote
+      description: Update an existing quote
+      operationId: updateQuote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Quote ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                source:
+                  type: string
+                author:
+                  type: string
+                url:
+                  type: string
+                pageNumber:
+                  type: integer
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Quote updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+    delete:
+      tags:
+        - Quotes
+      summary: Delete a quote
+      description: Remove a quote from the system
+      operationId: deleteQuote
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Quote ID
+      responses:
+        '200':
+          description: Quote deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
 components:
   schemas:
     Document:
@@ -768,6 +1161,58 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Document'
+
+    Quote:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the quote
+          example: "quote-123"
+        documentId:
+          type: string
+          description: ID of the document this quote belongs to
+          example: "doc-456"
+        text:
+          type: string
+          description: The quote text
+          example: "To be or not to be"
+        source:
+          type: string
+          nullable: true
+          description: Source of the quote
+          example: "Hamlet"
+        author:
+          type: string
+          nullable: true
+          description: Author of the quote
+          example: "William Shakespeare"
+        url:
+          type: string
+          nullable: true
+          description: URL reference for the quote
+          example: "https://example.com/hamlet"
+        pageNumber:
+          type: integer
+          nullable: true
+          description: Page number reference
+          example: 42
+        tags:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Tags for categorizing the quote
+          example: ["literature", "shakespeare"]
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2025-12-01T12:00:00.000Z"
+      required:
+        - id
+        - documentId
+        - text
 
     ErrorResponse:
       type: object

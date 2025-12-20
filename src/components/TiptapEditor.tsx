@@ -665,7 +665,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
 
         {/* AI Suggestion Overlay */}
         {(aiSuggestion || isAiLoading) && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
             <AIRewriteSuggestion
               originalText={aiSuggestion?.originalText || ''}
               suggestedText={aiSuggestion?.suggestedText || ''}
