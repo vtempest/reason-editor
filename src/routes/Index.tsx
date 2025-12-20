@@ -9,6 +9,7 @@ import { TeamManagement } from '@/components/TeamManagement';
 import { InviteModal } from '@/components/InviteModal';
 import { TagBar } from '@/components/TagBar';
 import { TagManagementDialog } from '@/components/TagManagementDialog';
+import { DocumentTabs } from '@/components/DocumentTabs';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
@@ -25,7 +26,7 @@ const Index = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [tagManagementDocId, setTagManagementDocId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('REASON-view-mode', 'tree');
+  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline' | 'split'>('REASON-view-mode', 'tree');
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('REASON-documents', [
     {
@@ -42,6 +43,11 @@ const Index = () => {
   const [activeDocId, setActiveDocId] = useLocalStorage<string | null>(
     'REASON-active-doc',
     documents.length > 0 ? documents[0].id : null
+  );
+
+  const [openTabs, setOpenTabs] = useLocalStorage<string[]>(
+    'REASON-open-tabs',
+    documents.length > 0 ? [documents[0].id] : []
   );
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,6 +106,7 @@ const Index = () => {
 
     setDocuments([...documents, newDoc]);
     setActiveDocId(newDoc.id);
+    setOpenTabs([...openTabs, newDoc.id]);
 
     // Expand parent if exists
     if (parentId) {
@@ -128,8 +135,12 @@ const Index = () => {
 
     setDocuments(remaining);
 
+    // Remove deleted documents from open tabs
+    const newOpenTabs = openTabs.filter((tabId) => !idsToDelete.includes(tabId));
+    setOpenTabs(newOpenTabs);
+
     if (activeDocId && idsToDelete.includes(activeDocId)) {
-      setActiveDocId(remaining.length > 0 ? remaining[0].id : null);
+      setActiveDocId(newOpenTabs.length > 0 ? newOpenTabs[0] : remaining.length > 0 ? remaining[0].id : null);
     }
 
     toast.success('Note deleted');
@@ -148,6 +159,7 @@ const Index = () => {
 
     setDocuments([...documents, newDoc]);
     setActiveDocId(newDoc.id);
+    setOpenTabs([...openTabs, newDoc.id]);
     toast.success('Note duplicated');
   };
 
@@ -258,6 +270,34 @@ const Index = () => {
     }
   };
 
+  const handleTabChange = (tabId: string) => {
+    setActiveDocId(tabId);
+  };
+
+  const handleTabClose = (tabId: string) => {
+    const newOpenTabs = openTabs.filter((id) => id !== tabId);
+    setOpenTabs(newOpenTabs);
+
+    // If closing active tab, switch to another tab
+    if (activeDocId === tabId) {
+      const closedIndex = openTabs.indexOf(tabId);
+      const newActiveIndex = Math.max(0, closedIndex - 1);
+      setActiveDocId(newOpenTabs[newActiveIndex] || null);
+    }
+  };
+
+  const handleTabAdd = () => {
+    handleAddDocument(null);
+  };
+
+  const handleSelectDocument = (id: string) => {
+    // Open document in tab if not already open
+    if (!openTabs.includes(id)) {
+      setOpenTabs([...openTabs, id]);
+    }
+    setActiveDocId(id);
+  };
+
   useEffect(() => {
     // Ensure active document exists
     if (activeDocId && !documents.find((d) => d.id === activeDocId)) {
@@ -282,7 +322,7 @@ const Index = () => {
           documents={filteredTree}
           activeId={activeDocId}
           activeDocument={activeDocument}
-          onSelect={setActiveDocId}
+          onSelect={handleSelectDocument}
           onAdd={handleAddDocument}
           onDelete={handleDeleteDocument}
           onDuplicate={handleDuplicateDocument}
@@ -303,6 +343,17 @@ const Index = () => {
         />
 
         <main className="flex-1 overflow-hidden flex flex-col">
+          {!isMobile && (
+            <DocumentTabs
+              openTabs={openTabs}
+              activeTab={activeDocId}
+              documents={documents}
+              onTabChange={handleTabChange}
+              onTabClose={handleTabClose}
+              onTabAdd={handleTabAdd}
+            />
+          )}
+
           {activeDocument ? (
             <>
               {activeDocument.tags && activeDocument.tags.length > 0 && (
@@ -341,7 +392,7 @@ const Index = () => {
         open={isSearchModalOpen}
         onOpenChange={setIsSearchModalOpen}
         documents={documents}
-        onSelectDocument={setActiveDocId}
+        onSelectDocument={handleSelectDocument}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenTeams={() => setIsTeamsOpen(true)}
         onToggleTheme={handleToggleTheme}

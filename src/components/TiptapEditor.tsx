@@ -10,9 +10,11 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
-import { useEffect } from 'react';
+import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { SearchReplaceBar } from '@/components/SearchReplaceBar';
 import {
   Bold,
   Italic,
@@ -45,6 +47,8 @@ interface TiptapEditorProps {
 }
 
 export const TiptapEditor = ({ content, onChange, title, onTitleChange }: TiptapEditorProps) => {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -74,6 +78,11 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
       }),
       FloatingMenuExtension,
       BubbleMenuExtension,
+      SearchAndReplace.configure({
+        searchResultClass: 'search-result',
+        caseSensitive: false,
+        disableRegex: true,
+      }),
     ],
     content,
     editorProps: {
@@ -93,6 +102,19 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     }
   }, [content, editor]);
 
+  // Keyboard shortcut for search (Ctrl+F / Cmd+F)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   if (!editor) {
     return null;
   }
@@ -110,16 +132,12 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
 
   return (
     <div className="flex h-full flex-col bg-editor-bg">
-      {/* Title Input */}
-      <div className="border-b border-border bg-card px-6 py-4">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="Untitled Note"
-          className="w-full border-none bg-transparent text-3xl font-serif font-semibold text-foreground outline-none placeholder:text-muted-foreground"
-        />
-      </div>
+      {/* Search and Replace Bar */}
+      <SearchReplaceBar
+        editor={editor}
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card px-4 py-2">
@@ -626,6 +644,17 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
 
         .ProseMirror h3 {
           font-size: 1.25rem;
+        }
+
+        /* Search and Replace highlighting */
+        .search-result {
+          background-color: rgba(255, 237, 74, 0.4);
+          border-radius: 2px;
+        }
+
+        .search-result-current {
+          background-color: rgba(255, 152, 0, 0.6);
+          border-radius: 2px;
         }
       `}</style>
     </div>

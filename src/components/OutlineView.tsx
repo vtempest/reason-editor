@@ -22,7 +22,7 @@ export const OutlineView = ({ content, onNavigate }: OutlineViewProps) => {
     const lines = content.split('\n');
 
     lines.forEach((line, index) => {
-      const match = line.match(/^(#{1,6})\s+(.+)$/);
+      const match = line.match(/^(#{1,3})\s+(.+)$/);
       if (match) {
         items.push({
           id: `heading-${index}`,
