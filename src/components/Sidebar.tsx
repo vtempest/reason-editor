@@ -14,12 +14,13 @@ interface SidebarProps {
   activeId: string | null;
   activeDocument: Document | undefined;
   onSelect: (id: string) => void;
-  onAdd: (parentId: string | null) => void;
+  onAdd: (parentId: string | null, isFolder?: boolean) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;
   onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
   onManageTags?: (id: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onSearchClear: () => void;
@@ -47,6 +48,7 @@ export const Sidebar = ({
   onToggleExpand,
   onMove,
   onManageTags,
+  onRename,
   searchQuery,
   onSearchChange,
   onSearchClear,
@@ -151,6 +153,7 @@ export const Sidebar = ({
                 onOpenChange(false);
               }
             }}
+            onRename={onRename}
           />
         ) : viewMode === 'outline' ? (
           <OutlineView content={activeDocument?.content || ''} />
@@ -158,9 +161,6 @@ export const Sidebar = ({
           <PanelGroup direction="vertical" className="h-full">
             <Panel defaultSize={50} minSize={20}>
               <div className="h-full overflow-hidden flex flex-col">
-                <div className="px-3 py-2 border-b border-sidebar-border">
-                  <h3 className="text-xs font-semibold text-sidebar-foreground/70">FILES</h3>
-                </div>
                 <div className="flex-1 overflow-auto">
                   <ComplexDocumentTree
                     documents={documents}
@@ -182,6 +182,7 @@ export const Sidebar = ({
                         onOpenChange(false);
                       }
                     }}
+                    onRename={onRename}
                   />
                 </div>
               </div>
@@ -189,9 +190,6 @@ export const Sidebar = ({
             <PanelResizeHandle className="h-1 bg-sidebar-border hover:bg-sidebar-primary/50 transition-colors" />
             <Panel defaultSize={50} minSize={20}>
               <div className="h-full overflow-hidden flex flex-col">
-                <div className="px-3 py-2 border-b border-sidebar-border">
-                  <h3 className="text-xs font-semibold text-sidebar-foreground/70">OUTLINE</h3>
-                </div>
                 <div className="flex-1 overflow-auto">
                   <OutlineView content={activeDocument?.content || ''} />
                 </div>
