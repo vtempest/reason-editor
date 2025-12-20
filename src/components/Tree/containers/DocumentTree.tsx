@@ -159,19 +159,15 @@ function Node({ node, style, dragHandle, onDelete, onRename, onDuplicate, onNewF
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        {isFolder && (
-          <>
-            <ContextMenuItem onClick={handleNewFile}>
-              <FilePlus className="mr-2 h-4 w-4" />
-              New File
-            </ContextMenuItem>
-            <ContextMenuItem onClick={handleNewFolder}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              New Folder
-            </ContextMenuItem>
-            <ContextMenuSeparator />
-          </>
-        )}
+        <ContextMenuItem onClick={handleNewFile}>
+          <FilePlus className="mr-2 h-4 w-4" />
+          New File
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleNewFolder}>
+          <FolderPlus className="mr-2 h-4 w-4" />
+          New Folder
+        </ContextMenuItem>
+        <ContextMenuSeparator />
         <ContextMenuItem onClick={handleRename}>
           <Edit className="mr-2 h-4 w-4" />
           Rename
