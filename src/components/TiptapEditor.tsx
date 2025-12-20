@@ -61,6 +61,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
     originalText: string;
     suggestedText: string;
     range: { from: number; to: number };
+    mode?: string;
   } | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('formatted');
@@ -199,7 +200,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
     editor.chain().focus().toggleHeading({ level }).run();
   };
 
-  const handleAIRewrite = async () => {
+  const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
     if (!editor) return;
 
     const { from, to } = editor.state.selection;
@@ -234,11 +235,13 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
     setAiSuggestion(null);
 
     try {
-      const suggestion = await rewriteText(textToRewrite);
+      const fullPrompt = customPrompt ? `${customPrompt}\n\n"${textToRewrite}"` : undefined;
+      const suggestion = await rewriteText(textToRewrite, fullPrompt);
       setAiSuggestion({
         originalText: textToRewrite,
         suggestedText: suggestion,
         range: selectionRange,
+        mode: modeId,
       });
     } catch (error) {
       console.error('AI rewrite error:', error);
@@ -246,6 +249,11 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
     } finally {
       setIsAiLoading(false);
     }
+  };
+
+  const handleRegenerateWithMode = async (mode: any) => {
+    if (!aiSuggestion) return;
+    await handleAIRewrite(mode.prompt, mode.id);
   };
 
   const handleApproveSuggestion = () => {
@@ -798,6 +806,8 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
               suggestedText={aiSuggestion?.suggestedText || ''}
               onApprove={handleApproveSuggestion}
               onReject={handleRejectSuggestion}
+              onRegenerate={handleRegenerateWithMode}
+              currentMode={aiSuggestion?.mode}
               isLoading={isAiLoading}
             />
           </div>
