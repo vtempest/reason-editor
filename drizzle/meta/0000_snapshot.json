@@ -1,0 +1,320 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "d7c54c00-66cc-4bc6-9362-9e9d3c83303e",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "documents": {
+      "name": "documents",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "parentId": {
+          "name": "parentId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "isExpanded": {
+          "name": "isExpanded",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sharing": {
+          "name": "sharing",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_documents_parentId": {
+          "name": "idx_documents_parentId",
+          "columns": [
+            "parentId"
+          ],
+          "isUnique": false
+        },
+        "idx_documents_userId": {
+          "name": "idx_documents_userId",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        },
+        "idx_documents_createdAt": {
+          "name": "idx_documents_createdAt",
+          "columns": [
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "documents_parentId_documents_id_fk": {
+          "name": "documents_parentId_documents_id_fk",
+          "tableFrom": "documents",
+          "tableTo": "documents",
+          "columnsFrom": [
+            "parentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "google_docs_sync": {
+      "name": "google_docs_sync",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "documentId": {
+          "name": "documentId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "googleDocId": {
+          "name": "googleDocId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lastSyncedAt": {
+          "name": "lastSyncedAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "userId": {
+          "name": "userId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_google_docs_sync_documentId": {
+          "name": "idx_google_docs_sync_documentId",
+          "columns": [
+            "documentId"
+          ],
+          "isUnique": false
+        },
+        "idx_google_docs_sync_googleDocId": {
+          "name": "idx_google_docs_sync_googleDocId",
+          "columns": [
+            "googleDocId"
+          ],
+          "isUnique": false
+        },
+        "google_docs_sync_documentId_googleDocId_unique": {
+          "name": "google_docs_sync_documentId_googleDocId_unique",
+          "columns": [
+            "documentId",
+            "googleDocId"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "google_docs_sync_documentId_documents_id_fk": {
+          "name": "google_docs_sync_documentId_documents_id_fk",
+          "tableFrom": "google_docs_sync",
+          "tableTo": "documents",
+          "columnsFrom": [
+            "documentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "research_quotes": {
+      "name": "research_quotes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "documentId": {
+          "name": "documentId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "author": {
+          "name": "author",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "pageNumber": {
+          "name": "pageNumber",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tags": {
+          "name": "tags",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_research_quotes_documentId": {
+          "name": "idx_research_quotes_documentId",
+          "columns": [
+            "documentId"
+          ],
+          "isUnique": false
+        },
+        "idx_research_quotes_tags": {
+          "name": "idx_research_quotes_tags",
+          "columns": [
+            "tags"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "research_quotes_documentId_documents_id_fk": {
+          "name": "research_quotes_documentId_documents_id_fk",
+          "tableFrom": "research_quotes",
+          "tableTo": "documents",
+          "columnsFrom": [
+            "documentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
