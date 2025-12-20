@@ -1,5 +1,5 @@
 import { Document } from '@/components/DocumentTree';
-import { DocumentTreeWrapper } from '@/components/Tree/containers/DocumentTree';
+import { DocumentTreeWrapper } from '@/components/Tree/containers/DocumentTreeWrapper';
 import { OutlineView } from '@/components/OutlineView';
 import { FloatingSearch } from '@/components/FloatingSearch';
 import { ThemeDropdown } from '@/components/theme-dropdown';

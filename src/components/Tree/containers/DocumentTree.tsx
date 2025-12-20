@@ -1,141 +1,191 @@
-import React, { useRef, useMemo, useCallback } from "react";
-import { Tree, TreeApi } from "../index";
-import { DocumentNode } from "./DocumentNode";
-import { Document } from "@/components/DocumentTree";
+"use client"
 
-interface DocumentTreeWrapperProps {
-  documents: Document[];
-  activeId: string | null;
-  onSelect: (id: string) => void;
-  onAdd: (parentId: string | null, isFolder?: boolean) => void;
-  onDelete: (id: string) => void;
-  onDuplicate: (id: string) => void;
-  onToggleExpand: (id: string) => void;
-  onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
-  onManageTags?: (id: string) => void;
-  onRename?: (id: string, newTitle: string) => void;
-  width?: number;
-  height?: number;
+import { Tree, type NodeRendererProps } from "react-arborist"
+import type { Document } from "@/components/DocumentTree"
+import type { DocumentNode } from "@/lib/document-utils"
+import { ChevronRight, File, Folder, FolderOpen, Copy, Trash2, Edit, FilePlus, FolderPlus } from "lucide-react"
+import { cn } from "@/lib/utils"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+
+interface DocumentTreeProps {
+  data: DocumentNode[]
+  onSelect: (document: Document) => void
+  onMove?: (nodeId: string, parentId: string | null, index: number) => void
+  onDelete?: (nodeId: string) => void
+  onRename?: (nodeId: string, newName: string) => void
+  onDuplicate?: (nodeId: string) => void
+  onNewFile?: (parentId: string | null) => void
+  onNewFolder?: (parentId: string | null) => void
+  searchTerm?: string
+  height: number
 }
 
-// Build a hierarchical tree structure from flat document array
-const buildTreeData = (documents: Document[]): Document => {
-  const rootChildren = documents.filter(doc => !doc.parentId);
-
-  const buildNode = (doc: Document): Document => {
-    const children = documents.filter(d => d.parentId === doc.id);
-    return {
-      ...doc,
-      children: children.length > 0 ? children.map(buildNode) : undefined
-    };
-  };
-
-  // Create a virtual root node
-  const root: Document = {
-    id: 'ROOT',
-    title: 'ROOT',
-    content: '',
-    parentId: null,
-    isExpanded: true,
-    children: rootChildren.map(buildNode)
-  };
-
-  return root;
-};
-
-export const DocumentTreeWrapper = ({
-  documents,
-  activeId,
+export function DocumentTree({
+  data,
   onSelect,
-  onAdd,
-  onDelete,
-  onDuplicate,
-  onToggleExpand,
   onMove,
-  onManageTags,
+  onDelete,
   onRename,
-  width = 300,
-  height = 500
-}: DocumentTreeWrapperProps) => {
-  const treeRef = useRef<TreeApi<Document>>(null);
-
-  // Build hierarchical tree data from flat documents array
-  const treeData = useMemo(() => buildTreeData(documents), [documents]);
-
-  // Handler for moving nodes
-  const handleMove = useCallback((
-    dragIds: string[],
-    parentId: string | null,
-    index: number
-  ) => {
-    if (dragIds.length === 0) return;
-
-    const draggedId = dragIds[0];
-
-    // For now, we'll just use 'child' position since the new tree doesn't provide
-    // the same granular position control. You could enhance this based on index.
-    const actualParentId = parentId === 'ROOT' ? null : parentId;
-    onMove(draggedId, actualParentId, 'child');
-  }, [onMove]);
-
-  // Handler for toggling expand/collapse
-  const handleToggle = useCallback((id: string, isOpen: boolean) => {
-    if (id !== 'ROOT') {
-      onToggleExpand(id);
+  onDuplicate,
+  onNewFile,
+  onNewFolder,
+  searchTerm,
+  height,
+}: DocumentTreeProps) {
+  const handleMove = (args: { dragIds: string[]; parentId: string | null; index: number }) => {
+    console.log("[v0] Tree move:", args)
+    if (onMove && args.dragIds.length > 0) {
+      onMove(args.dragIds[0], args.parentId, args.index)
     }
-  }, [onToggleExpand]);
-
-  // Handler for renaming
-  const handleEdit = useCallback((id: string, name: string) => {
-    if (id !== 'ROOT' && onRename) {
-      onRename(id, name);
-    }
-  }, [onRename]);
-
-  // Handler for clicking a node
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    // Click handling is done in the DocumentNode component
-  }, []);
-
-  // Pass additional handlers through the tree ref
-  // We need to attach these to make them available in DocumentNode
-  React.useEffect(() => {
-    if (treeRef.current) {
-      (treeRef.current as any).onAddChild = (parentId: string, isFolder: boolean) => {
-        onAdd(parentId, isFolder);
-      };
-      (treeRef.current as any).onAddSibling = (siblingId: string, isFolder: boolean) => {
-        const doc = documents.find(d => d.id === siblingId);
-        onAdd(doc?.parentId || null, isFolder);
-      };
-      (treeRef.current as any).onDuplicate = onDuplicate;
-      (treeRef.current as any).onDelete = onDelete;
-      (treeRef.current as any).onManageTags = onManageTags;
-      (treeRef.current as any).onDocumentSelect = onSelect;
-    }
-  }, [documents, onAdd, onDuplicate, onDelete, onManageTags, onSelect]);
+  }
 
   return (
-    <div className="w-full h-full">
-      <Tree
-        ref={treeRef}
-        data={treeData}
-        getChildren="children"
-        isOpen={(doc: Document) => doc.isExpanded || false}
-        hideRoot={true}
-        indent={16}
-        onMove={handleMove}
-        onToggle={handleToggle}
-        onEdit={handleEdit}
-        onClick={handleClick}
-        rowHeight={32}
-        width={width}
-        height={height}
-        openByDefault={false}
-        disableDrag={false}
-      >
-        {DocumentNode}
-      </Tree>
-    </div>
-  );
-};
+    <Tree
+      data={data}
+      openByDefault={false}
+      width="100%"
+      height={height}
+      indent={24}
+      rowHeight={32}
+      searchTerm={searchTerm}
+      searchMatch={(node, term) => node.data.name.toLowerCase().includes(term.toLowerCase())}
+      onActivate={(node) => onSelect(node.data.data)}
+      onMove={handleMove}
+    >
+      {(props) => (
+        <Node
+          {...props}
+          onDelete={onDelete}
+          onRename={onRename}
+          onDuplicate={onDuplicate}
+          onNewFile={onNewFile}
+          onNewFolder={onNewFolder}
+        />
+      )}
+    </Tree>
+  )
+}
+
+interface NodeProps extends NodeRendererProps<DocumentNode> {
+  onDelete?: (nodeId: string) => void
+  onRename?: (nodeId: string, newName: string) => void
+  onDuplicate?: (nodeId: string) => void
+  onNewFile?: (parentId: string | null) => void
+  onNewFolder?: (parentId: string | null) => void
+}
+
+function Node({ node, style, dragHandle, onDelete, onRename, onDuplicate, onNewFile, onNewFolder }: NodeProps) {
+  const isFolder = node.data.data.isFolder === 1
+  const isDivider = node.data.data.type === 3
+
+  const handleDelete = () => {
+    if (onDelete && confirm(`Delete "${node.data.name}"?`)) {
+      onDelete(node.id)
+    }
+  }
+
+  const handleRename = () => {
+    if (onRename) {
+      const newName = prompt("Enter new name:", node.data.name)
+      if (newName && newName !== node.data.name) {
+        onRename(node.id, newName)
+      }
+    }
+  }
+
+  const handleDuplicate = () => {
+    if (onDuplicate) {
+      onDuplicate(node.id)
+    }
+  }
+
+  const handleNewFile = () => {
+    if (onNewFile) {
+      onNewFile(isFolder ? node.id : null)
+    }
+  }
+
+  const handleNewFolder = () => {
+    if (onNewFolder) {
+      onNewFolder(isFolder ? node.id : null)
+    }
+  }
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div
+          ref={dragHandle}
+          style={style}
+          className={cn(
+            "flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-accent rounded-sm transition-colors",
+            node.state.isSelected && "bg-accent",
+            node.state.isFocused && "ring-1 ring-ring",
+            node.state.isDragging && "opacity-50",
+          )}
+          onClick={() => node.toggle()}
+        >
+          {isFolder && (
+            <>
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-transform text-muted-foreground",
+                  node.isOpen && "rotate-90",
+                )}
+              />
+              {node.isOpen ? (
+                <FolderOpen className="h-4 w-4 shrink-0 text-blue-500" />
+              ) : (
+                <Folder className="h-4 w-4 shrink-0 text-blue-500" />
+              )}
+            </>
+          )}
+          {!isFolder && !isDivider && <File className="h-4 w-4 shrink-0 ml-6 text-muted-foreground" />}
+          <span
+            className={cn(
+              "text-sm truncate",
+              isDivider && "font-semibold text-muted-foreground",
+              !isFolder && !isDivider && "text-foreground",
+            )}
+          >
+            {node.data.name}
+          </span>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        {isFolder && (
+          <>
+            <ContextMenuItem onClick={handleNewFile}>
+              <FilePlus className="mr-2 h-4 w-4" />
+              New File
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleNewFolder}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              New Folder
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        )}
+        <ContextMenuItem onClick={handleRename}>
+          <Edit className="mr-2 h-4 w-4" />
+          Rename
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleDuplicate}>
+          <Copy className="mr-2 h-4 w-4" />
+          Duplicate
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+}
