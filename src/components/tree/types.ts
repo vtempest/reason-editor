@@ -4,6 +4,12 @@ export interface TreeItemData {
   isFolder: boolean;
   isOpen?: boolean;
   children?: TreeItemData[];
+  tags?: string[];
+  isArchived?: boolean;
+  isDeleted?: boolean;
+  content?: string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface TreeContextMenuProps {
@@ -14,6 +20,8 @@ export interface TreeContextMenuProps {
   onAddSibling: () => void;
   onAddSiblingFolder: () => void;
   onDuplicate: () => void;
+  onManageTags?: () => void;
+  onArchive?: () => void;
 }
 
 export interface TreeNodeProps {
@@ -27,7 +35,9 @@ export interface TreeNodeProps {
   onAddChild: (parentId: string, isFolder: boolean) => void;
   onAddSibling: (siblingId: string, isFolder: boolean) => void;
   onDuplicate: (id: string) => void;
-  onMove?: (srcIds: string[], dstParentId: string | null, dstIndex: number) => void;
+  onManageTags?: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onMove?: (draggedId: string, targetId: string, position: 'before' | 'after' | 'inside') => void;
 }
 
 export interface DocumentTreeProps {
@@ -40,5 +50,9 @@ export interface DocumentTreeProps {
   onAddChild?: (parentId: string, isFolder: boolean) => void;
   onAddSibling?: (siblingId: string, isFolder: boolean) => void;
   onDuplicate?: (id: string) => void;
-  onMove?: (srcIds: string[], dstParentId: string | null, dstIndex: number) => void;
+  onManageTags?: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onMove?: (draggedId: string, targetId: string, position: 'before' | 'after' | 'inside') => void;
 }
+
+export type DropPosition = 'before' | 'after' | 'inside' | null;
