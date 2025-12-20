@@ -20,6 +20,7 @@ interface SidebarProps {
   onToggleExpand: (id: string) => void;
   onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
   onManageTags?: (id: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onSearchClear: () => void;
@@ -47,6 +48,7 @@ export const Sidebar = ({
   onToggleExpand,
   onMove,
   onManageTags,
+  onRename,
   searchQuery,
   onSearchChange,
   onSearchClear,
@@ -151,6 +153,7 @@ export const Sidebar = ({
                 onOpenChange(false);
               }
             }}
+            onRename={onRename}
           />
         ) : viewMode === 'outline' ? (
           <OutlineView content={activeDocument?.content || ''} />
@@ -179,6 +182,7 @@ export const Sidebar = ({
                         onOpenChange(false);
                       }
                     }}
+                    onRename={onRename}
                   />
                 </div>
               </div>

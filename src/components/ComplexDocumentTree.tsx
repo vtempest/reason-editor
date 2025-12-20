@@ -23,6 +23,7 @@ interface ComplexDocumentTreeProps {
   onToggleExpand: (id: string) => void;
   onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
   onManageTags?: (id: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
 }
 
 // Transform flat document array to tree structure for react-complex-tree
@@ -69,6 +70,7 @@ export const ComplexDocumentTree = ({
   onToggleExpand,
   onMove,
   onManageTags,
+  onRename,
 }: ComplexDocumentTreeProps) => {
   const treeRef = useRef<TreeEnvironmentRef>(null);
 
@@ -219,6 +221,11 @@ export const ComplexDocumentTree = ({
           async onChangeItemChildren(itemId: TreeItemIndex, newChildren: TreeItemIndex[]) {
             // Handle reordering
           },
+          async onRenameItem(item: TreeItem, name: string) {
+            if (onRename && item.index !== 'root') {
+              onRename(item.index as string, name);
+            }
+          },
         }}
         getItemTitle={(item) => item.data.title || 'Untitled'}
         viewState={{
@@ -232,7 +239,13 @@ export const ComplexDocumentTree = ({
         canDropOnFolder
         canDropOnNonFolder
         canReorderItems
+        canRename
         onDrop={handleDrop}
+        onRenameItem={(item, name) => {
+          if (onRename && item.index !== 'root') {
+            onRename(item.index as string, name);
+          }
+        }}
         onFocusItem={(item) => {
           if (item.index !== 'root') {
             onSelect(item.index as string);

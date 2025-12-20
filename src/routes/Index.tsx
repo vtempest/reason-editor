@@ -332,6 +332,7 @@ const Index = () => {
               onToggleExpand={handleToggleExpand}
               onMove={handleMoveDocument}
               onManageTags={handleManageTags}
+              onRename={(id, title) => handleUpdateDocument(id, { title })}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onSearchClear={() => setSearchQuery('')}
@@ -353,6 +354,7 @@ const Index = () => {
                   onTabChange={handleTabChange}
                   onTabClose={handleTabClose}
                   onTabAdd={handleTabAdd}
+                  onRename={(id, title) => handleUpdateDocument(id, { title })}
                 />
               )}
 
@@ -403,6 +405,7 @@ const Index = () => {
                 onToggleExpand={handleToggleExpand}
                 onMove={handleMoveDocument}
                 onManageTags={handleManageTags}
+                onRename={(id, title) => handleUpdateDocument(id, { title })}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 onSearchClear={() => setSearchQuery('')}
@@ -426,6 +429,7 @@ const Index = () => {
                   onTabChange={handleTabChange}
                   onTabClose={handleTabClose}
                   onTabAdd={handleTabAdd}
+                  onRename={(id, title) => handleUpdateDocument(id, { title })}
                 />
 
                 {activeDocument ? (
