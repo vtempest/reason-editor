@@ -10,6 +10,8 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
+import { TableKit } from '@tiptap/extension-table';
+import Image from '@tiptap/extension-image';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -38,6 +40,8 @@ import {
   Undo,
   Redo,
   Bot,
+  Table,
+  ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText } from '@/lib/ai/rewrite';
@@ -96,6 +100,34 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       TaskList,
       TaskItem.configure({
         nested: true,
+      }),
+      TableKit.configure({
+        table: {
+          HTMLAttributes: {
+            class: 'tiptap-table w-full border-collapse border border-border',
+          },
+        },
+        tableRow: {
+          HTMLAttributes: {
+            class: 'border border-border',
+          },
+        },
+        tableCell: {
+          HTMLAttributes: {
+            class: 'border border-border p-2 min-w-[100px]',
+          },
+        },
+        tableHeader: {
+          HTMLAttributes: {
+            class: 'border border-border p-2 min-w-[100px] bg-muted font-semibold',
+          },
+        },
+      }),
+      Image.configure({
+        inline: false,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-md my-4',
+        },
       }),
       FloatingMenuExtension,
       BubbleMenuExtension,
@@ -201,6 +233,17 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
 
   const toggleHeading = (level: 1 | 2 | 3) => {
     editor.chain().focus().toggleHeading({ level }).run();
+  };
+
+  const insertTable = () => {
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  };
+
+  const insertImage = () => {
+    const url = window.prompt('Enter image URL:');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
   };
 
   const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
@@ -625,6 +668,30 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
+        {/* Table */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertTable}
+          className="h-8 w-8 p-0"
+          title="Insert Table"
+        >
+          <Table className="h-4 w-4" />
+        </Button>
+
+        {/* Image */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertImage}
+          className="h-8 w-8 p-0"
+          title="Insert Image"
+        >
+          <ImageIcon className="h-4 w-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
         {/* AI Rewrite */}
         <Button
           variant="ghost"
@@ -942,6 +1009,44 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         .search-result-current {
           background-color: rgba(255, 152, 0, 0.6);
           border-radius: 2px;
+        }
+
+        /* Table styles */
+        .ProseMirror table {
+          margin: 1rem 0;
+        }
+
+        .ProseMirror table td,
+        .ProseMirror table th {
+          vertical-align: top;
+          box-sizing: border-box;
+          position: relative;
+        }
+
+        .ProseMirror table .selectedCell {
+          background-color: hsl(var(--accent));
+        }
+
+        .ProseMirror table .column-resize-handle {
+          background-color: hsl(var(--primary));
+          bottom: -2px;
+          pointer-events: none;
+          position: absolute;
+          right: -2px;
+          top: 0;
+          width: 4px;
+        }
+
+        /* Image styles */
+        .ProseMirror img {
+          display: block;
+          height: auto;
+          margin: 1rem 0;
+          max-width: 100%;
+        }
+
+        .ProseMirror img.ProseMirror-selectednode {
+          outline: 3px solid hsl(var(--primary));
         }
       `}</style>
     </div>
