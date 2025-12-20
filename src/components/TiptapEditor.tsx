@@ -14,6 +14,7 @@ import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { SearchReplaceBar } from '@/components/SearchReplaceBar';
 import {
   Bold,
@@ -42,6 +43,8 @@ import { cn } from '@/lib/utils';
 import { rewriteText } from '@/lib/ai/rewrite';
 import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
 import { ExportDropdown } from '@/components/ExportDropdown';
+import { ViewModeDropdown, ViewMode } from '@/components/ViewModeDropdown';
+import TurndownService from 'turndown';
 import { toast } from 'sonner';
 
 interface TiptapEditorProps {
@@ -59,6 +62,8 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     range: { from: number; to: number };
   } | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('formatted');
+  const [rawContent, setRawContent] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -207,6 +212,79 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
   const handleRejectSuggestion = () => {
     setAiSuggestion(null);
     toast.info('AI suggestion rejected');
+  };
+
+  // Conversion utilities
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+  });
+
+  const htmlToMarkdown = (html: string): string => {
+    return turndownService.turndown(html);
+  };
+
+  const markdownToHtml = (markdown: string): string => {
+    // Simple markdown to HTML conversion
+    // For a more robust solution, you could use a library like 'marked'
+    let html = markdown
+      // Headers
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      // Bold
+      .replace(/\*\*([^*]+)\*\*/gim, '<strong>$1</strong>')
+      .replace(/__([^_]+)__/gim, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*([^*]+)\*/gim, '<em>$1</em>')
+      .replace(/_([^_]+)_/gim, '<em>$1</em>')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>')
+      // Line breaks
+      .replace(/\n/gim, '<br>');
+
+    return html;
+  };
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    if (!editor) return;
+
+    if (mode === 'formatted') {
+      // Converting back to formatted view
+      if (viewMode === 'html') {
+        // Update editor with the raw HTML content
+        editor.commands.setContent(rawContent);
+        onChange(rawContent);
+      } else if (viewMode === 'markdown') {
+        // Convert markdown to HTML and update editor
+        const html = markdownToHtml(rawContent);
+        editor.commands.setContent(html);
+        onChange(html);
+      }
+    } else if (mode === 'html') {
+      // Switching to HTML view
+      const html = editor.getHTML();
+      setRawContent(html);
+    } else if (mode === 'markdown') {
+      // Switching to Markdown view
+      const html = editor.getHTML();
+      const markdown = htmlToMarkdown(html);
+      setRawContent(markdown);
+    }
+
+    setViewMode(mode);
+  };
+
+  const handleRawContentChange = (value: string) => {
+    setRawContent(value);
+
+    // Update the document content when editing raw content
+    if (viewMode === 'html') {
+      onChange(value);
+    } else if (viewMode === 'markdown') {
+      const html = markdownToHtml(value);
+      onChange(html);
+    }
   };
 
   return (
@@ -494,6 +572,11 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
+        {/* View Mode */}
+        <ViewModeDropdown value={viewMode} onChange={handleViewModeChange} />
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
         {/* Export */}
         <ExportDropdown title={title} htmlContent={editor.getHTML()} />
       </div>
@@ -501,7 +584,9 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
 
       {/* Editor Content */}
       <div className="flex-1 overflow-auto relative">
-        <EditorContent editor={editor} className="h-full" />
+        {viewMode === 'formatted' ? (
+        <>
+          <EditorContent editor={editor} className="h-full" />
 
         {/* Floating Menu - appears on empty lines */}
         <FloatingMenu
@@ -663,6 +748,15 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
               isLoading={isAiLoading}
             />
           </div>
+        )}
+        </>
+        ) : (
+          <Textarea
+            value={rawContent}
+            onChange={(e) => handleRawContentChange(e.target.value)}
+            className="h-full w-full resize-none font-mono text-sm p-6 border-none focus-visible:ring-0"
+            placeholder={viewMode === 'html' ? 'Enter HTML...' : 'Enter Markdown...'}
+          />
         )}
       </div>
 
