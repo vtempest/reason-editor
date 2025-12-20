@@ -1,18 +1,14 @@
-import type { Config } from 'drizzle-kit';
+import { config } from 'dotenv'
+import { defineConfig } from 'drizzle-kit'
 
-// Detect which DB URL to use
-// Priority:
-// 1. DB_LOCAL=true -> local file
-// 2. TURSO_DATABASE_URL -> cloud
-// 3. Fallback -> local file (safe default if env vars missing)
-const url = process.env.DB_LOCAL ? 'file:data/documents.db' : (process.env.TURSO_DATABASE_URL || 'file:data/documents.db');
+config({ path: '.env' })
 
-export default {
+export default defineConfig({
     schema: './lib/db/schema.ts',
-    out: './drizzle',
-    dialect: 'sqlite',
+    out: './migrations',
+    dialect: 'turso',
     dbCredentials: {
-        url,
-        authToken: process.env.TURSO_AUTH_TOKEN,
+        url: process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || 'file:./local.db',
+        authToken: process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN,
     },
-} satisfies Config;
+})
