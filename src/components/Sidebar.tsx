@@ -1,5 +1,5 @@
 import { Document } from '@/components/DocumentTree';
-import { ComplexDocumentTree } from '@/components/ComplexDocumentTree';
+import { DocumentTreeWrapper } from '@/components/Tree/containers/DocumentTree';
 import { OutlineView } from '@/components/OutlineView';
 import { FloatingSearch } from '@/components/FloatingSearch';
 import { ThemeDropdown } from '@/components/theme-dropdown';
@@ -96,7 +96,7 @@ export const Sidebar = ({
       {/* Content area */}
       <div className="flex-1 overflow-hidden">
         {viewMode === 'tree' ? (
-          <ComplexDocumentTree
+          <DocumentTreeWrapper
             documents={activeDocuments}
             activeId={activeId}
             onSelect={(id) => {
@@ -133,7 +133,7 @@ export const Sidebar = ({
             <Panel defaultSize={50} minSize={20}>
               <div className="h-full overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-auto">
-                  <ComplexDocumentTree
+                  <DocumentTreeWrapper
                     documents={activeDocuments}
                     activeId={activeId}
                     onSelect={(id) => {

@@ -34,3 +34,19 @@ export function indexOf(node: Node): number {
 }
 
 export function noop() {}
+
+export function isFunction(value: any): value is Function {
+  return typeof value === "function";
+}
+
+export function access<T, K extends keyof any>(obj: T, path: K | string): any {
+  if (typeof path === "string") {
+    const keys = path.split(".");
+    let result: any = obj;
+    for (const key of keys) {
+      result = result?.[key];
+    }
+    return result;
+  }
+  return (obj as any)[path];
+}
