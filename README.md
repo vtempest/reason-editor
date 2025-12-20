@@ -1,50 +1,62 @@
-# Research Editor for Annotated Summaries in Outline Notation 
+<p align="center">
+    <img width="400px" src="https://i.imgur.com/VoAVfyI.jpeg" />
+</p>
+<p align="center">
+    <a href="https://discord.gg/SJdBqBz3tV">
+        <img src="https://img.shields.io/discord/1110227955554209923.svg?label=Chat&logo=Discord&colorB=7289da&style=flat"
+            alt="Join Discord" />
+    </a>
+     <a href="https://github.com/vtempest/reason-editor/discussions">
+     <img alt="GitHub Stars" src="https://img.shields.io/github/stars/vtempest/reason-editor" /></a>
+    <a href="https://github.com/vtempest/reason-editor/discussions">
+    <img alt="GitHub Discussions"
+        src="https://img.shields.io/github/discussions/vtempest/reason-editor" />
+    </a>
+    <!-- <a href="https://npmjs.org/package/reason-editor"><img src="https://img.shields.io/npm/v/reason-editor"/></a>    -->
+    <a href="https://github.com/vtempest/reason-editor/pulse" alt="Activity">
+        <img src="https://img.shields.io/github/commit-activity/m/vtempest/reason-editor" />
+    </a>
+    <img src="https://img.shields.io/github/last-commit/vtempest/reason-editor.svg" alt="GitHub last commit" />
+    <img src="https://img.shields.io/badge/Next.js-16.0-black" alt="Next.js" />
 
-![logo](https://i.imgur.com/VoAVfyI.jpeg)
+</p>
+<p align="center">
+    <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request">
+        <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"
+            alt="PRs Welcome" />
+    </a>
+    <a href="https://codespaces.new/vtempest/reason-editor">
+    <img src="https://github.com/codespaces/badge.svg" width="150" height="20" />
+    </a>
+</p>
+<h3 align="center">
+    <a href="https://editor.qwksearch.com/docs"> 📑 Docs </a> <a href="https://editor.qwksearch.com/api/docs"> 🎯 API </a>
+ <a href="https://editor.qwksearch.com"> 🚀 Demo</a></h3>
 
-A modern, hierarchical document management system with professional drag-and-drop, Google Docs integration, and persistent storage.
 
-## ✨ Features
+# Research Editor for Annotated Summaries in Outline Notation
 
-- 🌳 **Enhanced Tree Component** - Professional drag-and-drop with react-complex-tree
-- 🖱️ **Right-Click Context Menu** - Quick actions for all document operations
-- 🔌 **Next.js API Backend** - RESTful API with SQLite storage
-- 📄 **Google Docs Integration** - Export, import, and share with Google Docs
-- 🔍 **Full-Text Search** - Search documents by title and content
-- 💾 **Persistent Storage** - SQLite database with proper schema
-- 🎨 **Modern UI** - Beautiful interface with shadcn/ui components
-- ⌨️ **Keyboard Navigation** - Full keyboard support with shortcuts
+A hierarchical document management system with drag-and-drop, Google Docs integration, and persistent storage.
 
-## 🎯 Key Capabilities
+## Features
 
-### Document Tree
-- Hierarchical document organization
-- Drag and drop to reorder (before/after/child positions)
-- Right-click context menu for all operations
+- Hierarchical document tree with drag-and-drop reordering
+- Right-click context menu for document operations
+- Create, read, update, delete documents
+- Move, duplicate, and search documents
 - Expand/collapse document branches
-- Visual feedback during drag operations
-
-### API Operations
-- Full CRUD (Create, Read, Update, Delete)
-- Move documents in tree hierarchy
-- Duplicate documents
-- Search by title or content
-- Bulk sync for offline support
-
-### Google Docs
+- Full-text search by title and content
+- Google Docs export, import, and sharing
 - OAuth2 authentication
-- Export markdown to Google Docs format
-- Import Google Docs content
-- Share with specific users (reader/writer/commenter)
-- Generate public shareable links
-- Markdown formatting preservation
+- SQLite persistent storage
+- Keyboard navigation and shortcuts
+- Modern UI with shadcn/ui components
 
-## 🛠️ Technology Stack
+## Technology Stack
 
-- **Frontend**: React 19, TypeScript, Vite
-- **UI**: shadcn/ui, Tailwind CSS, Radix UI
-- **Tree**: react-complex-tree
-- **Backend**: Next.js 16 App Router
-- **Database**: SQLite with adapters
-- **Integration**: Google Docs API, Google Drive API
-- **Auth**: OAuth2 (Google)
+- React 19, TypeScript, Vite
+- Next.js 16 App Router
+- SQLite database
+- shadcn/ui, Tailwind CSS, Radix UI
+- react-complex-tree
+- Google Docs API, Google Drive API
