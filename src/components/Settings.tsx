@@ -1,13 +1,43 @@
+import * as React from "react";
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
-import { Moon, Sun, Monitor, Settings as SettingsIcon, Plus, Trash2, RotateCcw, Edit2 } from 'lucide-react';
+import {
+  Moon,
+  Sun,
+  Monitor,
+  Settings as SettingsIcon,
+  Plus,
+  Trash2,
+  RotateCcw,
+  Edit2,
+  Paintbrush,
+  Info,
+  Wand2
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
+  DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from "@/components/ui/sidebar";
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
@@ -24,8 +54,15 @@ interface SettingsProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const settingsNav = [
+  { name: "Appearance", icon: Paintbrush },
+  { name: "AI Rewrite Modes", icon: Wand2 },
+  { name: "About", icon: Info },
+];
+
 export const Settings = ({ open, onOpenChange }: SettingsProps) => {
   const { theme, setTheme } = useTheme();
+  const [activeSection, setActiveSection] = useState("Appearance");
   const [rewriteModes, setRewriteModes] = useState<RewriteMode[]>([]);
   const [editingMode, setEditingMode] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RewriteMode>>({});
@@ -106,23 +143,13 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
     setEditForm({});
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <SettingsIcon className="h-5 w-5" />
-            <DialogTitle>Settings</DialogTitle>
-          </div>
-          <DialogDescription>
-            Customize your note-taking experience
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          <div className="space-y-4">
+  const renderContent = () => {
+    switch (activeSection) {
+      case "Appearance":
+        return (
+          <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-1">Appearance</h3>
+              <h2 className="text-xl font-semibold mb-2">Appearance</h2>
               <p className="text-sm text-muted-foreground">
                 Choose how REASON looks to you
               </p>
@@ -176,13 +203,14 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
               </div>
             </div>
           </div>
+        );
 
-          <Separator />
-
-          <div className="space-y-4">
+      case "AI Rewrite Modes":
+        return (
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-semibold mb-1">AI Rewrite Modes</h3>
+                <h2 className="text-xl font-semibold mb-2">AI Rewrite Modes</h2>
                 <p className="text-sm text-muted-foreground">
                   Customize AI rewrite prompts and add your own modes
                 </p>
@@ -198,7 +226,9 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
               </Button>
             </div>
 
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            <Separator />
+
+            <div className="space-y-3">
               {rewriteModes.map((mode) => (
                 <div
                   key={mode.id}
@@ -368,17 +398,94 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
               </Button>
             )}
           </div>
+        );
 
-          <Separator />
+      case "About":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">About</h2>
+              <p className="text-sm text-muted-foreground">
+                Application information
+              </p>
+            </div>
 
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">About</h3>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>REASON - A powerful note-taking application</p>
-              <p>Version 1.0.0</p>
+            <Separator />
+
+            <div className="text-sm space-y-3">
+              <div className="space-y-1">
+                <p className="font-medium">REASON</p>
+                <p className="text-muted-foreground">A powerful note-taking application</p>
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">Version</p>
+                <p className="text-muted-foreground">1.0.0</p>
+              </div>
             </div>
           </div>
-        </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="overflow-hidden p-0 md:max-h-[600px] md:max-w-[700px] lg:max-w-[900px]">
+        <DialogTitle className="sr-only">Settings</DialogTitle>
+        <DialogDescription className="sr-only">
+          Customize your settings here.
+        </DialogDescription>
+        <SidebarProvider className="items-start">
+          <Sidebar collapsible="none" className="hidden md:flex">
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {settingsNav.map((item) => (
+                      <SidebarMenuItem key={item.name}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={item.name === activeSection}
+                          onClick={() => setActiveSection(item.name)}
+                        >
+                          <a href="#">
+                            <item.icon />
+                            <span>{item.name}</span>
+                          </a>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+          <main className="flex h-[550px] flex-1 flex-col overflow-hidden">
+            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+              <div className="flex items-center gap-2 px-4">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem className="hidden md:block">
+                      <BreadcrumbLink href="#">
+                        <SettingsIcon className="h-4 w-4 inline mr-1" />
+                        Settings
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>{activeSection}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+            </header>
+            <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0">
+              {renderContent()}
+            </div>
+          </main>
+        </SidebarProvider>
       </DialogContent>
     </Dialog>
   );

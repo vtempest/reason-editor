@@ -40,14 +40,14 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --sidebar-background: 28 18% 96%;
-    --sidebar-foreground: 25 15% 25%;
-    --sidebar-primary: 25 35% 45%;
-    --sidebar-primary-foreground: 30 20% 98%;
-    --sidebar-accent: 30 20% 90%;
-    --sidebar-accent-foreground: 25 15% 25%;
-    --sidebar-border: 30 12% 88%;
-    --sidebar-ring: 25 35% 45%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Custom tokens */
     --editor-bg: 0 0% 100%;
@@ -83,14 +83,14 @@ All colors MUST be HSL.
     --input: 25 15% 22%;
     --ring: 30 45% 60%;
 
-    --sidebar-background: 25 20% 14%;
-    --sidebar-foreground: 30 20% 85%;
-    --sidebar-primary: 30 45% 60%;
-    --sidebar-primary-foreground: 25 20% 12%;
-    --sidebar-accent: 25 15% 20%;
-    --sidebar-accent-foreground: 30 20% 85%;
-    --sidebar-border: 25 15% 24%;
-    --sidebar-ring: 30 45% 60%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Custom tokens */
     --editor-bg: 25 18% 16%;
