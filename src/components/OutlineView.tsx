@@ -18,11 +18,12 @@ interface OutlineItem {
   level: number;
   text: string;
   line: number;
+  headingId?: string;
 }
 
 interface OutlineViewProps {
   content: string;
-  onNavigate?: (line: number) => void;
+  onNavigate?: (headingText: string, headingId?: string) => void;
   onReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -45,12 +46,14 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
     headings.forEach((heading, index) => {
       const level = parseInt(heading.tagName.substring(1));
       const text = heading.textContent || '';
+      const headingId = heading.getAttribute('id') || `heading-${text.toLowerCase().replace(/\s+/g, '-')}-${index}`;
 
       items.push({
         id: `heading-${index}`,
         level: level,
         text: text,
         line: index,
+        headingId: headingId,
       });
     });
 
@@ -222,7 +225,7 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
                     dragOverItem === item.id && 'border-t-2 border-primary'
                   )}
                   style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}
-                  onClick={() => onNavigate?.(item.line)}
+                  onClick={() => onNavigate?.(item.text, item.headingId)}
                 >
                   <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
 
