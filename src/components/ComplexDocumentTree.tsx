@@ -293,7 +293,7 @@ export const ComplexDocumentTree = ({
               onAddSibling={() => onAdd(doc.parentId || null, false)}
               onAddSiblingFolder={() => onAdd(doc.parentId || null, true)}
               onRename={() => {
-                onSelect(doc.id);
+                treeRef.current?.startRenamingItem(doc.id);
               }}
               onDuplicate={() => onDuplicate(doc.id)}
               onDelete={() => onDelete(doc.id)}
