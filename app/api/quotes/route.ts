@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { statements } from '@/lib/db/turso';
+import { tursoQueries } from '@/lib/db/turso';
 
 // GET /api/quotes?documentId=xxx - Get all quotes for a document
 export async function GET(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const quotes = statements.getQuotesByDocument.all(documentId);
+    const quotes = await tursoQueries.getQuotesByDocument(documentId);
 
     return NextResponse.json({
       success: true,
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const id = Date.now().toString() + Math.random().toString(36).substring(7);
     const now = new Date().toISOString();
 
-    statements.createQuote.run(
+    await tursoQueries.createQuote(
       id,
       documentId,
       text,
