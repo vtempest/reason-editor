@@ -12,6 +12,7 @@ import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import { TableKit } from '@tiptap/extension-table';
 import Image from '@tiptap/extension-image';
+import CharacterCount from '@tiptap/extension-character-count';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,11 @@ import {
   Bot,
   Table,
   ImageIcon,
+  Columns,
+  Rows,
+  Trash,
+  Plus,
+  Merge,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText } from '@/lib/ai/rewrite';
@@ -131,6 +137,9 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       }),
       FloatingMenuExtension,
       BubbleMenuExtension,
+      CharacterCount.configure({
+        limit: null,
+      }),
       SearchAndReplace.configure({
         searchResultClass: 'search-result',
         caseSensitive: false,
@@ -871,6 +880,118 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
           </Button>
         </BubbleMenu>
 
+        {/* Table Bubble Menu - appears when inside a table */}
+        <BubbleMenu
+          editor={editor}
+          shouldShow={({ editor }) => {
+            return (
+              editor.isActive('table') ||
+              editor.isActive('tableCell') ||
+              editor.isActive('tableHeader') ||
+              editor.isActive('tableRow')
+            );
+          }}
+          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+        >
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addColumnBefore().run()}
+              className="h-8 px-2 text-xs"
+              title="Add column before"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Col ←
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              className="h-8 px-2 text-xs"
+              title="Add column after"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Col →
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              className="h-8 px-2 text-xs text-destructive"
+              title="Delete column"
+            >
+              <Trash className="h-3 w-3 mr-1" />
+              Col
+            </Button>
+
+            <Separator orientation="vertical" className="mx-1 h-6" />
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addRowBefore().run()}
+              className="h-8 px-2 text-xs"
+              title="Add row before"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Row ↑
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              className="h-8 px-2 text-xs"
+              title="Add row after"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Row ↓
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              className="h-8 px-2 text-xs text-destructive"
+              title="Delete row"
+            >
+              <Trash className="h-3 w-3 mr-1" />
+              Row
+            </Button>
+
+            <Separator orientation="vertical" className="mx-1 h-6" />
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().mergeOrSplit().run()}
+              className="h-8 px-2 text-xs"
+              title="Merge or split cells"
+            >
+              <Merge className="h-3 w-3 mr-1" />
+              Merge
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+              className="h-8 px-2 text-xs"
+              title="Toggle header row"
+            >
+              Header
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              className="h-8 px-2 text-xs text-destructive"
+              title="Delete table"
+            >
+              <Trash className="h-3 w-3 mr-1" />
+              Table
+            </Button>
+          </div>
+        </BubbleMenu>
+
         {/* AI Suggestion Overlay */}
         {(aiSuggestion || isAiLoading) && (
           <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
@@ -894,6 +1015,16 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
             placeholder={viewMode === 'html' ? 'Enter HTML...' : 'Enter Markdown...'}
           />
         )}
+      </div>
+
+      {/* Status Bar with Word and Character Count */}
+      <div className="border-t border-border bg-muted/50 px-4 py-1.5 text-xs text-muted-foreground flex items-center gap-4">
+        <span>
+          Words: {editor.storage.characterCount.words()}
+        </span>
+        <span>
+          Characters: {editor.storage.characterCount.characters()}
+        </span>
       </div>
 
       {/* Tiptap Styles */}
