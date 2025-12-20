@@ -30,6 +30,7 @@ interface InviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentTitle: string;
+  documentId: string;
   sharingInfo?: SharingInfo;
   teams?: Team[];
   onUpdateSharing?: (sharing: SharingInfo) => void;
@@ -49,6 +50,7 @@ export const InviteModal = ({
   open,
   onOpenChange,
   documentTitle,
+  documentId,
   sharingInfo,
   teams = [],
   onUpdateSharing,
@@ -57,6 +59,8 @@ export const InviteModal = ({
   const [newRole, setNewRole] = useState<'viewer' | 'editor'>('editor');
   const [isPublic, setIsPublic] = useState(sharingInfo?.isPublic || false);
   const [sharedWith, setSharedWith] = useState(sharingInfo?.sharedWith || []);
+  const [shareLink, setShareLink] = useState<string | null>(sharingInfo?.shareLink || null);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
   const handleInvite = () => {
     if (!newEmail.trim()) return;
@@ -120,23 +124,76 @@ export const InviteModal = ({
     toast.success('Role updated');
   };
 
-  const handleTogglePublic = (checked: boolean) => {
+  const handleTogglePublic = async (checked: boolean) => {
     setIsPublic(checked);
+
+    // Generate share link if making public and link doesn't exist
+    if (checked && !shareLink) {
+      await generateShareLink();
+    }
 
     if (onUpdateSharing) {
       onUpdateSharing({
         ...sharingInfo,
         isPublic: checked,
         sharedWith,
+        shareLink,
       });
     }
 
     toast.success(checked ? 'Document is now public' : 'Document is now private');
   };
 
-  const handleCopyLink = () => {
-    const shareLink = sharingInfo?.shareLink || `${window.location.origin}/share/${Date.now()}`;
-    navigator.clipboard.writeText(shareLink);
+  const generateShareLink = async () => {
+    if (isGeneratingLink) return;
+
+    setIsGeneratingLink(true);
+    try {
+      const response = await fetch('/api/share', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ documentId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShareLink(data.data.shareUrl);
+
+        if (onUpdateSharing) {
+          onUpdateSharing({
+            ...sharingInfo,
+            isPublic,
+            sharedWith,
+            shareLink: data.data.shareUrl,
+          });
+        }
+
+        return data.data.shareUrl;
+      } else {
+        toast.error(data.error || 'Failed to generate share link');
+        return null;
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to generate share link');
+      return null;
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    let linkToCopy = shareLink;
+
+    // Generate link if it doesn't exist
+    if (!linkToCopy) {
+      linkToCopy = await generateShareLink();
+      if (!linkToCopy) return;
+    }
+
+    navigator.clipboard.writeText(linkToCopy);
     toast.success('Link copied to clipboard');
   };
 
