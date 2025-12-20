@@ -78,6 +78,15 @@ const Index = () => {
 
   const activeDocument = documents.find((doc) => doc.id === activeDocId);
 
+  // Update document title when active document changes
+  useEffect(() => {
+    if (activeDocument?.title) {
+      document.title = `${activeDocument.title} - Reason Docs`;
+    } else {
+      document.title = 'Reason - Powerful Note-Taking App';
+    }
+  }, [activeDocument?.title]);
+
   const filteredDocuments = useMemo(() => {
     // Filter out archived and deleted documents from the main tree
     const activeDocuments = documents.filter(

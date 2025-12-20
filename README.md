@@ -40,23 +40,19 @@ A hierarchical document management system with drag-and-drop, Google Docs integr
 
 ## Features
 
-- Hierarchical document tree with drag-and-drop reordering
-- Right-click context menu for document operations
-- Create, read, update, delete documents
-- Move, duplicate, and search documents
-- Expand/collapse document branches
-- Full-text search by title and content
-- Google Docs export, import, and sharing
-- OAuth2 authentication
-- SQLite persistent storage
-- Keyboard navigation and shortcuts
-- Modern UI with shadcn/ui components
-
-## Technology Stack
-
-- React 19, TypeScript, Vite
-- Next.js 16 App Router
-- SQLite database
-- shadcn/ui, Tailwind CSS, Radix UI
-- react-complex-tree
-- Google Docs API, Google Drive API
+- 📂 **Hierarchical Document Tree**: organize your thoughts with a nested structure and intuitive drag-and-drop reordering
+- 🖱️ **Context Menu Operations**: right-click to access quick actions for seamless document management
+- 📝 **CRUD Operations**: full create, read, update, and delete capabilities for your research notes
+- 🔍 **Advanced Search**: instantly find documents by title or content with full-text search
+- 🏷️ **Tagging System**: categorize and filter documents with a flexible tagging system
+- ✨ **AI Rewriting**: leverage AI to rewrite and improve your text directly within the editor
+- 👥 **Team Management**: collaborate with team members and manage access rights
+- 💬 **Research Quotes**: capture and organize key quotes and insights from your research
+- 🔄 **View Modes**: switch between Formatted, parsing HTML, and Markdown views for versatile editing
+- 🛠️ **Find & Replace**: powerful search and replace functionality with match highlighting
+- 📥 **Google Docs Integration**: seamless export, import, and sharing capabilities with Google Docs
+- 🔐 **Secure Authentication**: robust OAuth2 authentication for user data protection
+- 💾 **Persistent Storage**: reliable SQLite storage ensures your data is safe and accessible
+- ⌨️ **Keyboard Navigation**: efficient keyboard shortcuts for power users
+- 🎨 **Modern UI**: beautiful and responsive interface built with shadcn/ui components
+- 🏗️ **Built with**: [TipTap Editor](https://demos.tiptap.dev/BcLLFFrH7z), shadcn/ui, Google Docs API

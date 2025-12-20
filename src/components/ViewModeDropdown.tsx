@@ -16,28 +16,19 @@ interface ViewModeDropdownProps {
 }
 
 export const ViewModeDropdown = ({ value, onChange }: ViewModeDropdownProps) => {
-  const getLabel = (mode: ViewMode) => {
-    switch (mode) {
-      case 'formatted':
-        return 'Formatted text';
-      case 'html':
-        return 'HTML';
-      case 'markdown':
-        return 'Markdown';
-    }
-  };
+
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-8 gap-2" title="View mode">
+        <Button variant="ghost" size="icon" className="h-8 w-8" title="View mode">
           <Eye className="h-4 w-4" />
-          <span className="text-sm">{getLabel(value)}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuItem onClick={() => onChange('formatted')}>
           <Check className={cn('mr-2 h-4 w-4', value !== 'formatted' && 'opacity-0')} />
+          Formatted text
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onChange('html')}>
           <Check className={cn('mr-2 h-4 w-4', value !== 'html' && 'opacity-0')} />
