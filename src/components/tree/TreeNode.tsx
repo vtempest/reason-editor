@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, KeyboardEvent, FocusEvent } from 'react';
-import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText } from 'lucide-react';
+import React, { useState, useRef, useEffect, KeyboardEvent, FocusEvent, DragEvent } from 'react';
+import { ChevronRight, ChevronDown, Folder, FolderOpen, FileText, GripVertical, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   ContextMenu,
@@ -11,7 +11,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
 } from '@/components/ui/context-menu';
-import { TreeItemData, TreeNodeProps } from './types';
+import { TreeItemData, TreeNodeProps, DropPosition } from './types';
 
 export const TreeNode: React.FC<TreeNodeProps> = ({
   item,
@@ -24,10 +24,16 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
   onAddChild,
   onAddSibling,
   onDuplicate,
+  onManageTags,
+  onArchive,
+  onMove,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(item.name);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dropPosition, setDropPosition] = useState<DropPosition>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   const hasChildren = item.children && item.children.length > 0;
   const isOpen = item.isOpen ?? false;
@@ -68,6 +74,58 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     handleRenameSubmit();
   };
 
+  // Drag and Drop handlers
+  const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.id);
+  };
+
+  const handleDragEnd = (e: DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    setIsDragging(false);
+    setDropPosition(null);
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!nodeRef.current) return;
+
+    const rect = nodeRef.current.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const height = rect.height;
+
+    // Determine drop position based on cursor location
+    if (item.isFolder && y > height * 0.33 && y < height * 0.66) {
+      setDropPosition('inside');
+    } else if (y <= height * 0.33) {
+      setDropPosition('before');
+    } else {
+      setDropPosition('after');
+    }
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    setDropPosition(null);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const draggedId = e.dataTransfer.getData('text/plain');
+
+    if (draggedId && draggedId !== item.id && dropPosition && onMove) {
+      onMove(draggedId, item.id, dropPosition);
+    }
+
+    setDropPosition(null);
+  };
+
   const renderIcon = () => {
     if (item.isFolder) {
       const FolderIcon = isOpen ? FolderOpen : Folder;
@@ -98,18 +156,52 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
     );
   };
 
+  const renderTags = () => {
+    if (!item.tags || item.tags.length === 0) return null;
+
+    return (
+      <div className="flex items-center gap-1 ml-2">
+        {item.tags.slice(0, 2).map((tag, index) => (
+          <span
+            key={index}
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-primary/10 text-primary"
+          >
+            {tag}
+          </span>
+        ))}
+        {item.tags.length > 2 && (
+          <span className="text-xs text-muted-foreground">
+            +{item.tags.length - 2}
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
+            ref={nodeRef}
+            draggable={!isEditing}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             className={cn(
-              'group flex items-center gap-1.5 px-2 py-1.5 hover:bg-accent rounded-md cursor-pointer transition-colors',
-              isActive && 'bg-accent'
+              'group relative flex items-center gap-1.5 px-2 py-1.5 hover:bg-accent rounded-md cursor-pointer transition-all',
+              isActive && 'bg-accent font-medium',
+              isDragging && 'opacity-40',
+              dropPosition === 'before' && 'border-t-2 border-primary',
+              dropPosition === 'after' && 'border-b-2 border-primary',
+              dropPosition === 'inside' && 'ring-2 ring-primary ring-inset'
             )}
             style={{ paddingLeft: `${level * 16 + 8}px` }}
-            onClick={() => onSelect(item.id)}
+            onClick={() => !isEditing && onSelect(item.id)}
           >
+            <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             {renderChevron()}
             {renderIcon()}
             {isEditing ? (
@@ -124,9 +216,12 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <span className="flex-1 truncate text-sm">
-                {item.name || 'Untitled'}
-              </span>
+              <>
+                <span className="flex-1 truncate text-sm">
+                  {item.name || 'Untitled'}
+                </span>
+                {renderTags()}
+              </>
             )}
           </div>
         </ContextMenuTrigger>
@@ -177,6 +272,21 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
             <FileText className="mr-2 h-4 w-4" />
             Duplicate
           </ContextMenuItem>
+          {onManageTags && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => onManageTags(item.id)}>
+                <Tag className="mr-2 h-4 w-4" />
+                Manage Tags
+              </ContextMenuItem>
+            </>
+          )}
+          {onArchive && (
+            <ContextMenuItem onClick={() => onArchive(item.id)}>
+              <FileText className="mr-2 h-4 w-4" />
+              Archive
+            </ContextMenuItem>
+          )}
           <ContextMenuSeparator />
           <ContextMenuItem
             onClick={() => onDelete(item.id)}
@@ -195,7 +305,7 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               key={child.id}
               item={child}
               level={level + 1}
-              isActive={isActive}
+              isActive={child.id === isActive}
               onSelect={onSelect}
               onToggle={onToggle}
               onRename={onRename}
@@ -203,6 +313,9 @@ export const TreeNode: React.FC<TreeNodeProps> = ({
               onAddChild={onAddChild}
               onAddSibling={onAddSibling}
               onDuplicate={onDuplicate}
+              onManageTags={onManageTags}
+              onArchive={onArchive}
+              onMove={onMove}
             />
           ))}
         </div>

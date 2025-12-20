@@ -6,4 +6,5 @@ export type {
   TreeContextMenuProps,
   TreeNodeProps,
   DocumentTreeProps,
+  DropPosition,
 } from './types';
