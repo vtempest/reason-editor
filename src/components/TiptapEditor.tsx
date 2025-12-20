@@ -41,6 +41,7 @@ import {
 import { cn } from '@/lib/utils';
 import { rewriteText } from '@/lib/ai/rewrite';
 import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
+import { ExportDropdown } from '@/components/ExportDropdown';
 import { toast } from 'sonner';
 
 interface TiptapEditorProps {
@@ -501,6 +502,11 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
         >
           <Bot className="h-4 w-4" />
         </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Export */}
+        <ExportDropdown title={title} htmlContent={editor.getHTML()} />
       </div>
 
 
