@@ -559,6 +559,7 @@ const Index = () => {
         open={isInviteModalOpen}
         onOpenChange={setIsInviteModalOpen}
         documentTitle={activeDocument?.title || 'Untitled'}
+        documentId={activeDocument?.id || ''}
         sharingInfo={activeDocument?.sharing}
         onUpdateSharing={(sharing) => {
           if (activeDocument) {

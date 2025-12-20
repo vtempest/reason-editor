@@ -50,3 +50,14 @@ export const researchQuotes = sqliteTable('research_quotes', {
     tagsIdx: index('idx_research_quotes_tags').on(table.tags),
   };
 });
+
+export const shareTokens = sqliteTable('share_tokens', {
+  id: text('id').primaryKey(),
+  documentId: text('documentId').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  createdAt: text('createdAt').notNull(),
+  expiresAt: text('expiresAt'),
+}, (table) => {
+  return {
+    documentIdIdx: index('idx_share_tokens_documentId').on(table.documentId),
+  };
+});

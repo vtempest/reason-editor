@@ -53,9 +53,10 @@ interface TiptapEditorProps {
   title: string;
   onTitleChange: (title: string) => void;
   scrollToHeading?: (headingText: string) => void;
+  readOnly?: boolean;
 }
 
-export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollToHeading }: TiptapEditorProps) => {
+export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollToHeading, readOnly = false }: TiptapEditorProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<{
     originalText: string;
@@ -69,6 +70,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
 
   const editor = useEditor({
     immediatelyRender: false,
+    editable: !readOnly,
     extensions: [
       StarterKit.configure({
         heading: {
@@ -352,13 +354,16 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
   return (
     <div className="flex h-full flex-col bg-editor-bg">
       {/* Search and Replace Bar */}
-      <SearchReplaceBar
-        editor={editor}
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+      {!readOnly && (
+        <SearchReplaceBar
+          editor={editor}
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+        />
+      )}
 
       {/* Toolbar */}
+      {!readOnly && (
       <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card px-4 py-2">
         {/* History */}
         <Button
@@ -642,7 +647,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         {/* Export */}
         <ExportDropdown title={title} htmlContent={editor.getHTML()} />
       </div>
-
+      )}
 
       {/* Editor Content */}
       <div className="flex-1 overflow-auto relative">
