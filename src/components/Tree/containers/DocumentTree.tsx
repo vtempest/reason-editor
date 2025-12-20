@@ -151,7 +151,7 @@ function Node({ node, style, dragHandle, onDelete, onRename, onDuplicate, onNewF
             className={cn(
               "text-sm truncate",
               isDivider && "font-semibold text-muted-foreground",
-              !isFolder && !isDivider && "text-foreground",
+              !isDivider && "text-foreground",
             )}
           >
             {node.data.name}
