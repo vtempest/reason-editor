@@ -5,8 +5,9 @@ import { FloatingSearch } from '@/components/FloatingSearch';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus } from 'lucide-react';
+import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus, Columns2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 interface SidebarProps {
   documents: Document[];
@@ -28,8 +29,8 @@ interface SidebarProps {
   onOpenChange?: (open: boolean) => void;
   isMobile?: boolean;
   // View mode
-  viewMode: 'tree' | 'outline';
-  onViewModeChange: (mode: 'tree' | 'outline') => void;
+  viewMode: 'tree' | 'outline' | 'split';
+  onViewModeChange: (mode: 'tree' | 'outline' | 'split') => void;
   // Settings
   onSettingsClick?: () => void;
   onInviteClick?: () => void;
@@ -76,11 +77,13 @@ export const Sidebar = ({
           <div className="flex items-center gap-2">
             {viewMode === 'tree' ? (
               <FolderOpen className="h-5 w-5 text-sidebar-primary" />
-            ) : (
+            ) : viewMode === 'outline' ? (
               <List className="h-5 w-5 text-sidebar-primary" />
+            ) : (
+              <Columns2 className="h-5 w-5 text-sidebar-primary" />
             )}
             <h2 className="font-serif text-lg font-semibold text-sidebar-foreground">
-              {viewMode === 'tree' ? 'Notes' : 'Outline'}
+              {viewMode === 'tree' ? 'Notes' : viewMode === 'outline' ? 'Outline' : 'Split View'}
             </h2>
           </div>
 
@@ -108,6 +111,18 @@ export const Sidebar = ({
               title="Document Outline"
             >
               <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onViewModeChange('split')}
+              className={cn(
+                'h-8 w-8 p-0',
+                viewMode === 'split' && 'bg-sidebar-accent'
+              )}
+              title="Split View (Files + Outline)"
+            >
+              <Columns2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -137,13 +152,57 @@ export const Sidebar = ({
               }
             }}
           />
-        ) : (
+        ) : viewMode === 'outline' ? (
           <OutlineView content={activeDocument?.content || ''} />
+        ) : (
+          <PanelGroup direction="vertical" className="h-full">
+            <Panel defaultSize={50} minSize={20}>
+              <div className="h-full overflow-hidden flex flex-col">
+                <div className="px-3 py-2 border-b border-sidebar-border">
+                  <h3 className="text-xs font-semibold text-sidebar-foreground/70">FILES</h3>
+                </div>
+                <div className="flex-1 overflow-auto">
+                  <ComplexDocumentTree
+                    documents={documents}
+                    activeId={activeId}
+                    onSelect={(id) => {
+                      onSelect(id);
+                      if (isMobile && onOpenChange) {
+                        onOpenChange(false);
+                      }
+                    }}
+                    onAdd={onAdd}
+                    onDelete={onDelete}
+                    onDuplicate={onDuplicate}
+                    onToggleExpand={onToggleExpand}
+                    onMove={onMove}
+                    onManageTags={(id) => {
+                      onManageTags?.(id);
+                      if (isMobile && onOpenChange) {
+                        onOpenChange(false);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </Panel>
+            <PanelResizeHandle className="h-1 bg-sidebar-border hover:bg-sidebar-primary/50 transition-colors" />
+            <Panel defaultSize={50} minSize={20}>
+              <div className="h-full overflow-hidden flex flex-col">
+                <div className="px-3 py-2 border-b border-sidebar-border">
+                  <h3 className="text-xs font-semibold text-sidebar-foreground/70">OUTLINE</h3>
+                </div>
+                <div className="flex-1 overflow-auto">
+                  <OutlineView content={activeDocument?.content || ''} />
+                </div>
+              </div>
+            </Panel>
+          </PanelGroup>
         )}
       </div>
 
       {/* Footer with new note button and utility links */}
-      {viewMode === 'tree' && (
+      {(viewMode === 'tree' || viewMode === 'split') && (
         <div className="border-t border-sidebar-border p-3 space-y-2">
           <Button
             onClick={() => onAdd(null)}

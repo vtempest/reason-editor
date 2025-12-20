@@ -25,7 +25,7 @@ const Index = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [tagManagementDocId, setTagManagementDocId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline'>('REASON-view-mode', 'tree');
+  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline' | 'split'>('REASON-view-mode', 'tree');
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('REASON-documents', [
     {
