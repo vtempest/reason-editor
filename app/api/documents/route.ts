@@ -5,7 +5,7 @@ import { DocumentService } from '@/lib/services/documentService';
 export async function GET(request: NextRequest) {
   try {
     const userId = request.headers.get('x-user-id') || undefined;
-    const documents = DocumentService.getAllDocuments(userId);
+    const documents = await DocumentService.getAllDocuments(userId);
     const tree = DocumentService.buildTree(documents);
 
     return NextResponse.json({
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = request.headers.get('x-user-id') || undefined;
-    const newDocument = DocumentService.createDocument(
+    const newDocument = await DocumentService.createDocument(
       {
         title,
         content: content || '',

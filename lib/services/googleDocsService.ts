@@ -1,6 +1,6 @@
 import { google, docs_v1 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import { statements } from '../db/sqlite';
+import { tursoQueries } from '../db/turso';
 
 export interface GoogleDocsConfig {
   clientId: string;
@@ -200,7 +200,7 @@ export class GoogleDocsService {
       }
 
       // Save sync information
-      statements.createGoogleDocSync.run(
+      await tursoQueries.createGoogleDocSync(
         documentId,
         googleDocId,
         new Date().toISOString(),
@@ -312,12 +312,12 @@ export class GoogleDocsService {
   /**
    * Get sync status for a document
    */
-  static getSyncStatus(documentId: string): {
+  static async getSyncStatus(documentId: string): Promise<{
     isSynced: boolean;
     googleDocId?: string;
     lastSyncedAt?: string;
-  } {
-    const sync: any = statements.getGoogleDocSync.get(documentId);
+  }> {
+    const sync = await tursoQueries.getGoogleDocSync(documentId);
 
     if (!sync) {
       return { isSynced: false };
@@ -333,7 +333,7 @@ export class GoogleDocsService {
   /**
    * Remove sync relationship
    */
-  static removeSyncStatus(documentId: string): void {
-    statements.deleteGoogleDocSync.run(documentId);
+  static async removeSyncStatus(documentId: string): Promise<void> {
+    await tursoQueries.deleteGoogleDocSync(documentId);
   }
 }

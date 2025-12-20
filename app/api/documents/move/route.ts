@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const moved = DocumentService.moveDocument(draggedId, targetId, position);
+    const moved = await DocumentService.moveDocument(draggedId, targetId, position);
 
     if (!moved) {
       return NextResponse.json(

@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = request.headers.get('x-user-id') || undefined;
-    const updated = DocumentService.bulkUpdate(documents, userId);
+    const updated = await DocumentService.bulkUpdate(documents, userId);
 
     return NextResponse.json({
       success: true,

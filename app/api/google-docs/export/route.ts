@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the document
-    const document = DocumentService.getDocument(documentId);
+    const document = await DocumentService.getDocument(documentId);
     if (!document) {
       return NextResponse.json(
         {

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Create a new document with imported content
     const userId = request.headers.get('x-user-id') || undefined;
-    const newDocument = DocumentService.createDocument(
+    const newDocument = await DocumentService.createDocument(
       {
         title: imported.title,
         content: imported.content,

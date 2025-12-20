@@ -8,7 +8,7 @@ export async function POST(
 ) {
   try {
     const userId = request.headers.get('x-user-id') || undefined;
-    const duplicated = DocumentService.duplicateDocument(params.id, userId);
+    const duplicated = await DocumentService.duplicateDocument(params.id, userId);
 
     if (!duplicated) {
       return NextResponse.json(

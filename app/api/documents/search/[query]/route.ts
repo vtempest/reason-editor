@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const query = decodeURIComponent(params.query);
-    const results = DocumentService.searchDocuments(query);
+    const results = await DocumentService.searchDocuments(query);
 
     return NextResponse.json({
       success: true,

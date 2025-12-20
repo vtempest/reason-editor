@@ -1,4 +1,4 @@
-import { statements, db } from '../db/sqlite';
+import { tursoQueries } from '../db/turso';
 
 export interface Document {
   id: string;
@@ -16,8 +16,8 @@ export class DocumentService {
   /**
    * Get all documents for a user
    */
-  static getAllDocuments(userId?: string): Document[] {
-    const rows = statements.getAllDocuments.all(userId || 'anonymous');
+  static async getAllDocuments(userId?: string): Promise<Document[]> {
+    const rows = await tursoQueries.getAllDocuments(userId || 'anonymous');
     return rows.map((row: any) => ({
       ...row,
       isExpanded: Boolean(row.isExpanded),
@@ -28,8 +28,8 @@ export class DocumentService {
   /**
    * Get a single document by ID
    */
-  static getDocument(id: string): Document | null {
-    const row: any = statements.getDocument.get(id);
+  static async getDocument(id: string): Promise<Document | null> {
+    const row = await tursoQueries.getDocument(id);
     if (!row) return null;
 
     return {
@@ -41,14 +41,14 @@ export class DocumentService {
   /**
    * Create a new document
    */
-  static createDocument(
+  static async createDocument(
     data: Omit<Document, 'id' | 'createdAt' | 'updatedAt'>,
     userId?: string
-  ): Document {
+  ): Promise<Document> {
     const id = Date.now().toString() + Math.random().toString(36).substring(7);
     const now = new Date().toISOString();
 
-    statements.createDocument.run(
+    await tursoQueries.createDocument(
       id,
       data.title,
       data.content || '',
@@ -56,7 +56,9 @@ export class DocumentService {
       data.isExpanded ? 1 : 0,
       now,
       now,
-      userId || 'anonymous'
+      userId || 'anonymous',
+      undefined,
+      undefined
     );
 
     return {
@@ -74,50 +76,54 @@ export class DocumentService {
   /**
    * Update a document
    */
-  static updateDocument(id: string, updates: Partial<Document>): Document | null {
-    const existing = this.getDocument(id);
+  static async updateDocument(id: string, updates: Partial<Document>): Promise<Document | null> {
+    const existing = await this.getDocument(id);
     if (!existing) return null;
 
     const now = new Date().toISOString();
 
-    statements.updateDocument.run(
+    await tursoQueries.updateDocument(
       updates.title !== undefined ? updates.title : existing.title,
       updates.content !== undefined ? updates.content : existing.content,
       updates.parentId !== undefined ? updates.parentId : existing.parentId,
       updates.isExpanded !== undefined ? (updates.isExpanded ? 1 : 0) : (existing.isExpanded ? 1 : 0),
+      null,
+      null,
       now,
       id
     );
 
-    return this.getDocument(id);
+    return await this.getDocument(id);
   }
 
   /**
    * Delete a document and all its children
    */
-  static deleteDocument(id: string): boolean {
+  static async deleteDocument(id: string): Promise<boolean> {
     // Get all children recursively
-    const deleteRecursive = (docId: string) => {
-      const children: any[] = statements.getChildren.all(docId);
-      children.forEach((child) => deleteRecursive(child.id));
-      statements.deleteDocument.run(docId);
+    const deleteRecursive = async (docId: string) => {
+      const children = await tursoQueries.getChildren(docId);
+      for (const child of children) {
+        await deleteRecursive(child.id);
+      }
+      await tursoQueries.deleteDocument(docId);
     };
 
-    const exists = this.getDocument(id);
+    const exists = await this.getDocument(id);
     if (!exists) return false;
 
-    deleteRecursive(id);
+    await deleteRecursive(id);
     return true;
   }
 
   /**
    * Duplicate a document (without children)
    */
-  static duplicateDocument(id: string, userId?: string): Document | null {
-    const original = this.getDocument(id);
+  static async duplicateDocument(id: string, userId?: string): Promise<Document | null> {
+    const original = await this.getDocument(id);
     if (!original) return null;
 
-    return this.createDocument(
+    return await this.createDocument(
       {
         title: `${original.title} (Copy)`,
         content: original.content,
@@ -131,26 +137,26 @@ export class DocumentService {
   /**
    * Move a document to a new parent
    */
-  static moveDocument(
+  static async moveDocument(
     draggedId: string,
     targetId: string | null,
     position: 'before' | 'after' | 'child'
-  ): boolean {
-    const draggedDoc = this.getDocument(draggedId);
+  ): Promise<boolean> {
+    const draggedDoc = await this.getDocument(draggedId);
     if (!draggedDoc) return false;
 
     // Prevent moving to itself
     if (draggedId === targetId) return false;
 
     // Prevent moving parent into its own child
-    const isDescendant = (parentId: string, childId: string | null): boolean => {
+    const isDescendant = async (parentId: string, childId: string | null): Promise<boolean> => {
       if (!childId) return false;
       if (parentId === childId) return true;
-      const child = this.getDocument(childId);
-      return child ? isDescendant(parentId, child.parentId) : false;
+      const child = await this.getDocument(childId);
+      return child ? await isDescendant(parentId, child.parentId) : false;
     };
 
-    if (targetId && isDescendant(draggedId, targetId)) {
+    if (targetId && await isDescendant(draggedId, targetId)) {
       return false;
     }
 
@@ -159,21 +165,20 @@ export class DocumentService {
     if (position === 'child') {
       newParentId = targetId;
     } else {
-      const targetDoc = targetId ? this.getDocument(targetId) : null;
+      const targetDoc = targetId ? await this.getDocument(targetId) : null;
       newParentId = targetDoc ? targetDoc.parentId : null;
     }
 
     // Update the document
-    this.updateDocument(draggedId, { parentId: newParentId });
+    await this.updateDocument(draggedId, { parentId: newParentId });
     return true;
   }
 
   /**
    * Search documents by title or content
    */
-  static searchDocuments(query: string): Document[] {
-    const searchTerm = `%${query}%`;
-    const rows: any[] = statements.searchDocuments.all(searchTerm, searchTerm);
+  static async searchDocuments(query: string): Promise<Document[]> {
+    const rows = await tursoQueries.searchDocuments(query);
     return rows.map((row) => ({
       ...row,
       isExpanded: Boolean(row.isExpanded),
@@ -214,30 +219,26 @@ export class DocumentService {
   /**
    * Bulk update documents (for syncing)
    */
-  static bulkUpdate(documents: Document[], userId?: string): Document[] {
-    // Use transaction for bulk operations
-    const transaction = db.transaction((docs: Document[]) => {
-      // Delete all existing documents for this user
-      db.prepare(`DELETE FROM documents WHERE userId = ? OR userId IS NULL`).run(
-        userId || 'anonymous'
+  static async bulkUpdate(documents: Document[], userId?: string): Promise<Document[]> {
+    // Delete all existing documents for this user
+    await tursoQueries.deleteAllDocumentsForUser(userId || 'anonymous');
+
+    // Insert all new documents
+    for (const doc of documents) {
+      await tursoQueries.createDocument(
+        doc.id,
+        doc.title,
+        doc.content || '',
+        doc.parentId || null,
+        doc.isExpanded ? 1 : 0,
+        doc.createdAt || new Date().toISOString(),
+        doc.updatedAt || new Date().toISOString(),
+        userId || 'anonymous',
+        undefined,
+        undefined
       );
+    }
 
-      // Insert all new documents
-      docs.forEach((doc) => {
-        statements.createDocument.run(
-          doc.id,
-          doc.title,
-          doc.content || '',
-          doc.parentId || null,
-          doc.isExpanded ? 1 : 0,
-          doc.createdAt || new Date().toISOString(),
-          doc.updatedAt || new Date().toISOString(),
-          userId || 'anonymous'
-        );
-      });
-    });
-
-    transaction(documents);
-    return this.getAllDocuments(userId);
+    return await this.getAllDocuments(userId);
   }
 }
