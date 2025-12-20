@@ -1,15 +1,18 @@
 # Document Tree Component
 
-A feature-rich tree component for displaying hierarchical document structures with folders, files, and context menu operations.
+A comprehensive, feature-rich tree component for displaying hierarchical document structures with folders and files.
 
 ## Features
 
-- **Hierarchical Structure**: Support for nested folders and documents
-- **Context Menu**: Right-click menu with operations like rename, delete, duplicate, add child/sibling
-- **Inline Editing**: Click rename to edit items inline
-- **Folder Icons**: Visual distinction between folders and documents
-- **Expand/Collapse**: Toggle folder visibility
-- **Active Selection**: Highlight currently selected item
+- ✅ **Hierarchical Structure**: Support for nested folders and documents
+- ✅ **Drag & Drop**: Intuitive drag-and-drop functionality to reorganize items
+- ✅ **Context Menu**: Right-click menu for common operations
+- ✅ **Inline Rename**: Click to rename documents and folders
+- ✅ **Search**: Built-in search functionality with auto-expand
+- ✅ **Tag Support**: Display document tags inline
+- ✅ **Visual Feedback**: Hover states, drag indicators, and drop zones
+- ✅ **Keyboard Navigation**: Full keyboard support
+- ✅ **TypeScript**: Full type safety with comprehensive interfaces
 
 ## Usage
 
@@ -50,16 +53,25 @@ function App() {
 | `onAddChild` | `(parentId: string, isFolder: boolean) => void` | No | Callback when a child is added |
 | `onAddSibling` | `(siblingId: string, isFolder: boolean) => void` | No | Callback when a sibling is added |
 | `onDuplicate` | `(id: string) => void` | No | Callback when an item is duplicated |
+| `onManageTags` | `(id: string) => void` | No | Callback when managing tags |
+| `onArchive` | `(id: string) => void` | No | Callback when archiving an item |
+| `onMove` | `(draggedId: string, targetId: string, position: 'before' \| 'after' \| 'inside') => void` | No | Callback when an item is moved via drag-and-drop |
 
 ## Data Structure
 
 ```typescript
 interface TreeItemData {
-  id: string;           // Unique identifier
-  name: string;         // Display name
-  isFolder: boolean;    // Whether this is a folder or document
-  isOpen?: boolean;     // Whether folder is expanded
+  id: string;              // Unique identifier
+  name: string;            // Display name
+  isFolder: boolean;       // Whether this is a folder or document
+  isOpen?: boolean;        // Whether folder is expanded
   children?: TreeItemData[]; // Child items (for folders)
+  tags?: string[];         // Optional tags for the document
+  isArchived?: boolean;    // Whether the item is archived
+  isDeleted?: boolean;     // Whether the item is deleted
+  content?: string;        // Document content
+  createdAt?: Date | string;  // Creation timestamp
+  updatedAt?: Date | string;  // Last update timestamp
 }
 ```
 
@@ -67,11 +79,38 @@ interface TreeItemData {
 
 Right-click on any tree item to access:
 
-- **Add Child** (folders only): Add a document or folder as a child
-- **Add Sibling**: Add a document or folder at the same level
-- **Rename**: Edit the item name inline
-- **Duplicate**: Create a copy of the item
-- **Delete**: Remove the item
+- **Add Child** (folders only)
+  - Document
+  - Folder
+- **Add Sibling**
+  - Document
+  - Folder
+- **Rename** - Edit item name inline
+- **Duplicate** - Create a copy
+- **Manage Tags** - Open tag management (if handler provided)
+- **Archive** - Archive the item (if handler provided)
+- **Delete** - Remove the item
+
+## Drag and Drop
+
+Items can be dragged and dropped to reorder or move them:
+
+1. **Before**: Drop above an item to insert before it
+2. **After**: Drop below an item to insert after it
+3. **Inside**: Drop in the middle of a folder to move inside it
+
+Visual indicators show where the item will be dropped:
+- Blue line above/below for before/after
+- Blue ring around folder for inside
+- Dragged item becomes semi-transparent
+
+## Search Functionality
+
+The built-in search bar allows filtering documents:
+- Type to search by document name (case-insensitive)
+- Matching items and their ancestors are shown
+- Folders auto-expand during search
+- Clear search to restore full tree
 
 ## Styling
 
@@ -81,6 +120,24 @@ The component uses Tailwind CSS and shadcn/ui components. It respects the theme 
 - `text-sidebar-foreground`: Text color
 - `border-sidebar-border`: Border color
 - `bg-accent`: Hover and active states
+- `text-primary`: Tag colors and highlights
+- `text-destructive`: Delete action color
+
+## Keyboard Support
+
+- **Enter**: Confirm rename
+- **Escape**: Cancel rename
+- **Click**: Select item
+- **Right-click**: Open context menu
+- **Drag**: Reorder items
+
+## Tag Display
+
+Documents can display tags inline:
+- Up to 2 tags are shown directly
+- Additional tags show a "+N" indicator
+- Tags appear with colored badges next to the document name
+- Click "Manage Tags" in context menu to edit
 
 ## Example Data
 
