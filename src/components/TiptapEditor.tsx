@@ -24,6 +24,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { SearchReplaceBar } from '@/components/SearchReplaceBar';
 import { FontFamilyDropdown } from '@/components/FontFamilyDropdown';
 import { FontSizeDropdown } from '@/components/FontSizeDropdown';
+import { AlignmentDropdown } from '@/components/AlignmentDropdown';
+import { HeadingsDropdown } from '@/components/HeadingsDropdown';
+import { StylesDropdown } from '@/components/StylesDropdown';
 import {
   Bold,
   Italic,
@@ -89,7 +92,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [1, 2, 3],
+          levels: [1, 2, 3, 4, 5, 6],
         },
       }),
       Placeholder.configure({
@@ -456,42 +459,12 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         <Separator orientation="vertical" className="mx-1 h-6" />
 
         {/* Headings */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleHeading(1)}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('heading', { level: 1 }) && 'bg-muted'
-          )}
-          title="Heading 1"
-        >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleHeading(2)}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('heading', { level: 2 }) && 'bg-muted'
-          )}
-          title="Heading 2"
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleHeading(3)}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('heading', { level: 3 }) && 'bg-muted'
-          )}
-          title="Heading 3"
-        >
-          <Heading3 className="h-4 w-4" />
-        </Button>
+        <HeadingsDropdown editor={editor} />
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Styles */}
+        <StylesDropdown editor={editor} />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -624,54 +597,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         <Separator orientation="vertical" className="mx-1 h-6" />
 
         {/* Alignment */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'left' }) && 'bg-muted'
-          )}
-          title="Align Left"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'center' }) && 'bg-muted'
-          )}
-          title="Align Center"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'right' }) && 'bg-muted'
-          )}
-          title="Align Right"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'justify' }) && 'bg-muted'
-          )}
-          title="Justify"
-        >
-          <AlignJustify className="h-4 w-4" />
-        </Button>
+        <AlignmentDropdown editor={editor} />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
