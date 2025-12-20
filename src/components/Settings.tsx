@@ -51,6 +51,8 @@ import { toast } from 'sonner';
 interface SettingsProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultSidebarView?: 'tree' | 'outline' | 'split' | 'last-used';
+  onDefaultSidebarViewChange?: (view: 'tree' | 'outline' | 'split' | 'last-used') => void;
 }
 
 const settingsNav = [
@@ -59,7 +61,7 @@ const settingsNav = [
   { name: "About", icon: Info },
 ];
 
-export const Settings = ({ open, onOpenChange }: SettingsProps) => {
+export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used', onDefaultSidebarViewChange }: SettingsProps) => {
   const { theme, setTheme } = useTheme();
   const [activeSection, setActiveSection] = useState("Appearance");
   const [rewriteModes, setRewriteModes] = useState<RewriteMode[]>([]);
@@ -200,6 +202,65 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
               <div className="flex items-center">
                 <ThemeDropdown />
               </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <Label className="text-base">Default Sidebar View</Label>
+              <p className="text-sm text-muted-foreground mb-2">
+                Choose the default view when opening the application
+              </p>
+              <RadioGroup
+                value={defaultSidebarView}
+                onValueChange={(value) => onDefaultSidebarViewChange?.(value as 'tree' | 'outline' | 'split' | 'last-used')}
+                className="space-y-3"
+              >
+                <div className="flex items-start space-x-3">
+                  <RadioGroupItem value="tree" id="tree" className="mt-1" />
+                  <label htmlFor="tree" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">Documents Tree</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Show only the document tree
+                    </p>
+                  </label>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <RadioGroupItem value="outline" id="outline" className="mt-1" />
+                  <label htmlFor="outline" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">Outline Only</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Show only the headings outline
+                    </p>
+                  </label>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <RadioGroupItem value="split" id="split" className="mt-1" />
+                  <label htmlFor="split" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">Split View</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Show both tree and outline side by side
+                    </p>
+                  </label>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <RadioGroupItem value="last-used" id="last-used" className="mt-1" />
+                  <label htmlFor="last-used" className="flex-1 cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">Remember Last Used</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Use the view you had open last time
+                    </p>
+                  </label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
         );
