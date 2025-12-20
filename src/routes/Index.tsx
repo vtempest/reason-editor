@@ -79,10 +79,15 @@ const Index = () => {
   const activeDocument = documents.find((doc) => doc.id === activeDocId);
 
   const filteredDocuments = useMemo(() => {
-    if (!searchQuery.trim()) return documents;
+    // Filter out archived and deleted documents from the main tree
+    const activeDocuments = documents.filter(
+      (doc) => !doc.isArchived && !doc.isDeleted
+    );
+
+    if (!searchQuery.trim()) return activeDocuments;
 
     const query = searchQuery.toLowerCase();
-    return documents.filter(
+    return activeDocuments.filter(
       (doc) =>
         doc.title.toLowerCase().includes(query) ||
         doc.content.toLowerCase().includes(query)
@@ -276,6 +281,50 @@ const Index = () => {
     }
   };
 
+  const handleArchiveDocument = (id: string) => {
+    setDocuments((docs) =>
+      docs.map((doc) =>
+        doc.id === id ? { ...doc, isArchived: true, isDeleted: false } : doc
+      )
+    );
+    toast.success('Note archived');
+  };
+
+  const handleRestoreDocument = (id: string) => {
+    setDocuments((docs) =>
+      docs.map((doc) =>
+        doc.id === id ? { ...doc, isArchived: false, isDeleted: false } : doc
+      )
+    );
+    toast.success('Note restored');
+  };
+
+  const handlePermanentDelete = (id: string) => {
+    // Recursively collect all descendant IDs
+    const collectDescendants = (docId: string): string[] => {
+      const children = documents.filter((d) => d.parentId === docId);
+      return [
+        docId,
+        ...children.flatMap((child) => collectDescendants(child.id)),
+      ];
+    };
+
+    const idsToDelete = collectDescendants(id);
+    const remaining = documents.filter((doc) => !idsToDelete.includes(doc.id));
+
+    setDocuments(remaining);
+
+    // Remove deleted documents from open tabs
+    const newOpenTabs = openTabs.filter((tabId) => !idsToDelete.includes(tabId));
+    setOpenTabs(newOpenTabs);
+
+    if (activeDocId && idsToDelete.includes(activeDocId)) {
+      setActiveDocId(newOpenTabs.length > 0 ? newOpenTabs[0] : remaining.length > 0 ? remaining[0].id : null);
+    }
+
+    toast.success('Note permanently deleted');
+  };
+
   const handleTabChange = (tabId: string) => {
     setActiveDocId(tabId);
   };
@@ -336,7 +385,7 @@ const Index = () => {
         {isMobile ? (
           <>
             <Sidebar
-              documents={filteredDocuments}
+              documents={documents}
               activeId={activeDocId}
               activeDocument={activeDocument}
               onSelect={handleSelectDocument}
@@ -358,6 +407,9 @@ const Index = () => {
               onViewModeChange={setViewMode}
               onSettingsClick={() => setIsSettingsOpen(true)}
               onInviteClick={() => setIsInviteModalOpen(true)}
+              onArchive={handleArchiveDocument}
+              onRestore={handleRestoreDocument}
+              onPermanentDelete={handlePermanentDelete}
             />
             <main className="flex-1 overflow-hidden flex flex-col">
               {!isMobile && (
@@ -409,7 +461,7 @@ const Index = () => {
           <PanelGroup direction="horizontal" className="flex-1">
             <Panel defaultSize={20} minSize={15} maxSize={40}>
               <Sidebar
-                documents={filteredDocuments}
+                documents={documents}
                 activeId={activeDocId}
                 activeDocument={activeDocument}
                 onSelect={handleSelectDocument}
@@ -431,6 +483,9 @@ const Index = () => {
                 onViewModeChange={setViewMode}
                 onSettingsClick={() => setIsSettingsOpen(true)}
                 onInviteClick={() => setIsInviteModalOpen(true)}
+                onArchive={handleArchiveDocument}
+                onRestore={handleRestoreDocument}
+                onPermanentDelete={handlePermanentDelete}
               />
             </Panel>
             <PanelResizeHandle className="w-1 bg-sidebar-border hover:bg-primary/50 transition-colors" />
