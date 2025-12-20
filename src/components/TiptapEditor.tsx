@@ -36,8 +36,12 @@ import {
   AlignJustify,
   Undo,
   Redo,
+  Bot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { rewriteText } from '@/lib/ai/rewrite';
+import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
+import { toast } from 'sonner';
 
 interface TiptapEditorProps {
   content: string;
@@ -48,6 +52,12 @@ interface TiptapEditorProps {
 
 export const TiptapEditor = ({ content, onChange, title, onTitleChange }: TiptapEditorProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    originalText: string;
+    suggestedText: string;
+    range: { from: number; to: number };
+  } | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -130,6 +140,74 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     editor.chain().focus().toggleHeading({ level }).run();
   };
 
+  const handleAIRewrite = async () => {
+    if (!editor) return;
+
+    const { from, to } = editor.state.selection;
+    let textToRewrite = '';
+    let selectionRange = { from, to };
+
+    // If there's selected text, use it
+    if (from !== to) {
+      textToRewrite = editor.state.doc.textBetween(from, to, ' ');
+    } else {
+      // Otherwise, get the current paragraph
+      const { $from } = editor.state.selection;
+      const currentNode = $from.node($from.depth);
+
+      if (currentNode.type.name === 'paragraph' || currentNode.type.name.includes('heading')) {
+        const start = $from.before($from.depth);
+        const end = $from.after($from.depth);
+        textToRewrite = currentNode.textContent;
+        selectionRange = { from: start + 1, to: end - 1 };
+      } else {
+        toast.error('Please select text or place cursor in a paragraph to rewrite');
+        return;
+      }
+    }
+
+    if (!textToRewrite.trim()) {
+      toast.error('No text to rewrite');
+      return;
+    }
+
+    setIsAiLoading(true);
+    setAiSuggestion(null);
+
+    try {
+      const suggestion = await rewriteText(textToRewrite);
+      setAiSuggestion({
+        originalText: textToRewrite,
+        suggestedText: suggestion,
+        range: selectionRange,
+      });
+    } catch (error) {
+      console.error('AI rewrite error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to generate AI suggestion');
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleApproveSuggestion = () => {
+    if (!editor || !aiSuggestion) return;
+
+    editor
+      .chain()
+      .focus()
+      .deleteRange(aiSuggestion.range)
+      .insertContentAt(aiSuggestion.range.from, aiSuggestion.suggestedText)
+      .run();
+
+    setAiSuggestion(null);
+    toast.success('AI suggestion applied');
+  };
+
+  const handleRejectSuggestion = () => {
+    setAiSuggestion(null);
+    toast.info('AI suggestion rejected');
+  };
+
   return (
     <div className="flex h-full flex-col bg-editor-bg">
       {/* Search and Replace Bar */}
@@ -138,6 +216,17 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
       />
+
+      {/* Title Input */}
+      <div className="border-b border-border bg-card px-6 py-4">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="Untitled Note"
+          className="w-full border-none bg-transparent text-3xl font-serif font-semibold text-foreground outline-none placeholder:text-muted-foreground"
+        />
+      </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card px-4 py-2">
@@ -398,6 +487,20 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
         >
           <Link2 className="h-4 w-4" />
         </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* AI Rewrite */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleAIRewrite}
+          disabled={isAiLoading}
+          className="h-8 w-8 p-0"
+          title="AI Rewrite"
+        >
+          <Bot className="h-4 w-4" />
+        </Button>
       </div>
 
 
@@ -539,7 +642,33 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
           >
             <Link2 className="h-4 w-4" />
           </Button>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleAIRewrite}
+            disabled={isAiLoading}
+            className="h-8 w-8 p-0"
+            title="AI Rewrite"
+          >
+            <Bot className="h-4 w-4" />
+          </Button>
         </BubbleMenu>
+
+        {/* AI Suggestion Overlay */}
+        {(aiSuggestion || isAiLoading) && (
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <AIRewriteSuggestion
+              originalText={aiSuggestion?.originalText || ''}
+              suggestedText={aiSuggestion?.suggestedText || ''}
+              onApprove={handleApproveSuggestion}
+              onReject={handleRejectSuggestion}
+              isLoading={isAiLoading}
+            />
+          </div>
+        )}
       </div>
 
       {/* Tiptap Styles */}
