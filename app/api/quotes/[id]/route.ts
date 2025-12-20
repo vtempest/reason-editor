@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { statements } from '@/lib/db/turso';
+import { tursoQueries } from '@/lib/db/turso';
 
 // PUT /api/quotes/[id] - Update a quote
 export async function PUT(
@@ -20,7 +20,7 @@ export async function PUT(
       );
     }
 
-    statements.updateQuote.run(
+    await tursoQueries.updateQuote(
       text,
       source || null,
       author || null,
@@ -59,7 +59,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    statements.deleteQuote.run(params.id);
+    await tursoQueries.deleteQuote(params.id);
 
     return NextResponse.json({
       success: true,

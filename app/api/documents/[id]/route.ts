@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const document = DocumentService.getDocument(params.id);
+    const document = await DocumentService.getDocument(params.id);
 
     if (!document) {
       return NextResponse.json(
@@ -41,7 +41,7 @@ export async function PUT(
 ) {
   try {
     const updates = await request.json();
-    const updatedDocument = DocumentService.updateDocument(params.id, updates);
+    const updatedDocument = await DocumentService.updateDocument(params.id, updates);
 
     if (!updatedDocument) {
       return NextResponse.json(
@@ -74,7 +74,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const deleted = DocumentService.deleteDocument(params.id);
+    const deleted = await DocumentService.deleteDocument(params.id);
 
     if (!deleted) {
       return NextResponse.json(
