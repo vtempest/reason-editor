@@ -11,6 +11,8 @@ export interface Document {
   children?: Document[];
   isExpanded?: boolean;
   isFolder?: boolean;
+  isArchived?: boolean;
+  isDeleted?: boolean;
   tags?: string[];
   sharing?: {
     isPublic: boolean;
