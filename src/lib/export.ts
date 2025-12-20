@@ -143,7 +143,7 @@ export async function exportAsDocx(title: string, htmlContent: string): Promise<
   doc.body.childNodes.forEach(processNode);
 
   // Create document
-  const document = new Document({
+  const docxDocument = new Document({
     sections: [
       {
         properties: {},
@@ -153,7 +153,7 @@ export async function exportAsDocx(title: string, htmlContent: string): Promise<
   });
 
   // Generate and download
-  const blob = await Packer.toBlob(document);
+  const blob = await Packer.toBlob(docxDocument);
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
