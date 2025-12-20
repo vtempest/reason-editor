@@ -8,7 +8,7 @@ import {
   InteractionMode,
 } from 'react-complex-tree';
 import 'react-complex-tree/lib/style-modern.css';
-import { FileText, ChevronRight } from 'lucide-react';
+import { FileText, ChevronRight, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Document } from './DocumentTree';
 import { DocumentContextMenu } from './DocumentContextMenu';
@@ -17,12 +17,13 @@ interface ComplexDocumentTreeProps {
   documents: Document[];
   activeId: string | null;
   onSelect: (id: string) => void;
-  onAdd: (parentId: string | null) => void;
+  onAdd: (parentId: string | null, isFolder?: boolean) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;
   onMove: (draggedId: string, targetId: string | null, position: 'before' | 'after' | 'child') => void;
   onManageTags?: (id: string) => void;
+  onRename?: (id: string, newTitle: string) => void;
 }
 
 // Transform flat document array to tree structure for react-complex-tree
@@ -42,7 +43,7 @@ const buildTreeData = (documents: Document[]) => {
       index: doc.id,
       canMove: true,
       canRename: true,
-      isFolder: children.length > 0,
+      isFolder: doc.isFolder || children.length > 0,
       children,
       data: doc,
     };
@@ -69,6 +70,7 @@ export const ComplexDocumentTree = ({
   onToggleExpand,
   onMove,
   onManageTags,
+  onRename,
 }: ComplexDocumentTreeProps) => {
   const treeRef = useRef<TreeEnvironmentRef>(null);
 
@@ -219,6 +221,11 @@ export const ComplexDocumentTree = ({
           async onChangeItemChildren(itemId: TreeItemIndex, newChildren: TreeItemIndex[]) {
             // Handle reordering
           },
+          async onRenameItem(item: TreeItem, name: string) {
+            if (onRename && item.index !== 'root') {
+              onRename(item.index as string, name);
+            }
+          },
         }}
         getItemTitle={(item) => item.data.title || 'Untitled'}
         viewState={{
@@ -232,7 +239,13 @@ export const ComplexDocumentTree = ({
         canDropOnFolder
         canDropOnNonFolder
         canReorderItems
+        canRename
         onDrop={handleDrop}
+        onRenameItem={(item, name) => {
+          if (onRename && item.index !== 'root') {
+            onRename(item.index as string, name);
+          }
+        }}
         onFocusItem={(item) => {
           if (item.index !== 'root') {
             onSelect(item.index as string);
@@ -275,10 +288,12 @@ export const ComplexDocumentTree = ({
 
           return (
             <DocumentContextMenu
-              onAddChild={() => onAdd(doc.id)}
-              onAddSibling={() => onAdd(doc.parentId || null)}
+              onAddChild={() => onAdd(doc.id, false)}
+              onAddChildFolder={() => onAdd(doc.id, true)}
+              onAddSibling={() => onAdd(doc.parentId || null, false)}
+              onAddSiblingFolder={() => onAdd(doc.parentId || null, true)}
               onRename={() => {
-                onSelect(doc.id);
+                treeRef.current?.startRenamingItem(doc.id);
               }}
               onDuplicate={() => onDuplicate(doc.id)}
               onDelete={() => onDelete(doc.id)}
@@ -301,7 +316,11 @@ export const ComplexDocumentTree = ({
                   style={{ paddingLeft: `${depth * 12 + 8}px` }}
                 >
                   {arrow}
-                  <FileText className="rct-tree-item-icon" />
+                  {doc.isFolder ? (
+                    <Folder className="rct-tree-item-icon" />
+                  ) : (
+                    <FileText className="rct-tree-item-icon" />
+                  )}
                   <span className="truncate text-sm">{title}</span>
                 </div>
                 {children}

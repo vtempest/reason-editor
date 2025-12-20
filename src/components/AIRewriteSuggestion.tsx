@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Check, X, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getRewriteModes, RewriteMode } from '@/lib/ai/rewriteModes';
 
 interface AIRewriteSuggestionProps {
   originalText: string;
   suggestedText: string;
   onApprove: () => void;
   onReject: () => void;
+  onRegenerate?: (mode: RewriteMode) => void;
   isLoading?: boolean;
+  currentMode?: string;
 }
 
 export const AIRewriteSuggestion = ({
@@ -16,8 +20,15 @@ export const AIRewriteSuggestion = ({
   suggestedText,
   onApprove,
   onReject,
+  onRegenerate,
   isLoading = false,
+  currentMode,
 }: AIRewriteSuggestionProps) => {
+  const [modes, setModes] = useState<RewriteMode[]>([]);
+
+  useEffect(() => {
+    setModes(getRewriteModes());
+  }, []);
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-popover p-3 shadow-lg">
@@ -27,10 +38,41 @@ export const AIRewriteSuggestion = ({
     );
   }
 
+  const getModeColor = (color?: string) => {
+    const colors: Record<string, string> = {
+      blue: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20 border-blue-500/20',
+      purple: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 border-purple-500/20',
+      green: 'bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-500/20 border-green-500/20',
+      orange: 'bg-orange-500/10 text-orange-700 dark:text-orange-300 hover:bg-orange-500/20 border-orange-500/20',
+      pink: 'bg-pink-500/10 text-pink-700 dark:text-pink-300 hover:bg-pink-500/20 border-pink-500/20',
+    };
+    return colors[color || 'blue'] || colors.blue;
+  };
+
   return (
     <div className="rounded-lg border border-border bg-popover shadow-lg max-w-xl">
       <div className="p-3 border-b border-border">
-        <div className="text-xs font-semibold text-muted-foreground mb-2">AI SUGGESTION</div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-semibold text-muted-foreground">AI SUGGESTION</div>
+          {onRegenerate && modes.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {modes.map((mode) => (
+                <Badge
+                  key={mode.id}
+                  variant="outline"
+                  className={cn(
+                    'cursor-pointer text-xs px-2 py-0.5 transition-colors',
+                    getModeColor(mode.color),
+                    currentMode === mode.id && 'ring-2 ring-offset-1'
+                  )}
+                  onClick={() => onRegenerate(mode)}
+                >
+                  {mode.name}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="space-y-2">
           <div>
             <div className="text-xs text-muted-foreground mb-1">Original:</div>

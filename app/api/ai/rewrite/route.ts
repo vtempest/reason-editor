@@ -3,7 +3,7 @@ import { ChatGroq } from '@langchain/groq';
 
 export async function POST(request: NextRequest) {
   try {
-    const { text } = await request.json();
+    const { text, prompt: customPrompt } = await request.json();
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json(
@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
       temperature: 0.7,
     });
 
-    const prompt = `Rewrite the following text to improve clarity, grammar, and style while maintaining the original meaning and tone. Only return the rewritten text without any explanation or additional commentary:
+    // Use custom prompt if provided, otherwise use default
+    const prompt = customPrompt || `Rewrite the following text to improve clarity, grammar, and style while maintaining the original meaning and tone. Only return the rewritten text without any explanation or additional commentary:
 
 ${text}`;
 

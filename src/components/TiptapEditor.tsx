@@ -14,6 +14,7 @@ import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { SearchReplaceBar } from '@/components/SearchReplaceBar';
 import {
   Bold,
@@ -41,6 +42,9 @@ import {
 import { cn } from '@/lib/utils';
 import { rewriteText } from '@/lib/ai/rewrite';
 import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
+import { ExportDropdown } from '@/components/ExportDropdown';
+import { ViewModeDropdown, ViewMode } from '@/components/ViewModeDropdown';
+import TurndownService from 'turndown';
 import { toast } from 'sonner';
 
 interface TiptapEditorProps {
@@ -48,16 +52,20 @@ interface TiptapEditorProps {
   onChange: (content: string) => void;
   title: string;
   onTitleChange: (title: string) => void;
+  scrollToHeading?: (headingText: string) => void;
 }
 
-export const TiptapEditor = ({ content, onChange, title, onTitleChange }: TiptapEditorProps) => {
+export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollToHeading }: TiptapEditorProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<{
     originalText: string;
     suggestedText: string;
     range: { from: number; to: number };
+    mode?: string;
   } | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('formatted');
+  const [rawContent, setRawContent] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -125,6 +133,58 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Scroll to heading functionality
+  useEffect(() => {
+    if (scrollToHeading && editor) {
+      // Store the function to be called from parent
+      (window as any).__scrollToHeading = (headingText: string) => {
+        // Find all headings in the editor
+        const editorElement = editor.view.dom;
+        const headings = editorElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+        // Find the matching heading
+        const targetHeading = Array.from(headings).find(
+          h => h.textContent?.trim() === headingText.trim()
+        ) as HTMLElement;
+
+        if (targetHeading) {
+          // Scroll the heading into view
+          targetHeading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Add blinking border animation
+          targetHeading.style.border = '2px solid #9ca3af';
+          targetHeading.style.borderRadius = '4px';
+          targetHeading.style.padding = '4px';
+          targetHeading.style.transition = 'border-color 0.3s ease-in-out';
+
+          // Animate the border (blink effect)
+          let blinkCount = 0;
+          const blinkInterval = setInterval(() => {
+            targetHeading.style.borderColor = blinkCount % 2 === 0 ? 'transparent' : '#9ca3af';
+            blinkCount++;
+
+            // Stop after 1 second (approximately 3 blinks at 300ms interval)
+            if (blinkCount >= 6) {
+              clearInterval(blinkInterval);
+              // Remove the border after animation
+              setTimeout(() => {
+                targetHeading.style.border = '';
+                targetHeading.style.borderRadius = '';
+                targetHeading.style.padding = '';
+              }, 300);
+            }
+          }, 150);
+        }
+      };
+    }
+
+    return () => {
+      if ((window as any).__scrollToHeading) {
+        delete (window as any).__scrollToHeading;
+      }
+    };
+  }, [editor, scrollToHeading]);
+
   if (!editor) {
     return null;
   }
@@ -140,7 +200,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     editor.chain().focus().toggleHeading({ level }).run();
   };
 
-  const handleAIRewrite = async () => {
+  const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
     if (!editor) return;
 
     const { from, to } = editor.state.selection;
@@ -175,11 +235,13 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     setAiSuggestion(null);
 
     try {
-      const suggestion = await rewriteText(textToRewrite);
+      const fullPrompt = customPrompt ? `${customPrompt}\n\n"${textToRewrite}"` : undefined;
+      const suggestion = await rewriteText(textToRewrite, fullPrompt);
       setAiSuggestion({
         originalText: textToRewrite,
         suggestedText: suggestion,
         range: selectionRange,
+        mode: modeId,
       });
     } catch (error) {
       console.error('AI rewrite error:', error);
@@ -187,6 +249,11 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     } finally {
       setIsAiLoading(false);
     }
+  };
+
+  const handleRegenerateWithMode = async (mode: any) => {
+    if (!aiSuggestion) return;
+    await handleAIRewrite(mode.prompt, mode.id);
   };
 
   const handleApproveSuggestion = () => {
@@ -208,6 +275,79 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
     toast.info('AI suggestion rejected');
   };
 
+  // Conversion utilities
+  const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+  });
+
+  const htmlToMarkdown = (html: string): string => {
+    return turndownService.turndown(html);
+  };
+
+  const markdownToHtml = (markdown: string): string => {
+    // Simple markdown to HTML conversion
+    // For a more robust solution, you could use a library like 'marked'
+    let html = markdown
+      // Headers
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      // Bold
+      .replace(/\*\*([^*]+)\*\*/gim, '<strong>$1</strong>')
+      .replace(/__([^_]+)__/gim, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*([^*]+)\*/gim, '<em>$1</em>')
+      .replace(/_([^_]+)_/gim, '<em>$1</em>')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>')
+      // Line breaks
+      .replace(/\n/gim, '<br>');
+
+    return html;
+  };
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    if (!editor) return;
+
+    if (mode === 'formatted') {
+      // Converting back to formatted view
+      if (viewMode === 'html') {
+        // Update editor with the raw HTML content
+        editor.commands.setContent(rawContent);
+        onChange(rawContent);
+      } else if (viewMode === 'markdown') {
+        // Convert markdown to HTML and update editor
+        const html = markdownToHtml(rawContent);
+        editor.commands.setContent(html);
+        onChange(html);
+      }
+    } else if (mode === 'html') {
+      // Switching to HTML view
+      const html = editor.getHTML();
+      setRawContent(html);
+    } else if (mode === 'markdown') {
+      // Switching to Markdown view
+      const html = editor.getHTML();
+      const markdown = htmlToMarkdown(html);
+      setRawContent(markdown);
+    }
+
+    setViewMode(mode);
+  };
+
+  const handleRawContentChange = (value: string) => {
+    setRawContent(value);
+
+    // Update the document content when editing raw content
+    if (viewMode === 'html') {
+      onChange(value);
+    } else if (viewMode === 'markdown') {
+      const html = markdownToHtml(value);
+      onChange(html);
+    }
+  };
+
   return (
     <div className="flex h-full flex-col bg-editor-bg">
       {/* Search and Replace Bar */}
@@ -216,17 +356,6 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
       />
-
-      {/* Title Input */}
-      <div className="border-b border-border bg-card px-6 py-4">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="Untitled Note"
-          className="w-full border-none bg-transparent text-3xl font-serif font-semibold text-foreground outline-none placeholder:text-muted-foreground"
-        />
-      </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card px-4 py-2">
@@ -501,12 +630,24 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
         >
           <Bot className="h-4 w-4" />
         </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* View Mode */}
+        <ViewModeDropdown value={viewMode} onChange={handleViewModeChange} />
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Export */}
+        <ExportDropdown title={title} htmlContent={editor.getHTML()} />
       </div>
 
 
       {/* Editor Content */}
       <div className="flex-1 overflow-auto relative">
-        <EditorContent editor={editor} className="h-full" />
+        {viewMode === 'formatted' ? (
+        <>
+          <EditorContent editor={editor} className="h-full" />
 
         {/* Floating Menu - appears on empty lines */}
         <FloatingMenu
@@ -659,15 +800,26 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange }: Tiptap
 
         {/* AI Suggestion Overlay */}
         {(aiSuggestion || isAiLoading) && (
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
             <AIRewriteSuggestion
               originalText={aiSuggestion?.originalText || ''}
               suggestedText={aiSuggestion?.suggestedText || ''}
               onApprove={handleApproveSuggestion}
               onReject={handleRejectSuggestion}
+              onRegenerate={handleRegenerateWithMode}
+              currentMode={aiSuggestion?.mode}
               isLoading={isAiLoading}
             />
           </div>
+        )}
+        </>
+        ) : (
+          <Textarea
+            value={rawContent}
+            onChange={(e) => handleRawContentChange(e.target.value)}
+            className="h-full w-full resize-none font-mono text-sm p-6 border-none focus-visible:ring-0"
+            placeholder={viewMode === 'html' ? 'Enter HTML...' : 'Enter Markdown...'}
+          />
         )}
       </div>
 

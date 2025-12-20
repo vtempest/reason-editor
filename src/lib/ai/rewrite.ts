@@ -1,13 +1,13 @@
 /**
  * Rewrite text using Groq's Llama 3.3 model via backend API
  */
-export async function rewriteText(text: string): Promise<string> {
+export async function rewriteText(text: string, customPrompt?: string): Promise<string> {
   const response = await fetch('/api/ai/rewrite', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, prompt: customPrompt }),
   });
 
   if (!response.ok) {

@@ -15,7 +15,7 @@ export const SearchReplaceBar = ({ editor, isOpen, onClose }: SearchReplaceBarPr
   const [searchTerm, setSearchTerm] = useState('');
   const [replaceTerm, setReplaceTerm] = useState('');
   const [caseSensitive, setCaseSensitive] = useState(false);
-  const [showReplace, setShowReplace] = useState(false);
+  const [showReplace, setShowReplace] = useState(true);
 
   // Get current results info from editor storage
   const results = editor.storage.searchAndReplace?.results || [];
@@ -34,7 +34,7 @@ export const SearchReplaceBar = ({ editor, isOpen, onClose }: SearchReplaceBarPr
       editor.commands.clearSearch();
       setSearchTerm('');
       setReplaceTerm('');
-      setShowReplace(false);
+      setShowReplace(true);
     }
   }, [isOpen, editor]);
 
