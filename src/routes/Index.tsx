@@ -489,7 +489,7 @@ const Index = () => {
                 onPermanentDelete={handlePermanentDelete}
               />
             </Panel>
-            <PanelResizeHandle className="w-1 bg-sidebar-border hover:bg-primary/50 transition-colors" />
+            <PanelResizeHandle className="w-px bg-sidebar-border hover:bg-primary/50 transition-colors" />
             <Panel defaultSize={80} minSize={50}>
               <main className="flex-1 overflow-hidden flex flex-col h-full">
                 <DocumentTabs
