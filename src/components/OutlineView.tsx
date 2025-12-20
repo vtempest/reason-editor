@@ -1,6 +1,17 @@
-import { Hash, ChevronRight } from 'lucide-react';
+import { Hash, ChevronRight, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubContent,
+  ContextMenuSubTrigger,
+  ContextMenuTrigger,
+  ContextMenuCheckboxItem,
+} from '@/components/ui/context-menu';
 
 interface OutlineItem {
   id: string;
@@ -12,10 +23,16 @@ interface OutlineItem {
 interface OutlineViewProps {
   content: string;
   onNavigate?: (line: number) => void;
+  onReorder?: (fromIndex: number, toIndex: number) => void;
 }
 
-export const OutlineView = ({ content, onNavigate }: OutlineViewProps) => {
-  const [expandedLevels, setExpandedLevels] = useState<Set<number>>(new Set([1, 2]));
+const STORAGE_KEY = 'outline-collapse-preferences';
+
+export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps) => {
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const [defaultCollapseLevel, setDefaultCollapseLevel] = useState<number | null>(null);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<string | null>(null);
 
   const outline = useMemo(() => {
     const items: OutlineItem[] = [];
@@ -40,16 +57,125 @@ export const OutlineView = ({ content, onNavigate }: OutlineViewProps) => {
     return items;
   }, [content]);
 
-  const toggleLevel = (level: number) => {
-    setExpandedLevels((prev) => {
+  // Load preferences from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const prefs = JSON.parse(stored);
+        setDefaultCollapseLevel(prefs.defaultCollapseLevel || null);
+        if (prefs.defaultCollapseLevel) {
+          applyCollapseToLevel(prefs.defaultCollapseLevel);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load outline preferences:', e);
+    }
+  }, []);
+
+  // Save default collapse level to localStorage
+  const saveDefaultCollapseLevel = (level: number | null) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ defaultCollapseLevel: level }));
+      setDefaultCollapseLevel(level);
+    } catch (e) {
+      console.error('Failed to save outline preferences:', e);
+    }
+  };
+
+  // Get all children (recursive) for a given item
+  const getChildrenIds = (itemId: string): string[] => {
+    const index = outline.findIndex((item) => item.id === itemId);
+    if (index === -1) return [];
+
+    const parentLevel = outline[index].level;
+    const children: string[] = [];
+
+    for (let i = index + 1; i < outline.length; i++) {
+      if (outline[i].level <= parentLevel) break;
+      children.push(outline[i].id);
+    }
+
+    return children;
+  };
+
+  // Toggle collapse for a specific item and all its children
+  const toggleCollapse = (itemId: string) => {
+    setCollapsedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(level)) {
-        next.delete(level);
+      if (next.has(itemId)) {
+        // Expand: remove this item and all its descendants from collapsed
+        next.delete(itemId);
+        const children = getChildrenIds(itemId);
+        children.forEach((childId) => next.delete(childId));
       } else {
-        next.add(level);
+        // Collapse: add this item to collapsed
+        next.add(itemId);
       }
       return next;
     });
+  };
+
+  // Check if an item should be hidden because a parent is collapsed
+  const isHiddenByParent = (itemIndex: number): boolean => {
+    const currentLevel = outline[itemIndex].level;
+
+    // Look backwards for parent items
+    for (let i = itemIndex - 1; i >= 0; i--) {
+      if (outline[i].level < currentLevel) {
+        // Found a parent
+        if (collapsedIds.has(outline[i].id)) {
+          return true;
+        }
+        // Continue checking higher-level parents
+        if (outline[i].level === 1) break;
+      }
+    }
+
+    return false;
+  };
+
+  // Collapse all headings at or below a specific level
+  const applyCollapseToLevel = (level: number) => {
+    const newCollapsed = new Set<string>();
+    outline.forEach((item) => {
+      if (item.level === level) {
+        newCollapsed.add(item.id);
+      }
+    });
+    setCollapsedIds(newCollapsed);
+  };
+
+  // Handle drag and drop
+  const handleDragStart = (e: React.DragEvent, itemId: string) => {
+    setDraggedItem(itemId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, itemId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverItem(itemId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem === targetId) return;
+
+    const fromIndex = outline.findIndex((item) => item.id === draggedItem);
+    const toIndex = outline.findIndex((item) => item.id === targetId);
+
+    if (fromIndex !== -1 && toIndex !== -1 && onReorder) {
+      onReorder(fromIndex, toIndex);
+    }
+
+    setDraggedItem(null);
+    setDragOverItem(null);
   };
 
   if (outline.length === 0) {
@@ -74,59 +200,107 @@ export const OutlineView = ({ content, onNavigate }: OutlineViewProps) => {
         {outline.map((item, index) => {
           const nextItem = outline[index + 1];
           const hasChildren = nextItem && nextItem.level > item.level;
-          const isExpanded = expandedLevels.has(item.level);
+          const isCollapsed = collapsedIds.has(item.id);
 
-          // Skip items that are under a collapsed parent
-          if (index > 0) {
-            const prevItem = outline[index - 1];
-            if (prevItem.level < item.level && !expandedLevels.has(prevItem.level)) {
-              return null;
-            }
+          // Skip items that are hidden by collapsed parent
+          if (isHiddenByParent(index)) {
+            return null;
           }
 
           return (
-            <div
-              key={item.id}
-              className={cn(
-                'group flex items-center gap-1 px-2 py-1.5 hover:bg-sidebar-accent rounded-md cursor-pointer transition-colors',
-              )}
-              style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}
-              onClick={() => onNavigate?.(item.line)}
-            >
-              <button
-                className={cn(
-                  'h-5 w-5 p-0 flex items-center justify-center hover:bg-transparent',
-                  !hasChildren && 'invisible'
-                )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleLevel(item.level);
-                }}
-              >
-                <ChevronRight
+            <ContextMenu key={item.id}>
+              <ContextMenuTrigger>
+                <div
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, item.id)}
+                  onDragOver={(e) => handleDragOver(e, item.id)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDrop(e, item.id)}
                   className={cn(
-                    'h-3 w-3 transition-transform text-muted-foreground',
-                    isExpanded && 'rotate-90'
+                    'group flex items-center gap-1 px-2 py-1.5 hover:bg-sidebar-accent rounded-md cursor-pointer transition-colors',
+                    draggedItem === item.id && 'opacity-50',
+                    dragOverItem === item.id && 'border-t-2 border-primary'
                   )}
-                />
-              </button>
+                  style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}
+                  onClick={() => onNavigate?.(item.line)}
+                >
+                  <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
 
-              <Hash
-                className={cn(
-                  'h-3 w-3 flex-shrink-0 text-muted-foreground',
-                  item.level === 1 && 'h-4 w-4'
-                )}
-              />
-              <span
-                className={cn(
-                  'flex-1 truncate text-sm',
-                  item.level === 1 && 'font-semibold',
-                  item.level === 2 && 'font-medium'
-                )}
-              >
-                {item.text}
-              </span>
-            </div>
+                  <button
+                    className={cn(
+                      'h-5 w-5 p-0 flex items-center justify-center hover:bg-transparent',
+                      !hasChildren && 'invisible'
+                    )}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCollapse(item.id);
+                    }}
+                  >
+                    <ChevronRight
+                      className={cn(
+                        'h-3 w-3 transition-transform text-muted-foreground',
+                        !isCollapsed && 'rotate-90'
+                      )}
+                    />
+                  </button>
+
+                  <Hash
+                    className={cn(
+                      'h-3 w-3 flex-shrink-0 text-muted-foreground',
+                      item.level === 1 && 'h-4 w-4'
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'flex-1 truncate text-sm',
+                      item.level === 1 && 'font-semibold',
+                      item.level === 2 && 'font-medium'
+                    )}
+                  >
+                    {item.text}
+                  </span>
+                </div>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>Collapse to...</ContextMenuSubTrigger>
+                  <ContextMenuSubContent>
+                    <ContextMenuItem onClick={() => applyCollapseToLevel(1)}>
+                      Heading 1
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => applyCollapseToLevel(2)}>
+                      Heading 2
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => applyCollapseToLevel(3)}>
+                      Heading 3
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => applyCollapseToLevel(4)}>
+                      Heading 4
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => setCollapsedIds(new Set())}>
+                      Expand All
+                    </ContextMenuItem>
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
+                <ContextMenuSeparator />
+                <ContextMenuCheckboxItem
+                  checked={defaultCollapseLevel !== null}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      // Save current first collapsed level as default
+                      const firstCollapsed = outline.find(item => collapsedIds.has(item.id));
+                      if (firstCollapsed) {
+                        saveDefaultCollapseLevel(firstCollapsed.level);
+                      }
+                    } else {
+                      saveDefaultCollapseLevel(null);
+                    }
+                  }}
+                >
+                  Keep this collapse level as default
+                </ContextMenuCheckboxItem>
+              </ContextMenuContent>
+            </ContextMenu>
           );
         })}
       </div>

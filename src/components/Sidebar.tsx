@@ -269,9 +269,9 @@ export const Sidebar = ({
     );
   }
 
-  // Desktop: render as fixed sidebar
+  // Desktop: render as sidebar (width controlled by parent panel)
   return (
-    <div className="w-80 border-r border-sidebar-border">
+    <div className="h-full border-r border-sidebar-border">
       {sidebarContent}
     </div>
   );

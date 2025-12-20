@@ -15,6 +15,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -318,75 +319,150 @@ const Index = () => {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar
-          documents={filteredDocuments}
-          activeId={activeDocId}
-          activeDocument={activeDocument}
-          onSelect={handleSelectDocument}
-          onAdd={handleAddDocument}
-          onDelete={handleDeleteDocument}
-          onDuplicate={handleDuplicateDocument}
-          onToggleExpand={handleToggleExpand}
-          onMove={handleMoveDocument}
-          onManageTags={handleManageTags}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onSearchClear={() => setSearchQuery('')}
-          onSearchFocus={() => !isMobile && setIsSearchModalOpen(true)}
-          isOpen={isSidebarOpen}
-          onOpenChange={setIsSidebarOpen}
-          isMobile={isMobile}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onSettingsClick={() => setIsSettingsOpen(true)}
-          onInviteClick={() => setIsInviteModalOpen(true)}
-        />
-
-        <main className="flex-1 overflow-hidden flex flex-col">
-          {!isMobile && (
-            <DocumentTabs
-              openTabs={openTabs}
-              activeTab={activeDocId}
-              documents={documents}
-              onTabChange={handleTabChange}
-              onTabClose={handleTabClose}
-              onTabAdd={handleTabAdd}
+        {isMobile ? (
+          <>
+            <Sidebar
+              documents={filteredDocuments}
+              activeId={activeDocId}
+              activeDocument={activeDocument}
+              onSelect={handleSelectDocument}
+              onAdd={handleAddDocument}
+              onDelete={handleDeleteDocument}
+              onDuplicate={handleDuplicateDocument}
+              onToggleExpand={handleToggleExpand}
+              onMove={handleMoveDocument}
+              onManageTags={handleManageTags}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onSearchClear={() => setSearchQuery('')}
+              onSearchFocus={() => !isMobile && setIsSearchModalOpen(true)}
+              isOpen={isSidebarOpen}
+              onOpenChange={setIsSidebarOpen}
+              isMobile={isMobile}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onSettingsClick={() => setIsSettingsOpen(true)}
+              onInviteClick={() => setIsInviteModalOpen(true)}
             />
-          )}
-
-          {activeDocument ? (
-            <>
-              {activeDocument.tags && activeDocument.tags.length > 0 && (
-                <TagBar
-                  tags={activeDocument.tags}
-                  onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                  onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+            <main className="flex-1 overflow-hidden flex flex-col">
+              {!isMobile && (
+                <DocumentTabs
+                  openTabs={openTabs}
+                  activeTab={activeDocId}
+                  documents={documents}
+                  onTabChange={handleTabChange}
+                  onTabClose={handleTabClose}
+                  onTabAdd={handleTabAdd}
                 />
               )}
-              <div className="flex-1 overflow-hidden">
-                <TiptapEditor
-                  key={activeDocument.id}
-                  content={activeDocument.content}
-                  onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
-                  title={activeDocument.title}
-                  onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+
+              {activeDocument ? (
+                <>
+                  {activeDocument.tags && activeDocument.tags.length > 0 && (
+                    <TagBar
+                      tags={activeDocument.tags}
+                      onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
+                      onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+                    />
+                  )}
+                  <div className="flex-1 overflow-hidden">
+                    <TiptapEditor
+                      content={activeDocument.content}
+                      onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                      title={activeDocument.title}
+                      onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="flex h-full items-center justify-center bg-editor-bg">
+                  <div className="text-center">
+                    <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+                    <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                      No Note Selected
+                    </h2>
+                    <p className="text-muted-foreground">
+                      {isMobile ? 'Tap the menu to select a note' : 'Select a note from the sidebar or create a new one'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </main>
+          </>
+        ) : (
+          <PanelGroup direction="horizontal" className="flex-1">
+            <Panel defaultSize={20} minSize={15} maxSize={40}>
+              <Sidebar
+                documents={filteredDocuments}
+                activeId={activeDocId}
+                activeDocument={activeDocument}
+                onSelect={handleSelectDocument}
+                onAdd={handleAddDocument}
+                onDelete={handleDeleteDocument}
+                onDuplicate={handleDuplicateDocument}
+                onToggleExpand={handleToggleExpand}
+                onMove={handleMoveDocument}
+                onManageTags={handleManageTags}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onSearchClear={() => setSearchQuery('')}
+                onSearchFocus={() => !isMobile && setIsSearchModalOpen(true)}
+                isOpen={isSidebarOpen}
+                onOpenChange={setIsSidebarOpen}
+                isMobile={isMobile}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                onSettingsClick={() => setIsSettingsOpen(true)}
+                onInviteClick={() => setIsInviteModalOpen(true)}
+              />
+            </Panel>
+            <PanelResizeHandle className="w-1 bg-sidebar-border hover:bg-primary/50 transition-colors" />
+            <Panel defaultSize={80} minSize={50}>
+              <main className="flex-1 overflow-hidden flex flex-col h-full">
+                <DocumentTabs
+                  openTabs={openTabs}
+                  activeTab={activeDocId}
+                  documents={documents}
+                  onTabChange={handleTabChange}
+                  onTabClose={handleTabClose}
+                  onTabAdd={handleTabAdd}
                 />
-              </div>
-            </>
-          ) : (
-            <div className="flex h-full items-center justify-center bg-editor-bg">
-              <div className="text-center">
-                <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-                <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
-                  No Note Selected
-                </h2>
-                <p className="text-muted-foreground">
-                  {isMobile ? 'Tap the menu to select a note' : 'Select a note from the sidebar or create a new one'}
-                </p>
-              </div>
-            </div>
-          )}
-        </main>
+
+                {activeDocument ? (
+                  <>
+                    {activeDocument.tags && activeDocument.tags.length > 0 && (
+                      <TagBar
+                        tags={activeDocument.tags}
+                        onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
+                        onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+                      />
+                    )}
+                    <div className="flex-1 overflow-hidden">
+                      <TiptapEditor
+                        content={activeDocument.content}
+                        onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                        title={activeDocument.title}
+                        onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-editor-bg">
+                    <div className="text-center">
+                      <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+                      <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                        No Note Selected
+                      </h2>
+                      <p className="text-muted-foreground">
+                        Select a note from the sidebar or create a new one
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </main>
+            </Panel>
+          </PanelGroup>
+        )}
       </div>
 
       <SearchModal
