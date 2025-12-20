@@ -1,7 +1,9 @@
 {
   "name": "reason-editor",
+  "description": "Reason-Editor.js - file tree, heading outline, formatting, search, share, Google Docs, docx",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "next dev",
@@ -9,7 +11,10 @@
     "start": "next start",
     "lint": "eslint .",
     "server": "tsx server/server.ts",
-    "server:watch": "tsx watch server/server.ts"
+    "server:watch": "tsx watch server/server.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -64,6 +69,7 @@
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
     "docx": "^9.5.1",
+    "drizzle-orm": "^0.45.1",
     "embla-carousel-react": "^8.6.0",
     "express": "^5.1.0",
     "googleapis": "^166.0.0",
@@ -100,6 +106,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.21",
+    "drizzle-kit": "^0.31.8",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^15.15.0",

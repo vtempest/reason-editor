@@ -38,7 +38,6 @@ export const ViewModeDropdown = ({ value, onChange }: ViewModeDropdownProps) => 
       <DropdownMenuContent align="start">
         <DropdownMenuItem onClick={() => onChange('formatted')}>
           <Check className={cn('mr-2 h-4 w-4', value !== 'formatted' && 'opacity-0')} />
-          Formatted text
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onChange('html')}>
           <Check className={cn('mr-2 h-4 w-4', value !== 'html' && 'opacity-0')} />
