@@ -102,6 +102,18 @@ export async function initializeDatabase() {
 
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_research_quotes_documentId ON research_quotes(documentId);`);
   await db.execute(`CREATE INDEX IF NOT EXISTS idx_research_quotes_tags ON research_quotes(tags);`);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS share_tokens (
+      id TEXT PRIMARY KEY,
+      documentId TEXT NOT NULL,
+      createdAt TEXT NOT NULL,
+      expiresAt TEXT,
+      FOREIGN KEY (documentId) REFERENCES documents(id) ON DELETE CASCADE
+    );
+  `);
+
+  await db.execute(`CREATE INDEX IF NOT EXISTS idx_share_tokens_documentId ON share_tokens(documentId);`);
 }
 
 // Helper function to convert ResultSet to typed rows
@@ -315,6 +327,44 @@ export const tursoQueries = {
     await db.execute({
       sql: `DELETE FROM documents WHERE userId = ? OR userId IS NULL`,
       args: [userId],
+    });
+  },
+
+  // Share token operations
+  async createShareToken(id: string, documentId: string, createdAt: string): Promise<void> {
+    const db = getTursoClient();
+    await db.execute({
+      sql: `INSERT INTO share_tokens (id, documentId, createdAt, expiresAt)
+            VALUES (?, ?, ?, NULL)`,
+      args: [id, documentId, createdAt],
+    });
+  },
+
+  async getShareToken(id: string): Promise<{ id: string; documentId: string; createdAt: string; expiresAt: string | null } | null> {
+    const db = getTursoClient();
+    const result = await db.execute({
+      sql: `SELECT * FROM share_tokens WHERE id = ?`,
+      args: [id],
+    });
+    const rows = rowsToArray(result);
+    return rows[0] || null;
+  },
+
+  async getShareTokenByDocumentId(documentId: string): Promise<{ id: string; documentId: string; createdAt: string; expiresAt: string | null } | null> {
+    const db = getTursoClient();
+    const result = await db.execute({
+      sql: `SELECT * FROM share_tokens WHERE documentId = ? LIMIT 1`,
+      args: [documentId],
+    });
+    const rows = rowsToArray(result);
+    return rows[0] || null;
+  },
+
+  async deleteShareToken(id: string): Promise<void> {
+    const db = getTursoClient();
+    await db.execute({
+      sql: `DELETE FROM share_tokens WHERE id = ?`,
+      args: [id],
     });
   },
 };
