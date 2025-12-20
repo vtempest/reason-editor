@@ -90,50 +90,8 @@ export const Sidebar = ({
         />
       </div>
 
-      {/* Header with view toggle */}
-      <div className="border-b border-sidebar-border px-4 py-3 pt-16">
-        <div className="flex items-center justify-end">
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange('tree')}
-              className={cn(
-                'h-8 w-8 p-0',
-                viewMode === 'tree' && 'bg-sidebar-accent'
-              )}
-              title="Document Tree"
-            >
-              <FolderOpen className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange('outline')}
-              className={cn(
-                'h-8 w-8 p-0',
-                viewMode === 'outline' && 'bg-sidebar-accent'
-              )}
-              title="Document Outline"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange('split')}
-              className={cn(
-                'h-8 w-8 p-0',
-                viewMode === 'split' && 'bg-sidebar-accent'
-              )}
-              title="Split View (Files + Outline)"
-            >
-              <Columns2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Spacer for floating search */}
+      <div className="h-16"></div>
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden">
@@ -377,6 +335,26 @@ export const Sidebar = ({
                 </TooltipTrigger>
                 <TooltipContent side="top">
                   <p>Invite</p>
+                </TooltipContent>
+              </Tooltip>
+
+              {/* Split View Toggle */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onViewModeChange(viewMode === 'split' ? 'tree' : 'split')}
+                    className={cn(
+                      'h-9 w-9 p-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+                      viewMode === 'split' && 'bg-sidebar-accent text-sidebar-foreground'
+                    )}
+                  >
+                    <Columns2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Toggle Split View</p>
                 </TooltipContent>
               </Tooltip>
             </nav>

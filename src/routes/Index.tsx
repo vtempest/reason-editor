@@ -27,7 +27,8 @@ const Index = () => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [tagManagementDocId, setTagManagementDocId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline' | 'split'>('REASON-view-mode', 'tree');
+  const [defaultSidebarView, setDefaultSidebarView] = useLocalStorage<'tree' | 'outline' | 'split' | 'last-used'>('REASON-default-sidebar-view', 'last-used');
+  const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline' | 'split'>('REASON-view-mode', 'split');
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('REASON-documents', [
     {
@@ -249,6 +250,13 @@ const Index = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Apply default sidebar view on mount
+  useEffect(() => {
+    if (defaultSidebarView !== 'last-used') {
+      setViewMode(defaultSidebarView as 'tree' | 'outline' | 'split');
+    }
+  }, []); // Only run on mount
 
   const handleToggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -560,7 +568,12 @@ const Index = () => {
         currentTheme={theme}
       />
 
-      <Settings open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      <Settings
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        defaultSidebarView={defaultSidebarView}
+        onDefaultSidebarViewChange={setDefaultSidebarView}
+      />
 
       <TeamManagement open={isTeamsOpen} onOpenChange={setIsTeamsOpen} />
 
