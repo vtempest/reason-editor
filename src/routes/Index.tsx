@@ -319,7 +319,7 @@ const Index = () => {
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
-          documents={filteredTree}
+          documents={filteredDocuments}
           activeId={activeDocId}
           activeDocument={activeDocument}
           onSelect={handleSelectDocument}

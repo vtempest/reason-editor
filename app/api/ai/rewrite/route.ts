@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { ChatGroq } from '@langchain/groq';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { text } = await request.json();
+
+    if (!text || typeof text !== 'string') {
+      return NextResponse.json(
+        { error: 'Text is required and must be a string' },
+        { status: 400 }
+      );
+    }
+
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+    if (!GROQ_API_KEY) {
+      console.error('GROQ_API_KEY is not configured');
+      return NextResponse.json(
+        { error: 'AI service is not configured. Please contact the administrator.' },
+        { status: 500 }
+      );
+    }
+
+    const model = new ChatGroq({
+      apiKey: GROQ_API_KEY,
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.7,
+    });
+
+    const prompt = `Rewrite the following text to improve clarity, grammar, and style while maintaining the original meaning and tone. Only return the rewritten text without any explanation or additional commentary:
+
+${text}`;
+
+    const response = await model.invoke(prompt);
+    const rewrittenText = response.content.toString().trim();
+
+    return NextResponse.json({ rewrittenText });
+  } catch (error) {
+    console.error('AI rewrite error:', error);
+    return NextResponse.json(
+      { error: 'Failed to process AI request. Please try again.' },
+      { status: 500 }
+    );
+  }
+}
