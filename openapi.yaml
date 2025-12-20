@@ -1,6 +1,6 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
-  title: REASON Note-Taking API
+  title: REASON Docs Management API
   description: |
     A comprehensive API for the REASON note-taking application. This API provides endpoints for managing documents, teams, organizations, and user settings.
 
@@ -11,19 +11,9 @@ info:
     - 🔄 Bulk operations and syncing
     - 🎨 Theme and settings management
 
-  version: 1.0.0
-  contact:
-    name: REASON API Support
-    email: support@REASON.app
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-
 servers:
-  - url: http://localhost:3001
-    description: Development server
-  - url: http://localhost:5173
-    description: Vite dev server (frontend)
+  - url: https://editor.qwksearch.com/api
+    description: Production server
 
 tags:
   - name: Documents

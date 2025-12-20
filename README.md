@@ -8,6 +8,9 @@
     </a>
      <a href="https://github.com/vtempest/reason-editor/discussions">
      <img alt="GitHub Stars" src="https://img.shields.io/github/stars/vtempest/reason-editor" /></a>
+    <img src="https://img.shields.io/badge/Next.js-16.0-black" alt="Next.js" />
+</p>
+<p align="center">
     <a href="https://github.com/vtempest/reason-editor/discussions">
     <img alt="GitHub Discussions"
         src="https://img.shields.io/github/discussions/vtempest/reason-editor" />
@@ -17,7 +20,6 @@
         <img src="https://img.shields.io/github/commit-activity/m/vtempest/reason-editor" />
     </a>
     <img src="https://img.shields.io/github/last-commit/vtempest/reason-editor.svg" alt="GitHub last commit" />
-    <img src="https://img.shields.io/badge/Next.js-16.0-black" alt="Next.js" />
 
 </p>
 <p align="center">
@@ -30,7 +32,7 @@
     </a>
 </p>
 <h3 align="center">
-    <a href="https://editor.qwksearch.com/docs"> 📑 Docs </a> <a href="https://editor.qwksearch.com/api/docs"> 🎯 API </a>
+    <a href="https://v0-research-editor-features.vercel.app"> 📑 Docs </a> <a href="https://editor.qwksearch.com/api/docs"> 🎯 API </a>
  <a href="https://editor.qwksearch.com"> 🚀 Demo</a></h3>
 
 
