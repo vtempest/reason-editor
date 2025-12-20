@@ -19,18 +19,22 @@ export const OutlineView = ({ content, onNavigate }: OutlineViewProps) => {
 
   const outline = useMemo(() => {
     const items: OutlineItem[] = [];
-    const lines = content.split('\n');
 
-    lines.forEach((line, index) => {
-      const match = line.match(/^(#{1,3})\s+(.+)$/);
-      if (match) {
-        items.push({
-          id: `heading-${index}`,
-          level: match[1].length,
-          text: match[2],
-          line: index,
-        });
-      }
+    // Parse HTML content for headings
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    headings.forEach((heading, index) => {
+      const level = parseInt(heading.tagName.substring(1));
+      const text = heading.textContent || '';
+
+      items.push({
+        id: `heading-${index}`,
+        level: level,
+        text: text,
+        line: index,
+      });
     });
 
     return items;
@@ -57,7 +61,7 @@ export const OutlineView = ({ content, onNavigate }: OutlineViewProps) => {
             No headings found in this document
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Use # for headings
+            Use the heading buttons in the toolbar
           </p>
         </div>
       </div>
