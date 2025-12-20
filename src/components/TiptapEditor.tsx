@@ -68,6 +68,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
   const [rawContent, setRawContent] = useState('');
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: {

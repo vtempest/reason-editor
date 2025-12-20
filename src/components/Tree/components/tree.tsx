@@ -1,13 +1,13 @@
 import React, { forwardRef, useMemo } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import enrichTree from "../data/enrichTree";
+import { enrichTree } from "../data/enrichTree";
 import { TreeApi } from "../tree-api";
 import { IdObj, TreeProps, Node } from "../types";
-import List from "./list";
-import TreeViewProvider from "../provider";
+import { List } from "./list";
+import { TreeViewProvider } from "../provider";
 import { Preview } from "./preview";
-import OuterDrop from "./outer-drop";
+import { OuterDrop } from "./outer-drop";
 
 export const Tree = forwardRef(
   <T extends IdObj>(props: TreeProps<T>, ref: React.Ref<TreeApi<T>>) => {

@@ -1,4 +1,4 @@
-import React, { CSSProperties } from "react";
+import { CSSProperties } from "react";
 import { useTreeApi } from "../context";
 
 const placeholderStyle = {
@@ -29,7 +29,7 @@ function DefaultCursor({ style }: { style: CSSProperties }) {
   );
 }
 
-const DropCursor = () => {
+export const DropCursor = () => {
   const tree = useTreeApi();
   const cursor = tree.state.cursor;
   if (!cursor || cursor.type !== "line") return null;
@@ -47,5 +47,3 @@ const DropCursor = () => {
 
   return <DefaultCursor style={styles}></DefaultCursor>;
 };
-
-export default DropCursor;

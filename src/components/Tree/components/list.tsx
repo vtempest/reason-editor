@@ -1,9 +1,9 @@
 import { FixedSizeList } from "react-window";
 import { useTreeApi } from "../context";
-import Row from "./row";
-import ListOuterElement from "./list-outer-element";
+import { Row } from "./row";
+import { ListOuterElement } from "./list-outer-element";
 
-function List(props: { className?: string }) {
+export function List(props: { className?: string }) {
   const tree = useTreeApi();
   return (
     <div style={{ height: tree.height, width: tree.width, overflow: "hidden" }}>
@@ -23,5 +23,3 @@ function List(props: { className?: string }) {
     </div>
   );
 }
-
-export default List;

@@ -12,7 +12,7 @@ import { TreeApi } from "./tree-api";
 import { actions, initState, reducer } from "./reducer";
 import { useSelectionKey } from "./selection/selection-hook";
 
-const TreeViewProvider = <T extends IdObj>(props: TreeProviderProps<T>) => {
+export const TreeViewProvider = <T extends IdObj>(props: TreeProviderProps<T>) => {
   // @ts-ignore
   const [state, dispatch] = useReducer(reducer, initState());
   const list = useRef<FixedSizeList | null>(null);
@@ -37,5 +37,3 @@ const TreeViewProvider = <T extends IdObj>(props: TreeProviderProps<T>) => {
     </TreeApiContext.Provider>
   );
 };
-
-export default TreeViewProvider;

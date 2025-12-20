@@ -2,7 +2,7 @@ import memoizeOne from "memoize-one";
 import React, { Dispatch, MutableRefObject } from "react";
 import ReactDOM from "react-dom";
 import type { FixedSizeList } from "react-window";
-import flattenTree from "./data/flatten-tree";
+import { flattenTree } from "./data/flatten-tree";
 import type { Cursor } from "./dnd/compute-drop";
 import { actions, Action } from "./reducer";
 import {

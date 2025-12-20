@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import {
@@ -15,12 +14,6 @@ import {
   Wand2
 } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -28,6 +21,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Sidebar,
   SidebarContent,
@@ -432,7 +431,7 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden p-0 md:max-h-[600px] md:max-w-[700px] lg:max-w-[900px]">
+      <DialogContent className="overflow-hidden p-0 md:max-h-[500px] md:max-w-[700px] lg:max-w-[800px]">
         <DialogTitle className="sr-only">Settings</DialogTitle>
         <DialogDescription className="sr-only">
           Customize your settings here.
@@ -462,8 +461,8 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
               </SidebarGroup>
             </SidebarContent>
           </Sidebar>
-          <main className="flex h-[550px] flex-1 flex-col overflow-hidden">
-            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <main className="flex h-[480px] flex-1 flex-col overflow-hidden">
+            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
               <div className="flex items-center gap-2 px-4">
                 <Breadcrumb>
                   <BreadcrumbList>

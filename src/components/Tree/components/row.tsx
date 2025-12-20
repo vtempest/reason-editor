@@ -9,7 +9,7 @@ type Props = {
   index: number;
 };
 
-const Row = React.memo(<T extends IdObj>({ index, style }: Props) => {
+export const Row = React.memo(<T extends IdObj>({ index, style }: Props) => {
   const realTree = useTreeApi<T>();
   const tree = useMemo(() => realTree, []);
   tree.sync(realTree);
@@ -112,5 +112,3 @@ const Row = React.memo(<T extends IdObj>({ index, style }: Props) => {
     />
   );
 });
-
-export default Row;
