@@ -4,13 +4,18 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
 } from '@/components/ui/context-menu';
-import { Plus, Trash2, Copy, Edit, FolderPlus, Tag } from 'lucide-react';
+import { Plus, Trash2, Copy, Edit, FolderPlus, Tag, Folder, FileText } from 'lucide-react';
 
 interface DocumentContextMenuProps {
   children: React.ReactNode;
   onAddChild: () => void;
+  onAddChildFolder: () => void;
   onAddSibling: () => void;
+  onAddSiblingFolder: () => void;
   onRename: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
@@ -20,7 +25,9 @@ interface DocumentContextMenuProps {
 export const DocumentContextMenu = ({
   children,
   onAddChild,
+  onAddChildFolder,
   onAddSibling,
+  onAddSiblingFolder,
   onRename,
   onDuplicate,
   onDelete,
@@ -30,14 +37,38 @@ export const DocumentContextMenu = ({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        <ContextMenuItem onClick={onAddChild}>
-          <FolderPlus className="mr-2 h-4 w-4" />
-          Add Child Note
-        </ContextMenuItem>
-        <ContextMenuItem onClick={onAddSibling}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Sibling Note
-        </ContextMenuItem>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <FolderPlus className="mr-2 h-4 w-4" />
+            Add Child
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent>
+            <ContextMenuItem onClick={onAddChild}>
+              <FileText className="mr-2 h-4 w-4" />
+              Note
+            </ContextMenuItem>
+            <ContextMenuItem onClick={onAddChildFolder}>
+              <Folder className="mr-2 h-4 w-4" />
+              Folder
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Sibling
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent>
+            <ContextMenuItem onClick={onAddSibling}>
+              <FileText className="mr-2 h-4 w-4" />
+              Note
+            </ContextMenuItem>
+            <ContextMenuItem onClick={onAddSiblingFolder}>
+              <Folder className="mr-2 h-4 w-4" />
+              Folder
+            </ContextMenuItem>
+          </ContextMenuSubContent>
+        </ContextMenuSub>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onRename}>
           <Edit className="mr-2 h-4 w-4" />

@@ -14,7 +14,7 @@ interface SidebarProps {
   activeId: string | null;
   activeDocument: Document | undefined;
   onSelect: (id: string) => void;
-  onAdd: (parentId: string | null) => void;
+  onAdd: (parentId: string | null, isFolder?: boolean) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;

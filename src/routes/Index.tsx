@@ -94,20 +94,25 @@ const Index = () => {
     return buildTree(filteredDocuments);
   }, [filteredDocuments, searchQuery]);
 
-  const handleAddDocument = (parentId: string | null) => {
+  const handleAddDocument = (parentId: string | null, isFolder: boolean = false) => {
     const newDoc: Document = {
       id: Date.now().toString(),
-      title: '',
+      title: isFolder ? 'New Folder' : '',
       content: '',
       parentId,
       children: [],
-      isExpanded: false,
+      isExpanded: isFolder,
+      isFolder,
       tags: [],
     };
 
     setDocuments([...documents, newDoc]);
-    setActiveDocId(newDoc.id);
-    setOpenTabs([...openTabs, newDoc.id]);
+
+    // Only set active and open in tab if it's a note (not a folder)
+    if (!isFolder) {
+      setActiveDocId(newDoc.id);
+      setOpenTabs([...openTabs, newDoc.id]);
+    }
 
     // Expand parent if exists
     if (parentId) {
@@ -118,7 +123,7 @@ const Index = () => {
       );
     }
 
-    toast.success('Note created');
+    toast.success(isFolder ? 'Folder created' : 'Note created');
   };
 
   const handleDeleteDocument = (id: string) => {
@@ -292,6 +297,15 @@ const Index = () => {
   };
 
   const handleSelectDocument = (id: string) => {
+    const doc = documents.find((d) => d.id === id);
+
+    // Don't open folders in tabs
+    if (doc?.isFolder) {
+      // Just expand/collapse the folder
+      handleToggleExpand(id);
+      return;
+    }
+
     // Open document in tab if not already open
     if (!openTabs.includes(id)) {
       setOpenTabs([...openTabs, id]);
