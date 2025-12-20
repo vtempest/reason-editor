@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { ThemeDropdown } from '@/components/theme-dropdown';
 import { getRewriteModes, saveRewriteModes, resetRewriteModes, RewriteMode } from '@/lib/ai/rewriteModes';
 import { toast } from 'sonner';
 
@@ -163,6 +164,16 @@ export const Settings = ({ open, onOpenChange }: SettingsProps) => {
                   </div>
                 ))}
               </RadioGroup>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-base">Color Theme</Label>
+              <p className="text-sm text-muted-foreground mb-2">
+                Choose from various color themes to customize your interface
+              </p>
+              <div className="flex items-center">
+                <ThemeDropdown />
+              </div>
             </div>
           </div>
 

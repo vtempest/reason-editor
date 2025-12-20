@@ -2,6 +2,7 @@ import { Document } from '@/components/DocumentTree';
 import { ComplexDocumentTree } from '@/components/ComplexDocumentTree';
 import { OutlineView } from '@/components/OutlineView';
 import { FloatingSearch } from '@/components/FloatingSearch';
+import { ThemeDropdown } from '@/components/theme-dropdown';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -235,6 +236,18 @@ export const Sidebar = ({
 
           <TooltipProvider delayDuration={300}>
             <nav className="flex items-center justify-around gap-1">
+              {/* Theme Dropdown */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <ThemeDropdown />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Color Theme</p>
+                </TooltipContent>
+              </Tooltip>
+
               {/* Archive Dropdown */}
               <DropdownMenu>
                 <Tooltip>
