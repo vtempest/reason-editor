@@ -1,7 +1,7 @@
 "use client"
 
 import { Tree, type NodeRendererProps } from "react-arborist"
-import type { Document } from "@/components/DocumentTree"
+import type { Document } from "@/lib/db/schema"
 import type { DocumentNode } from "@/lib/document-utils"
 import { ChevronRight, File, Folder, FolderOpen, Copy, Trash2, Edit, FilePlus, FolderPlus } from "lucide-react"
 import { cn } from "@/lib/utils"
