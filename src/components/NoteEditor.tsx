@@ -1,8 +1,29 @@
-import { useState } from 'react';
-import { Bold, Italic, List, ListOrdered, Code, Heading1, Heading2 } from 'lucide-react';
+import { useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { TableKit } from '@tiptap/extension-table';
+import Image from '@tiptap/extension-image';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import Highlight from '@tiptap/extension-highlight';
+import Link from '@tiptap/extension-link';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import Placeholder from '@tiptap/extension-placeholder';
+import {
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Code,
+  Heading1,
+  Heading2,
+  Table,
+  ImageIcon,
+  Underline as UnderlineIcon
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 
 interface NoteEditorProps {
   content: string;
@@ -12,41 +33,91 @@ interface NoteEditorProps {
 }
 
 export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEditorProps) => {
-  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3, 4, 5, 6],
+        },
+      }),
+      TableKit.configure({
+        table: {
+          HTMLAttributes: {
+            class: 'tiptap-table w-full border-collapse border border-border',
+          },
+        },
+        tableRow: {
+          HTMLAttributes: {
+            class: 'border border-border',
+          },
+        },
+        tableCell: {
+          HTMLAttributes: {
+            class: 'border border-border p-2 min-w-[100px]',
+          },
+        },
+        tableHeader: {
+          HTMLAttributes: {
+            class: 'border border-border p-2 min-w-[100px] bg-muted font-semibold',
+          },
+        },
+      }),
+      Image.configure({
+        inline: false,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-md my-4',
+        },
+      }),
+      Underline,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Highlight,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-primary underline cursor-pointer',
+        },
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      Placeholder.configure({
+        placeholder: 'Start writing...',
+      }),
+    ],
+    content,
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none max-w-none px-6 py-6',
+      },
+    },
+  });
 
-  const wrapSelection = (before: string, after: string = before) => {
-    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
-    if (!textarea) return;
+  // Update editor content when prop changes (e.g., loading a different document)
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    const newContent =
-      content.substring(0, start) +
-      before +
-      selectedText +
-      after +
-      content.substring(end);
+  if (!editor) {
+    return null;
+  }
 
-    onChange(newContent);
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, end + before.length);
-    }, 0);
+  const insertTable = () => {
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
   };
 
-  const insertAtCursor = (text: string) => {
-    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const newContent = content.substring(0, start) + text + content.substring(start);
-    onChange(newContent);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + text.length, start + text.length);
-    }, 0);
+  const insertImage = () => {
+    const url = window.prompt('Enter image URL:');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
   };
 
   return (
@@ -65,8 +136,8 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => insertAtCursor('# ')}
-          className="h-8 w-8 p-0"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('heading', { level: 1 }) ? 'bg-accent' : ''}`}
           title="Heading 1"
         >
           <Heading1 className="h-4 w-4" />
@@ -74,8 +145,8 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => insertAtCursor('## ')}
-          className="h-8 w-8 p-0"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('heading', { level: 2 }) ? 'bg-accent' : ''}`}
           title="Heading 2"
         >
           <Heading2 className="h-4 w-4" />
@@ -84,8 +155,8 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => wrapSelection('**')}
-          className="h-8 w-8 p-0"
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('bold') ? 'bg-accent' : ''}`}
           title="Bold"
         >
           <Bold className="h-4 w-4" />
@@ -93,8 +164,8 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => wrapSelection('*')}
-          className="h-8 w-8 p-0"
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('italic') ? 'bg-accent' : ''}`}
           title="Italic"
         >
           <Italic className="h-4 w-4" />
@@ -102,8 +173,17 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => wrapSelection('`')}
-          className="h-8 w-8 p-0"
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('underline') ? 'bg-accent' : ''}`}
+          title="Underline"
+        >
+          <UnderlineIcon className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('code') ? 'bg-accent' : ''}`}
           title="Code"
         >
           <Code className="h-4 w-4" />
@@ -112,8 +192,8 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => insertAtCursor('- ')}
-          className="h-8 w-8 p-0"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('bulletList') ? 'bg-accent' : ''}`}
           title="Bullet List"
         >
           <List className="h-4 w-4" />
@@ -121,23 +201,87 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => insertAtCursor('1. ')}
-          className="h-8 w-8 p-0"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className={`h-8 w-8 p-0 ${editor.isActive('orderedList') ? 'bg-accent' : ''}`}
           title="Numbered List"
         >
           <ListOrdered className="h-4 w-4" />
         </Button>
+        <Separator orientation="vertical" className="mx-1 h-6" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertTable}
+          className="h-8 w-8 p-0"
+          title="Insert Table"
+        >
+          <Table className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertImage}
+          className="h-8 w-8 p-0"
+          title="Insert Image"
+        >
+          <ImageIcon className="h-4 w-4" />
+        </Button>
       </div>
 
       <div className="flex-1 overflow-auto">
-        <textarea
-          value={content}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Start writing..."
-          className="h-full w-full resize-none border-none bg-transparent px-6 py-6 font-sans text-base leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
-          style={{ fontFamily: 'Inter, sans-serif' }}
-        />
+        <EditorContent editor={editor} />
       </div>
+
+      <style>{`
+        .tiptap {
+          outline: none;
+          min-height: 100%;
+        }
+
+        .tiptap p.is-editor-empty:first-child::before {
+          color: var(--muted-foreground);
+          content: attr(data-placeholder);
+          float: left;
+          height: 0;
+          pointer-events: none;
+        }
+
+        .tiptap table {
+          margin: 1rem 0;
+        }
+
+        .tiptap table td,
+        .tiptap table th {
+          vertical-align: top;
+          box-sizing: border-box;
+          position: relative;
+        }
+
+        .tiptap table .selectedCell {
+          background-color: var(--accent);
+        }
+
+        .tiptap table .column-resize-handle {
+          background-color: var(--primary);
+          bottom: -2px;
+          pointer-events: none;
+          position: absolute;
+          right: -2px;
+          top: 0;
+          width: 4px;
+        }
+
+        .tiptap img {
+          display: block;
+          height: auto;
+          margin: 1rem 0;
+          max-width: 100%;
+        }
+
+        .tiptap img.ProseMirror-selectednode {
+          outline: 3px solid var(--primary);
+        }
+      `}</style>
     </div>
   );
 };
