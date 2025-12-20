@@ -22,7 +22,7 @@ export function buildDocumentTree(documents: Document[]): DocumentNode[] {
   documents.forEach((doc) => {
     nodeMap.set(doc.id, {
       id: doc.id.toString(),
-      name: doc.name,
+      name: (doc as any).name || doc.title || 'Untitled',
       children: doc.isFolder ? [] : undefined,
       data: doc,
     })
@@ -101,7 +101,7 @@ export function searchDocuments(documents: Document[], searchTerm: string): Docu
   const term = searchTerm.toLowerCase()
   return documents.filter(
     (doc) =>
-      doc.name.toLowerCase().includes(term) ||
+      ((doc as any).name?.toLowerCase().includes(term) || doc.title?.toLowerCase().includes(term)) ||
       doc.summary?.toLowerCase().includes(term) ||
       doc.author?.toLowerCase().includes(term) ||
       doc.content?.toLowerCase().includes(term),
