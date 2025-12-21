@@ -149,25 +149,29 @@ function Node({ node, style, dragHandle, onDelete, onRename, onDuplicate, onNewF
           {!isFolder && !isDivider && <File className="h-4 w-4 shrink-0 ml-6 text-muted-foreground" />}
           <span
             className={cn(
-              "text-sm truncate",
+              "text-sm truncate flex-1",
               isDivider && "font-semibold text-muted-foreground",
               !isDivider && "text-sidebar-foreground",
             )}
           >
-            {node.data.name}
+            {node.data.name || 'Untitled'}
           </span>
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleNewFile}>
-          <FilePlus className="mr-2 h-4 w-4" />
-          New File
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleNewFolder}>
-          <FolderPlus className="mr-2 h-4 w-4" />
-          New Folder
-        </ContextMenuItem>
-        <ContextMenuSeparator />
+        {isFolder && (
+          <>
+            <ContextMenuItem onClick={handleNewFile}>
+              <FilePlus className="mr-2 h-4 w-4" />
+              New File
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleNewFolder}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              New Folder
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        )}
         <ContextMenuItem onClick={handleRename}>
           <Edit className="mr-2 h-4 w-4" />
           Rename
