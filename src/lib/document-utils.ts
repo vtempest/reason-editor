@@ -20,9 +20,11 @@ export function buildDocumentTree(documents: Document[]): DocumentNode[] {
 
   // Create nodes
   documents.forEach((doc) => {
+    // Use title field from document, fallback to 'Untitled'
+    const displayName = doc.title || (doc as any).name || 'Untitled'
     nodeMap.set(doc.id, {
       id: doc.id.toString(),
-      name: (doc as any).name || doc.title || 'Untitled',
+      name: displayName,
       children: doc.isFolder ? [] : undefined,
       data: doc,
     })
