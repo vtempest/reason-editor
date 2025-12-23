@@ -55,6 +55,7 @@ export function DocumentTree({
   height,
 }: DocumentTreeProps) {
   const treeRef = React.useRef<TreeEnvironmentRef>(null)
+  const [expandedItems, setExpandedItems] = React.useState<TreeItemIndex[]>([])
 
   // Convert DocumentNode[] to react-complex-tree format
   const treeItems = useMemo(() => {
@@ -158,18 +159,23 @@ export function DocumentTree({
     }
   }
 
+  // Create dynamic viewState that responds to activeId changes
+  const viewState = useMemo(() => ({
+    "document-tree": {
+      selectedItems: activeId ? [activeId] : [],
+      expandedItems,
+    },
+  }), [activeId, expandedItems])
+
   return (
     <div style={{ height: `${height}px` }} className="w-full">
       <UncontrolledTreeEnvironment
         ref={treeRef}
         dataProvider={dataProvider}
         getItemTitle={(item) => item.data.name}
-        viewState={{
-          "document-tree": {
-            selectedItems: activeId ? [activeId] : [],
-            expandedItems: [],
-          },
-        }}
+        viewState={viewState}
+        onExpandItem={(item) => setExpandedItems(prev => [...prev, item.index])}
+        onCollapseItem={(item) => setExpandedItems(prev => prev.filter(id => id !== item.index))}
         canDragAndDrop={true}
         canReorderItems={true}
         canDropOnFolder={true}
