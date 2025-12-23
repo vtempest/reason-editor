@@ -172,6 +172,12 @@ export function DocumentTree({
     }
   }
 
+  const startRenaming = (itemIndex: TreeItemIndex) => {
+    if (treeRef.current) {
+      treeRef.current.startRenamingItem("document-tree", itemIndex)
+    }
+  }
+
   // Sync selectedItems when activeId changes externally (e.g., from tab clicks)
   React.useEffect(() => {
     if (activeId) {
@@ -212,7 +218,7 @@ export function DocumentTree({
         onPrimaryAction={handlePrimaryAction}
         onDrop={handleDrop}
         onRenameItem={handleRenameItem}
-        renderItemTitle={({ title, item, context }) => {
+        renderItemTitle={({ title, item, context, info }) => {
           if (item.index === "root") return null
 
           const isFolder = item.isFolder
@@ -226,10 +232,42 @@ export function DocumentTree({
 
           const handleRename = () => {
             if (context.isRenaming) return
-            const newName = prompt("Enter new name:", title)
-            if (newName && newName !== title) {
-              handleRenameItem(item, newName)
+            startRenaming(item.index)
+          }
+
+          const handleDoubleClick = () => {
+            if (!context.isRenaming) {
+              startRenaming(item.index)
             }
+          }
+
+          // Show rename input when in renaming mode
+          if (context.isRenaming) {
+            return (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  const input = e.currentTarget.querySelector('input')
+                  if (input) {
+                    info.submitRenameInput(input.value)
+                  }
+                }}
+                className="flex items-center gap-1.5 px-1.5 py-0.5"
+              >
+                <input
+                  ref={(input) => input?.focus()}
+                  defaultValue={title}
+                  onBlur={info.abortRenameInput}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      info.abortRenameInput()
+                    }
+                  }}
+                  className="flex-1 px-1 py-0.5 text-sm bg-background border border-input rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </form>
+            )
           }
 
           const handleDuplicate = () => {
@@ -260,6 +298,7 @@ export function DocumentTree({
                     context.isFocused && "ring-1 ring-ring",
                     context.isDraggingOver && "bg-accent/50",
                   )}
+                  onDoubleClick={handleDoubleClick}
                 >
                   {isFolder ? (
                     <>
