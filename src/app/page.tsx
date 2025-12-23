@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { ThemeProvider } from "next-themes"
 import Index from "@/src/routes/Index"
 import ShareView from "@/src/routes/ShareView"
+import ICPExplorerPage from "@/src/routes/ICPExplorerPage"
 import NotFound from "@/src/routes/NotFound"
 import { useState, useEffect } from "react"
 
@@ -35,6 +36,7 @@ export default function Page() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/icp-explorer" element={<ICPExplorerPage />} />
               <Route path="/share/:shareId" element={<ShareView />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
