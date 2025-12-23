@@ -294,11 +294,59 @@ const Index = () => {
       newParentId = targetDoc?.parentId || null;
     }
 
-    setDocuments((docs) =>
-      docs.map((doc) =>
-        doc.id === draggedId ? { ...doc, parentId: newParentId } : doc
-      )
-    );
+    setDocuments((docs) => {
+      // Create a new array without the dragged document
+      const withoutDragged = docs.filter((d) => d.id !== draggedId);
+
+      // Update the dragged document with new parent
+      const updatedDragged = { ...draggedDoc, parentId: newParentId };
+
+      // Find the insert position
+      let insertIndex: number;
+
+      if (position === 'child') {
+        // Insert at the beginning of the target's children
+        const targetIndex = withoutDragged.findIndex((d) => d.id === targetId);
+        // Find the first child of target, or insert right after target
+        const firstChildIndex = withoutDragged.findIndex(
+          (d, i) => i > targetIndex && d.parentId === targetId
+        );
+        insertIndex = firstChildIndex !== -1 ? firstChildIndex : targetIndex + 1;
+      } else if (position === 'before') {
+        // Insert before the target
+        insertIndex = withoutDragged.findIndex((d) => d.id === targetId);
+      } else {
+        // Insert after the target (and its children)
+        const targetIndex = withoutDragged.findIndex((d) => d.id === targetId);
+        // Find the last descendant of target
+        let lastDescendantIndex = targetIndex;
+        const findLastDescendant = (parentId: string, startIndex: number): number => {
+          let lastIndex = startIndex;
+          for (let i = startIndex + 1; i < withoutDragged.length; i++) {
+            if (withoutDragged[i].parentId === parentId) {
+              lastIndex = i;
+              const childLastIndex = findLastDescendant(withoutDragged[i].id, i);
+              if (childLastIndex > lastIndex) {
+                lastIndex = childLastIndex;
+                i = childLastIndex;
+              }
+            }
+          }
+          return lastIndex;
+        };
+        lastDescendantIndex = findLastDescendant(targetId, targetIndex);
+        insertIndex = lastDescendantIndex + 1;
+      }
+
+      // Insert the dragged document at the correct position
+      const result = [
+        ...withoutDragged.slice(0, insertIndex),
+        updatedDragged,
+        ...withoutDragged.slice(insertIndex)
+      ];
+
+      return result;
+    });
 
     toast.success('Note moved');
   };
