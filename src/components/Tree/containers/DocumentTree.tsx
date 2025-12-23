@@ -56,6 +56,7 @@ export function DocumentTree({
 }: DocumentTreeProps) {
   const treeRef = React.useRef<TreeEnvironmentRef>(null)
   const [expandedItems, setExpandedItems] = React.useState<TreeItemIndex[]>([])
+  const [selectedItems, setSelectedItems] = React.useState<TreeItemIndex[]>([])
 
   // Convert DocumentNode[] to react-complex-tree format
   const treeItems = useMemo(() => {
@@ -111,7 +112,19 @@ export function DocumentTree({
 
   const handlePrimaryAction = (item: TreeItem<TreeItemData>) => {
     if (!item.isFolder && item.data.document) {
+      setSelectedItems([item.index])
       onSelect(item.data.document)
+    }
+  }
+
+  const handleSelectItems = (items: TreeItemIndex[]) => {
+    setSelectedItems(items)
+    // If a single item is selected and it's a document (not folder), trigger onSelect
+    if (items.length === 1 && items[0] !== 'root') {
+      const item = treeItems[items[0]]
+      if (item && !item.isFolder && item.data.document) {
+        onSelect(item.data.document)
+      }
     }
   }
 
@@ -159,23 +172,39 @@ export function DocumentTree({
     }
   }
 
-  // Create dynamic viewState that responds to activeId changes
+  // Sync selectedItems when activeId changes externally (e.g., from tab clicks)
+  React.useEffect(() => {
+    if (activeId) {
+      setSelectedItems([activeId])
+    } else {
+      setSelectedItems([])
+    }
+  }, [activeId])
+
+  // Create dynamic viewState that responds to activeId and selection changes
   const viewState = useMemo(() => ({
     "document-tree": {
-      selectedItems: activeId ? [activeId] : [],
+      selectedItems,
       expandedItems,
     },
-  }), [activeId, expandedItems])
+  }), [selectedItems, expandedItems])
+
+  // Create a key that changes when data structure changes to force re-render
+  const treeKey = useMemo(() => {
+    return `tree-${data.length}-${data.map(d => d.id).join('-')}`
+  }, [data])
 
   return (
     <div style={{ height: `${height}px` }} className="w-full">
       <UncontrolledTreeEnvironment
+        key={treeKey}
         ref={treeRef}
         dataProvider={dataProvider}
         getItemTitle={(item) => item.data.name}
         viewState={viewState}
         onExpandItem={(item) => setExpandedItems(prev => [...prev, item.index])}
         onCollapseItem={(item) => setExpandedItems(prev => prev.filter(id => id !== item.index))}
+        onSelectItems={(items) => handleSelectItems(items)}
         canDragAndDrop={true}
         canReorderItems={true}
         canDropOnFolder={true}
@@ -226,7 +255,7 @@ export function DocumentTree({
               <ContextMenuTrigger asChild>
                 <div
                   className={cn(
-                    "flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-accent rounded-sm transition-colors",
+                    "flex items-center gap-1.5 px-1.5 py-0.5 cursor-pointer hover:bg-accent rounded-sm transition-colors",
                     context.isSelected && "bg-accent",
                     context.isFocused && "ring-1 ring-ring",
                     context.isDraggingOver && "bg-accent/50",
@@ -236,18 +265,18 @@ export function DocumentTree({
                     <>
                       <ChevronRight
                         className={cn(
-                          "h-4 w-4 shrink-0 transition-transform text-muted-foreground",
+                          "h-3.5 w-3.5 shrink-0 transition-transform text-muted-foreground",
                           context.isExpanded && "rotate-90",
                         )}
                       />
                       {context.isExpanded ? (
-                        <FolderOpen className="h-4 w-4 shrink-0 text-blue-500" />
+                        <FolderOpen className="h-3.5 w-3.5 shrink-0 text-blue-500" />
                       ) : (
-                        <Folder className="h-4 w-4 shrink-0 text-blue-500" />
+                        <Folder className="h-3.5 w-3.5 shrink-0 text-blue-500" />
                       )}
                     </>
                   ) : (
-                    <File className="h-4 w-4 shrink-0 ml-6 text-muted-foreground" />
+                    <File className="h-3.5 w-3.5 shrink-0 ml-4 text-muted-foreground" />
                   )}
                   <span className="text-sm truncate flex-1 text-sidebar-foreground">
                     {title || 'Untitled'}
