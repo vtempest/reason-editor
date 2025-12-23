@@ -38,10 +38,8 @@ export const DocumentTreeWrapper = ({
   const treeData = React.useMemo(() => buildDocumentTree(documents), [documents])
 
   // Adapt onMove callback
-  const handleMove = (nodeId: string, parentId: string | null, index: number) => {
-    // The old API expects position, the new one provides index
-    // For simplicity, we'll use 'child' position
-    onMove(nodeId, parentId, "child")
+  const handleMove = (nodeId: string, parentId: string | null, position: "before" | "after" | "child") => {
+    onMove(nodeId, parentId, position)
   }
 
   // Adapt onSelect callback
@@ -77,6 +75,7 @@ export const DocumentTreeWrapper = ({
   return (
     <DocumentTree
       data={treeData}
+      activeId={activeId}
       onSelect={handleSelect}
       onMove={handleMove}
       onDelete={handleDelete}
