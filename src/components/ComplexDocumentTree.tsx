@@ -1,17 +1,24 @@
-import { useMemo, useRef } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 import {
-  Tree,
-  TreeItem,
-  TreeItemIndex,
-  TreeEnvironmentRef,
-  UncontrolledTreeEnvironment,
-  InteractionMode,
-} from 'react-complex-tree';
-import 'react-complex-tree/lib/style-modern.css';
+  DragTarget,
+  ItemInstance,
+  asyncDataLoaderFeature,
+  createOnDropHandler,
+  dragAndDropFeature,
+  hotkeysCoreFeature,
+  insertItemsAtTarget,
+  keyboardDragAndDropFeature,
+  removeItemsFromParents,
+  renamingFeature,
+  searchFeature,
+  selectionFeature,
+} from "@headless-tree/core";
+import { AssistiveTreeDescription, useTree } from "@headless-tree/react";
 import { FileText, ChevronRight, Folder } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Document } from './DocumentTree';
 import { DocumentContextMenu } from './DocumentContextMenu';
+import { TreeDataItem, asyncDataLoader, initializeTreeData, treeData } from './tree-data';
 
 interface ComplexDocumentTreeProps {
   documents: Document[];
@@ -26,38 +33,13 @@ interface ComplexDocumentTreeProps {
   onRename?: (id: string, newTitle: string) => void;
 }
 
-// Transform flat document array to tree structure for react-complex-tree
-const buildTreeData = (documents: Document[]) => {
-  const items: Record<TreeItemIndex, TreeItem<Document>> = {
-    root: {
-      index: 'root',
-      isFolder: true,
-      children: documents.filter(doc => !doc.parentId).map(doc => doc.id),
-      data: {} as Document,
-    },
+let newItemId = 0;
+const insertNewItem = (dataTransfer: DataTransfer) => {
+  const newId = `new-${newItemId++}`;
+  treeData[newId] = {
+    name: dataTransfer.getData("text/plain"),
   };
-
-  const processDocument = (doc: Document) => {
-    const children = documents.filter(d => d.parentId === doc.id).map(d => d.id);
-    items[doc.id] = {
-      index: doc.id,
-      canMove: true,
-      canRename: true,
-      isFolder: doc.isFolder || children.length > 0,
-      children,
-      data: doc,
-    };
-
-    // Process children recursively
-    children.forEach(childId => {
-      const child = documents.find(d => d.id === childId);
-      if (child) processDocument(child);
-    });
-  };
-
-  documents.filter(doc => !doc.parentId).forEach(processDocument);
-
-  return items;
+  return newId;
 };
 
 export const ComplexDocumentTree = ({
@@ -72,108 +54,111 @@ export const ComplexDocumentTree = ({
   onManageTags,
   onRename,
 }: ComplexDocumentTreeProps) => {
-  const treeRef = useRef<TreeEnvironmentRef>(null);
+  // Initialize tree data whenever documents change
+  useEffect(() => {
+    initializeTreeData(documents);
+  }, [documents]);
 
-  // Transform documents into tree data format
-  const treeData = useMemo(() => buildTreeData(documents), [documents]);
-
-  // Get expanded item IDs from documents
+  // Get expanded items from documents
   const expandedItems = useMemo(() => {
     return documents.filter(doc => doc.isExpanded).map(doc => doc.id);
   }, [documents]);
 
-  // Get focused item (active document)
-  const focusedItem = activeId || undefined;
+  // Get selected items
+  const selectedItems = useMemo(() => {
+    return activeId ? [activeId] : [];
+  }, [activeId]);
 
-  const handleDrop = (items: TreeItem[], target: { targetType: string; parentItem?: TreeItemIndex; targetItem?: TreeItemIndex; childIndex?: number }) => {
-    if (items.length === 0) return;
+  const onDropForeignDragObject = (
+    dataTransfer: DataTransfer,
+    target: DragTarget<TreeDataItem>,
+  ) => {
+    const newId = insertNewItem(dataTransfer);
+    insertItemsAtTarget([newId], target, (item, newChildrenIds) => {
+      treeData[item.getId()].children = newChildrenIds;
+    });
+  };
 
-    const draggedId = items[0].index as string;
+  const onCompleteForeignDrop = (items: ItemInstance<TreeDataItem>[]) =>
+    removeItemsFromParents(items, (item, newChildren) => {
+      item.getItemData().children = newChildren;
+    });
 
-    if (target.targetType === 'item') {
-      // Drop on item - make it a child
-      onMove(draggedId, target.targetItem as string, 'child');
-    } else if (target.targetType === 'between-items' && target.parentItem) {
-      // Drop between items
-      const parentId = target.parentItem === 'root' ? null : (target.parentItem as string);
-      const siblings = parentId
-        ? documents.filter(d => d.parentId === parentId)
-        : documents.filter(d => !d.parentId);
-
-      if (target.childIndex !== undefined && target.childIndex > 0) {
-        const targetSibling = siblings[target.childIndex - 1];
-        if (targetSibling) {
-          onMove(draggedId, targetSibling.id, 'after');
-        }
-      } else if (target.childIndex === 0 && siblings.length > 0) {
-        onMove(draggedId, siblings[0].id, 'before');
-      }
+  const handleRename = (item: ItemInstance<TreeDataItem>, value: string) => {
+    if (onRename && item.getId() !== 'root') {
+      onRename(item.getId(), value);
+      treeData[item.getId()].name = value;
     }
   };
 
+  const handleDrop = createOnDropHandler((item, newChildren) => {
+    const itemId = item.getId();
+
+    // Update local tree data
+    treeData[itemId].children = newChildren;
+
+    // Find the dragged item and its new parent
+    const draggedId = newChildren[newChildren.length - 1];
+    const targetId = itemId === 'root' ? null : itemId;
+
+    // Determine position based on the drop
+    const position = 'child';
+
+    // Call the onMove callback
+    if (draggedId && draggedId !== 'root') {
+      onMove(draggedId, targetId, position);
+    }
+  });
+
+  const getCssClass = (item: ItemInstance<TreeDataItem>) =>
+    cn("treeitem", {
+      focused: item.isFocused(),
+      expanded: item.isExpanded(),
+      selected: item.isSelected(),
+      folder: item.isFolder(),
+      drop: item.isDragTarget(),
+      searchmatch: item.isMatchingSearch(),
+    });
+
+  const tree = useTree<TreeDataItem>({
+    initialState: {
+      expandedItems,
+      selectedItems,
+    },
+    rootItemId: "root",
+    getItemName: (item) => item.getItemData()?.name || "Untitled",
+    isItemFolder: (item) => !!item.getItemData()?.children || item.getId() === 'root',
+    canReorder: true,
+    onDrop: handleDrop,
+    onRename: handleRename,
+    onDropForeignDragObject,
+    onCompleteForeignDrop,
+    createForeignDragObject: (items) => ({
+      format: "text/plain",
+      data: items.map((item) => item.getId()).join(","),
+    }),
+    canDropForeignDragObject: (_, target) => target.item.isFolder(),
+    indent: 20,
+    dataLoader: asyncDataLoader,
+    features: [
+      asyncDataLoaderFeature,
+      selectionFeature,
+      hotkeysCoreFeature,
+      dragAndDropFeature,
+      keyboardDragAndDropFeature,
+      renamingFeature,
+      searchFeature,
+    ],
+  });
+
   return (
-    <div className="flex-1 overflow-auto p-2 complex-tree-wrapper">
+    <div className="flex-1 overflow-auto p-2 headless-tree-wrapper">
       <style>{`
-        .complex-tree-wrapper .rct-tree-root {
+        .headless-tree-wrapper .tree {
           height: 100%;
         }
 
-        .complex-tree-wrapper .rct-tree-item-li {
-          list-style: none;
-        }
-
-        .complex-tree-wrapper .rct-tree-item-title-container {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.375rem 0.5rem;
-          border-radius: 0.375rem;
-          cursor: pointer;
-          transition: background-color 0.2s;
-          position: relative;
-        }
-
-        .complex-tree-wrapper .rct-tree-item-title-container:hover {
-          background-color: hsl(var(--sidebar-accent));
-        }
-
-        .complex-tree-wrapper .rct-tree-item-title-container-selected,
-        .complex-tree-wrapper .rct-tree-item-title-container-selected:hover {
-          background-color: hsl(var(--sidebar-accent));
-          font-weight: 500;
-        }
-
-        .complex-tree-wrapper .rct-tree-item-title-container-dragging-over {
-          background-color: hsl(var(--primary) / 0.1);
-          outline: 2px solid hsl(var(--primary));
-          outline-offset: -2px;
-        }
-
-        .complex-tree-wrapper .rct-tree-item-title-container-dragging-over-folder {
-          background-color: hsl(var(--primary) / 0.15);
-        }
-
-        .complex-tree-wrapper .rct-tree-item-arrow {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 1.25rem;
-          height: 1.25rem;
-          padding: 0;
-          transition: transform 0.2s;
-          flex-shrink: 0;
-        }
-
-        .complex-tree-wrapper .rct-tree-item-arrow svg {
-          width: 0.75rem;
-          height: 0.75rem;
-        }
-
-        .complex-tree-wrapper .rct-tree-item-arrow-expanded {
-          transform: rotate(90deg);
-        }
-
-        .complex-tree-wrapper .rct-tree-item-title {
+        .headless-tree-wrapper .treeitem {
           display: flex;
           align-items: center;
           gap: 0.5rem;
@@ -183,154 +168,160 @@ export const ComplexDocumentTree = ({
           line-height: 1.25rem;
         }
 
-        .complex-tree-wrapper .rct-tree-item-title span {
+        .headless-tree-wrapper button {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.375rem 0.5rem;
+          border-radius: 0.375rem;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          position: relative;
+          border: none;
+          background: transparent;
+          width: 100%;
+          text-align: left;
+        }
+
+        .headless-tree-wrapper button:hover {
+          background-color: hsl(var(--sidebar-accent));
+        }
+
+        .headless-tree-wrapper .treeitem.selected {
+          background-color: hsl(var(--sidebar-accent));
+          font-weight: 500;
+        }
+
+        .headless-tree-wrapper .treeitem.drop {
+          background-color: hsl(var(--primary) / 0.1);
+          outline: 2px solid hsl(var(--primary));
+          outline-offset: -2px;
+        }
+
+        .headless-tree-wrapper .dragline {
+          height: 2px;
+          background-color: hsl(var(--primary));
+          position: absolute;
+          pointer-events: none;
+        }
+
+        .headless-tree-wrapper .searchbox {
+          padding: 0.5rem;
+          margin-bottom: 0.5rem;
+          border-bottom: 1px solid hsl(var(--border));
+        }
+
+        .headless-tree-wrapper .searchbox input {
+          width: 100%;
+          padding: 0.375rem 0.5rem;
+          border: 1px solid hsl(var(--border));
+          border-radius: 0.375rem;
+          background: hsl(var(--background));
+          color: hsl(var(--foreground));
+        }
+
+        .headless-tree-wrapper .renaming-item {
+          padding: 0.375rem 0.5rem;
+        }
+
+        .headless-tree-wrapper .renaming-item input {
+          width: 100%;
+          padding: 0.25rem 0.5rem;
+          border: 1px solid hsl(var(--primary));
+          border-radius: 0.25rem;
+          background: hsl(var(--background));
+          color: hsl(var(--foreground));
+        }
+
+        .headless-tree-wrapper .treeitem span {
           flex: 1;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
 
-        .complex-tree-wrapper .rct-tree-drag-between-line {
-          height: 2px;
-          background-color: hsl(var(--primary));
-          margin: 0;
-        }
-
-        .complex-tree-wrapper .rct-tree-item-icon {
+        .headless-tree-wrapper svg {
           width: 1rem;
           height: 1rem;
           flex-shrink: 0;
           color: hsl(var(--muted-foreground));
         }
 
-        .complex-tree-wrapper .rct-tree-root ul {
-          padding-left: 0.75rem;
+        .headless-tree-wrapper .chevron {
+          transition: transform 0.2s;
         }
 
-        .complex-tree-wrapper .rct-tree-item-li[aria-level="0"] > .rct-tree-item-title-container-grid-container > .rct-tree-item-button {
-          padding-left: 0;
+        .headless-tree-wrapper .chevron.expanded {
+          transform: rotate(90deg);
         }
       `}</style>
 
-      <UncontrolledTreeEnvironment
-        ref={treeRef}
-        dataProvider={{
-          async getTreeItem(itemId: TreeItemIndex) {
-            return treeData[itemId];
-          },
-          async onChangeItemChildren(itemId: TreeItemIndex, newChildren: TreeItemIndex[]) {
-            // Handle reordering
-          },
-          async onRenameItem(item: TreeItem, name: string) {
-            if (onRename && item.index !== 'root') {
-              onRename(item.index as string, name);
-            }
-          },
-        }}
-        getItemTitle={(item) => item.data.title || 'Untitled'}
-        viewState={{
-          ['tree-1']: {
-            expandedItems,
-            focusedItem,
-            selectedItems: activeId ? [activeId] : [],
-          },
-        }}
-        canDragAndDrop
-        canDropOnFolder
-        canDropOnNonFolder
-        canReorderItems
-        canRename
-        onDrop={handleDrop}
-        onRenameItem={(item, name) => {
-          if (onRename && item.index !== 'root') {
-            onRename(item.index as string, name);
-          }
-        }}
-        onFocusItem={(item) => {
-          if (item.index !== 'root') {
-            onSelect(item.index as string);
-          }
-        }}
-        onExpandItem={(item) => {
-          if (item.index !== 'root') {
-            onToggleExpand(item.index as string);
-          }
-        }}
-        onCollapseItem={(item) => {
-          if (item.index !== 'root') {
-            onToggleExpand(item.index as string);
-          }
-        }}
-        renderItemArrow={({ item, context }) => {
-          if (!item.isFolder || item.children?.length === 0) {
-            return <span className="rct-tree-item-arrow" />;
-          }
-          return (
-            <button
-              className="rct-tree-item-arrow"
-              onClick={(e) => {
-                e.stopPropagation();
-                context.toggleExpandedState();
-              }}
-            >
-              <ChevronRight className={cn(
-                'transition-transform',
-                context.isExpanded && 'rotate-90'
-              )} />
-            </button>
-          );
-        }}
-        renderItem={({ item, depth, children, title, context, arrow }) => {
-          if (item.index === 'root') return null;
+      {tree.isSearchOpen() && (
+        <div className="searchbox">
+          <input {...tree.getSearchInputElementProps()} placeholder="Search..." />
+          <span className="text-xs text-muted-foreground ml-2">
+            ({tree.getSearchMatchingItems().length} matches)
+          </span>
+        </div>
+      )}
 
-          const doc = item.data;
-          const interactiveElementProps = context.interactiveElementProps;
+      <div {...tree.getContainerProps()} className="tree">
+        <AssistiveTreeDescription tree={tree} />
+        {tree.getItems().map((item) => {
+          if (item.getId() === 'root') return null;
+
+          const doc = documents.find(d => d.id === item.getId());
+          if (!doc) return null;
 
           return (
-            <DocumentContextMenu
-              onAddChild={() => onAdd(doc.id, false)}
-              onAddChildFolder={() => onAdd(doc.id, true)}
-              onAddSibling={() => onAdd(doc.parentId || null, false)}
-              onAddSiblingFolder={() => onAdd(doc.parentId || null, true)}
-              onRename={() => {
-                treeRef.current?.startRenamingItem(doc.id);
-              }}
-              onDuplicate={() => onDuplicate(doc.id)}
-              onDelete={() => onDelete(doc.id)}
-              onManageTags={() => onManageTags?.(doc.id)}
-            >
-              <li
-                {...(context.itemContainerWithChildrenProps as any)}
-                className={cn(
-                  'rct-tree-item-li',
-                )}
-              >
+            <Fragment key={item.getId()}>
+              {item.isRenaming() ? (
                 <div
-                  {...(interactiveElementProps as any)}
-                  className={cn(
-                    'rct-tree-item-title-container',
-                    context.isSelected && 'rct-tree-item-title-container-selected',
-                    context.isDraggingOver && 'rct-tree-item-title-container-dragging-over',
-                    context.isDraggingOverParent && item.isFolder && 'rct-tree-item-title-container-dragging-over-folder',
-                  )}
-                  style={{ paddingLeft: `${depth * 12 + 8}px` }}
+                  className="renaming-item"
+                  style={{ marginLeft: `${item.getItemMeta().level * 20}px` }}
                 >
-                  {arrow}
-                  {doc.isFolder ? (
-                    <Folder className="rct-tree-item-icon" />
-                  ) : (
-                    <FileText className="rct-tree-item-icon" />
-                  )}
-                  <span className="truncate text-sm">{title}</span>
+                  <input {...item.getRenameInputProps()} />
                 </div>
-                {children}
-              </li>
-            </DocumentContextMenu>
+              ) : (
+                <DocumentContextMenu
+                  onAddChild={() => onAdd(doc.id, false)}
+                  onAddChildFolder={() => onAdd(doc.id, true)}
+                  onAddSibling={() => onAdd(doc.parentId || null, false)}
+                  onAddSiblingFolder={() => onAdd(doc.parentId || null, true)}
+                  onRename={() => item.startRenaming()}
+                  onDuplicate={() => onDuplicate(doc.id)}
+                  onDelete={() => onDelete(doc.id)}
+                  onManageTags={() => onManageTags?.(doc.id)}
+                >
+                  <button
+                    {...item.getProps()}
+                    style={{ paddingLeft: `${item.getItemMeta().level * 20}px` }}
+                    onClick={() => onSelect(item.getId())}
+                  >
+                    {item.isFolder() && item.getItemData()?.children && item.getItemData()!.children!.length > 0 && (
+                      <ChevronRight
+                        className={cn(
+                          'chevron',
+                          item.isExpanded() && 'expanded'
+                        )}
+                      />
+                    )}
+                    {doc.isFolder ? (
+                      <Folder />
+                    ) : (
+                      <FileText />
+                    )}
+                    <div className={getCssClass(item)}>
+                      <span>{item.getItemName()}</span>
+                    </div>
+                  </button>
+                </DocumentContextMenu>
+              )}
+            </Fragment>
           );
-        }}
-      >
-        <Tree treeId="tree-1" rootItem="root" treeLabel="Documents" />
-      </UncontrolledTreeEnvironment>
+        })}
+        <div style={tree.getDragLineStyle()} className="dragline" />
+      </div>
     </div>
   );
 };
