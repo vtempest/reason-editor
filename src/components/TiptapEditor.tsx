@@ -10,12 +10,23 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
+import { TableKit } from '@tiptap/extension-table';
+import Image from '@tiptap/extension-image';
+import CharacterCount from '@tiptap/extension-character-count';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { FontFamily } from '@tiptap/extension-font-family';
+import { FontSize } from '@/lib/tiptap/fontSize';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { SearchReplaceBar } from '@/components/SearchReplaceBar';
+import { FontFamilyDropdown } from '@/components/FontFamilyDropdown';
+import { FontSizeDropdown } from '@/components/FontSizeDropdown';
+import { AlignmentDropdown } from '@/components/AlignmentDropdown';
+import { HeadingsDropdown } from '@/components/HeadingsDropdown';
+import { StylesDropdown } from '@/components/StylesDropdown';
 import {
   Bold,
   Italic,
@@ -38,6 +49,13 @@ import {
   Undo,
   Redo,
   Bot,
+  Table,
+  ImageIcon,
+  Columns,
+  Rows,
+  Trash,
+  Plus,
+  Merge,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText } from '@/lib/ai/rewrite';
@@ -74,7 +92,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [1, 2, 3],
+          levels: [1, 2, 3, 4, 5, 6],
         },
       }),
       Placeholder.configure({
@@ -97,8 +115,42 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       TaskItem.configure({
         nested: true,
       }),
+      TableKit.configure({
+        table: {
+          HTMLAttributes: {
+            class: 'tiptap-table w-full border-collapse border border-border',
+          },
+        },
+        tableRow: {
+          HTMLAttributes: {
+            class: 'border border-border',
+          },
+        },
+        tableCell: {
+          HTMLAttributes: {
+            class: 'border border-border p-2 min-w-[100px]',
+          },
+        },
+        tableHeader: {
+          HTMLAttributes: {
+            class: 'border border-border p-2 min-w-[100px] bg-muted font-semibold',
+          },
+        },
+      }),
+      Image.configure({
+        inline: false,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-md my-4',
+        },
+      }),
       FloatingMenuExtension,
       BubbleMenuExtension,
+      CharacterCount.configure({
+        limit: null,
+      }),
+      TextStyle,
+      FontFamily,
+      FontSize,
       SearchAndReplace.configure({
         searchResultClass: 'search-result',
         caseSensitive: false,
@@ -201,6 +253,17 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
 
   const toggleHeading = (level: 1 | 2 | 3) => {
     editor.chain().focus().toggleHeading({ level }).run();
+  };
+
+  const insertTable = () => {
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  };
+
+  const insertImage = () => {
+    const url = window.prompt('Enter image URL:');
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
   };
 
   const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
@@ -389,43 +452,19 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
+        {/* Font Family and Size */}
+        <FontFamilyDropdown editor={editor} />
+        <FontSizeDropdown editor={editor} />
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
         {/* Headings */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleHeading(1)}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('heading', { level: 1 }) && 'bg-muted'
-          )}
-          title="Heading 1"
-        >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleHeading(2)}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('heading', { level: 2 }) && 'bg-muted'
-          )}
-          title="Heading 2"
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => toggleHeading(3)}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('heading', { level: 3 }) && 'bg-muted'
-          )}
-          title="Heading 3"
-        >
-          <Heading3 className="h-4 w-4" />
-        </Button>
+        <HeadingsDropdown editor={editor} />
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Styles */}
+        <StylesDropdown editor={editor} />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -558,54 +597,7 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         <Separator orientation="vertical" className="mx-1 h-6" />
 
         {/* Alignment */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'left' }) && 'bg-muted'
-          )}
-          title="Align Left"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'center' }) && 'bg-muted'
-          )}
-          title="Align Center"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'right' }) && 'bg-muted'
-          )}
-          title="Align Right"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive({ textAlign: 'justify' }) && 'bg-muted'
-          )}
-          title="Justify"
-        >
-          <AlignJustify className="h-4 w-4" />
-        </Button>
+        <AlignmentDropdown editor={editor} />
 
         <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -621,6 +613,30 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
           title="Add Link"
         >
           <Link2 className="h-4 w-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="mx-1 h-6" />
+
+        {/* Table */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertTable}
+          className="h-8 w-8 p-0"
+          title="Insert Table"
+        >
+          <Table className="h-4 w-4" />
+        </Button>
+
+        {/* Image */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={insertImage}
+          className="h-8 w-8 p-0"
+          title="Insert Image"
+        >
+          <ImageIcon className="h-4 w-4" />
         </Button>
 
         <Separator orientation="vertical" className="mx-1 h-6" />
@@ -804,6 +820,118 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
           </Button>
         </BubbleMenu>
 
+        {/* Table Bubble Menu - appears when inside a table */}
+        <BubbleMenu
+          editor={editor}
+          shouldShow={({ editor }) => {
+            return (
+              editor.isActive('table') ||
+              editor.isActive('tableCell') ||
+              editor.isActive('tableHeader') ||
+              editor.isActive('tableRow')
+            );
+          }}
+          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+        >
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addColumnBefore().run()}
+              className="h-8 px-2 text-xs"
+              title="Add column before"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Col ←
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              className="h-8 px-2 text-xs"
+              title="Add column after"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Col →
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              className="h-8 px-2 text-xs text-destructive"
+              title="Delete column"
+            >
+              <Trash className="h-3 w-3 mr-1" />
+              Col
+            </Button>
+
+            <Separator orientation="vertical" className="mx-1 h-6" />
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addRowBefore().run()}
+              className="h-8 px-2 text-xs"
+              title="Add row before"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Row ↑
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              className="h-8 px-2 text-xs"
+              title="Add row after"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Row ↓
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              className="h-8 px-2 text-xs text-destructive"
+              title="Delete row"
+            >
+              <Trash className="h-3 w-3 mr-1" />
+              Row
+            </Button>
+
+            <Separator orientation="vertical" className="mx-1 h-6" />
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().mergeOrSplit().run()}
+              className="h-8 px-2 text-xs"
+              title="Merge or split cells"
+            >
+              <Merge className="h-3 w-3 mr-1" />
+              Merge
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+              className="h-8 px-2 text-xs"
+              title="Toggle header row"
+            >
+              Header
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              className="h-8 px-2 text-xs text-destructive"
+              title="Delete table"
+            >
+              <Trash className="h-3 w-3 mr-1" />
+              Table
+            </Button>
+          </div>
+        </BubbleMenu>
+
         {/* AI Suggestion Overlay */}
         {(aiSuggestion || isAiLoading) && (
           <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
@@ -827,6 +955,16 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
             placeholder={viewMode === 'html' ? 'Enter HTML...' : 'Enter Markdown...'}
           />
         )}
+      </div>
+
+      {/* Status Bar with Word and Character Count */}
+      <div className="border-t border-border bg-muted/50 px-4 py-1.5 text-xs text-muted-foreground flex items-center gap-4">
+        <span>
+          Words: {editor.storage.characterCount.words()}
+        </span>
+        <span>
+          Characters: {editor.storage.characterCount.characters()}
+        </span>
       </div>
 
       {/* Tiptap Styles */}
@@ -942,6 +1080,44 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         .search-result-current {
           background-color: rgba(255, 152, 0, 0.6);
           border-radius: 2px;
+        }
+
+        /* Table styles */
+        .ProseMirror table {
+          margin: 1rem 0;
+        }
+
+        .ProseMirror table td,
+        .ProseMirror table th {
+          vertical-align: top;
+          box-sizing: border-box;
+          position: relative;
+        }
+
+        .ProseMirror table .selectedCell {
+          background-color: hsl(var(--accent));
+        }
+
+        .ProseMirror table .column-resize-handle {
+          background-color: hsl(var(--primary));
+          bottom: -2px;
+          pointer-events: none;
+          position: absolute;
+          right: -2px;
+          top: 0;
+          width: 4px;
+        }
+
+        /* Image styles */
+        .ProseMirror img {
+          display: block;
+          height: auto;
+          margin: 1rem 0;
+          max-width: 100%;
+        }
+
+        .ProseMirror img.ProseMirror-selectednode {
+          outline: 3px solid hsl(var(--primary));
         }
       `}</style>
     </div>

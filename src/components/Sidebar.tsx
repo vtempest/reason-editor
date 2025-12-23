@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Document } from '@/components/DocumentTree';
 import { DocumentTreeWrapper } from '@/components/Tree/containers/DocumentTreeWrapper';
 import { OutlineView } from '@/components/OutlineView';
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus, Columns2, RotateCcw } from 'lucide-react';
+import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus, Columns2, RotateCcw, FilePlus, FolderPlus, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
@@ -78,6 +79,9 @@ export const Sidebar = ({
   // Filter to only show active documents in the tree (not archived or deleted)
   const activeDocuments = documents.filter(doc => !doc.isArchived && !doc.isDeleted);
 
+  // Track expand/collapse all state
+  const [allExpanded, setAllExpanded] = useState(false);
+
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col bg-sidebar-background relative">
       {/* Floating search */}
@@ -92,6 +96,76 @@ export const Sidebar = ({
 
       {/* Spacer for floating search */}
       <div className="h-16"></div>
+
+      {/* Tree toolbar - only show in tree or split view */}
+      {(viewMode === 'tree' || viewMode === 'split') && (
+        <div className="px-3 pb-2">
+          <div className="flex items-center gap-0.5 bg-sidebar-accent/50 rounded-md p-0.5">
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAdd(null, false)}
+                    className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  >
+                    <FilePlus className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>New File</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onAdd(null, true)}
+                    className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  >
+                    <FolderPlus className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>New Folder</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newState = !allExpanded;
+                      setAllExpanded(newState);
+                      // Expand or collapse all folder documents based on new state
+                      activeDocuments.forEach(doc => {
+                        if (doc.isFolder && doc.isExpanded !== newState) {
+                          onToggleExpand(doc.id);
+                        }
+                      });
+                    }}
+                    className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  >
+                    {allExpanded ? (
+                      <ChevronsUpDown className="h-3.5 w-3.5" />
+                    ) : (
+                      <ChevronsDownUp className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>{allExpanded ? 'Collapse All' : 'Expand All'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+      )}
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden">
@@ -178,20 +252,9 @@ export const Sidebar = ({
         )}
       </div>
 
-      {/* Footer with new note button and utility links */}
+      {/* Footer with utility links */}
       {(viewMode === 'tree' || viewMode === 'split') && (
-        <div className="border-t border-sidebar-border p-3 space-y-2">
-          <Button
-            onClick={() => onAdd(null)}
-            className="w-full bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
-            size="sm"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            New Note
-          </Button>
-
-          <Separator className="my-2" />
-
+        <div className="border-t border-sidebar-border p-3">
           <TooltipProvider delayDuration={300}>
             <nav className="flex items-center justify-around gap-1">
               {/* Theme Dropdown */}

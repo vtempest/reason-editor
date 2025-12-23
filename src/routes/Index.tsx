@@ -40,6 +40,71 @@ const Index = () => {
       isExpanded: true,
       tags: []
     },
+    {
+      id: '2',
+      title: 'Projects',
+      content: '',
+      parentId: null,
+      children: [],
+      isExpanded: true,
+      isFolder: true,
+      tags: []
+    },
+    {
+      id: '3',
+      title: 'Website Redesign',
+      content: '<h1>Website Redesign</h1><p>Planning for the new website design.</p><h2>Goals</h2><ul><li><p>Modern, clean interface</p></li><li><p>Mobile-first approach</p></li><li><p>Improved accessibility</p></li></ul>',
+      parentId: '2',
+      children: [],
+      isExpanded: false,
+      tags: ['design', 'web']
+    },
+    {
+      id: '4',
+      title: 'API Integration',
+      content: '<h1>API Integration</h1><p>Notes on integrating the new REST API.</p><h2>Endpoints</h2><ul><li><p>GET /api/documents</p></li><li><p>POST /api/documents</p></li><li><p>PUT /api/documents/:id</p></li></ul>',
+      parentId: '2',
+      children: [],
+      isExpanded: false,
+      tags: ['development', 'api']
+    },
+    {
+      id: '5',
+      title: 'Research',
+      content: '',
+      parentId: null,
+      children: [],
+      isExpanded: true,
+      isFolder: true,
+      tags: []
+    },
+    {
+      id: '6',
+      title: 'Market Analysis',
+      content: '<h1>Market Analysis</h1><p>Research findings on market trends.</p><h2>Key Insights</h2><ul><li><p>Growing demand for productivity tools</p></li><li><p>Users prefer cloud-based solutions</p></li><li><p>Mobile access is essential</p></li></ul>',
+      parentId: '5',
+      children: [],
+      isExpanded: false,
+      tags: ['research', 'business']
+    },
+    {
+      id: '7',
+      title: 'Competitor Review',
+      content: '<h1>Competitor Review</h1><p>Analysis of competitor products.</p><h2>Top Competitors</h2><ul><li><p>Notion - Versatile but complex</p></li><li><p>Obsidian - Great for developers</p></li><li><p>Roam Research - Powerful linking</p></li></ul>',
+      parentId: '5',
+      children: [],
+      isExpanded: false,
+      tags: ['research', 'competition']
+    },
+    {
+      id: '8',
+      title: 'Meeting Notes',
+      content: '<h1>Meeting Notes</h1><p>Quick notes from today\'s team meeting.</p><h2>Action Items</h2><ul><li><p>Review PRs by EOD</p></li><li><p>Update documentation</p></li><li><p>Schedule next sprint planning</p></li></ul>',
+      parentId: null,
+      children: [],
+      isExpanded: false,
+      tags: ['meetings']
+    },
   ]);
 
   const [activeDocId, setActiveDocId] = useLocalStorage<string | null>(
@@ -229,11 +294,59 @@ const Index = () => {
       newParentId = targetDoc?.parentId || null;
     }
 
-    setDocuments((docs) =>
-      docs.map((doc) =>
-        doc.id === draggedId ? { ...doc, parentId: newParentId } : doc
-      )
-    );
+    setDocuments((docs) => {
+      // Create a new array without the dragged document
+      const withoutDragged = docs.filter((d) => d.id !== draggedId);
+
+      // Update the dragged document with new parent
+      const updatedDragged = { ...draggedDoc, parentId: newParentId };
+
+      // Find the insert position
+      let insertIndex: number;
+
+      if (position === 'child') {
+        // Insert at the beginning of the target's children
+        const targetIndex = withoutDragged.findIndex((d) => d.id === targetId);
+        // Find the first child of target, or insert right after target
+        const firstChildIndex = withoutDragged.findIndex(
+          (d, i) => i > targetIndex && d.parentId === targetId
+        );
+        insertIndex = firstChildIndex !== -1 ? firstChildIndex : targetIndex + 1;
+      } else if (position === 'before') {
+        // Insert before the target
+        insertIndex = withoutDragged.findIndex((d) => d.id === targetId);
+      } else {
+        // Insert after the target (and its children)
+        const targetIndex = withoutDragged.findIndex((d) => d.id === targetId);
+        // Find the last descendant of target
+        let lastDescendantIndex = targetIndex;
+        const findLastDescendant = (parentId: string, startIndex: number): number => {
+          let lastIndex = startIndex;
+          for (let i = startIndex + 1; i < withoutDragged.length; i++) {
+            if (withoutDragged[i].parentId === parentId) {
+              lastIndex = i;
+              const childLastIndex = findLastDescendant(withoutDragged[i].id, i);
+              if (childLastIndex > lastIndex) {
+                lastIndex = childLastIndex;
+                i = childLastIndex;
+              }
+            }
+          }
+          return lastIndex;
+        };
+        lastDescendantIndex = findLastDescendant(targetId, targetIndex);
+        insertIndex = lastDescendantIndex + 1;
+      }
+
+      // Insert the dragged document at the correct position
+      const result = [
+        ...withoutDragged.slice(0, insertIndex),
+        updatedDragged,
+        ...withoutDragged.slice(insertIndex)
+      ];
+
+      return result;
+    });
 
     toast.success('Note moved');
   };
