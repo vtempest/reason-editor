@@ -2,25 +2,25 @@
 
 import React, { useMemo } from "react"
 import {
-  UncontrolledTreeEnvironment,
-  Tree,
-  StaticTreeDataProvider,
-  TreeItem,
-  TreeItemIndex,
-  TreeEnvironmentRef,
-} from "react-complex-tree"
-import "react-complex-tree/lib/style-modern.css"
+  createFileTree,
+  isDir,
+  isFile,
+  Node,
+  useDnd,
+  useHotkeys,
+  useObserver,
+  useRovingFocus,
+  useSelections,
+  useTraits,
+  useVirtualize,
+  type Dir,
+} from "exploration"
+import { createStyles } from "@dash-ui/styles"
+import reset from "@dash-ui/reset"
+import { VscFolder, VscFolderOpened, VscFile } from "react-icons/vsc"
+import * as colors from "@radix-ui/colors"
 import type { Document } from "@/lib/db/schema"
 import type { DocumentNode } from "@/lib/document-utils"
-import { ChevronRight, File, Folder, FolderOpen, Copy, Trash2, Edit, FilePlus, FolderPlus } from "lucide-react"
-import { cn } from "@/lib/utils"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
 
 interface DocumentTreeProps {
   data: DocumentNode[]
@@ -36,9 +36,9 @@ interface DocumentTreeProps {
   height: number
 }
 
-interface TreeItemData {
+interface DocumentMeta {
+  id: string
   document: Document
-  name: string
 }
 
 export function DocumentTree({
@@ -51,311 +51,302 @@ export function DocumentTree({
   onDuplicate,
   onNewFile,
   onNewFolder,
-  searchTerm,
   height,
 }: DocumentTreeProps) {
-  const treeRef = React.useRef<TreeEnvironmentRef>(null)
-  const [expandedItems, setExpandedItems] = React.useState<TreeItemIndex[]>([])
-  const [selectedItems, setSelectedItems] = React.useState<TreeItemIndex[]>([])
+  const windowRef = React.useRef<HTMLDivElement | null>(null)
 
-  // Convert DocumentNode[] to react-complex-tree format
-  const treeItems = useMemo(() => {
-    const items: Record<TreeItemIndex, TreeItem<TreeItemData>> = {
-      root: {
-        index: "root",
-        isFolder: true,
-        children: [],
-        data: { document: null as any, name: "Root" },
+  // Create the tree with root nodes
+  const tree = useMemo(() => {
+    // Helper to find node in tree structure
+    const findNode = (nodes: DocumentNode[], path: string): DocumentNode | null => {
+      for (const node of nodes) {
+        if (node.id === path || node.name === path) return node
+        if (node.children) {
+          const found = findNode(node.children, path)
+          if (found) return found
+        }
+      }
+      return null
+    }
+
+    const treeInstance = createFileTree<DocumentMeta>(
+      (parent: Dir<DocumentMeta>, { createFile, createDir }) => {
+        // Root level - return the top-level nodes
+        if (!parent.meta || parent.path === '/') {
+          return Promise.resolve(
+            data.map((node) => {
+              const meta: DocumentMeta = {
+                id: node.id,
+                document: node.data,
+              }
+
+              if (node.data.isFolder) {
+                return createDir(
+                  {
+                    name: node.name || 'Untitled',
+                    meta,
+                  },
+                  node.data.isExpanded === 1
+                )
+              }
+              return createFile({
+                name: node.name || 'Untitled',
+                meta,
+              })
+            })
+          )
+        }
+
+        // Find the node by the parent's path
+        const node = findNode(data, parent.meta.id)
+
+        if (!node || !node.children) {
+          return Promise.resolve([])
+        }
+
+        return Promise.resolve(
+          node.children.map((child) => {
+            const meta: DocumentMeta = {
+              id: child.id,
+              document: child.data,
+            }
+
+            if (child.data.isFolder) {
+              return createDir(
+                {
+                  name: child.name || 'Untitled',
+                  meta,
+                },
+                child.data.isExpanded === 1
+              )
+            }
+            return createFile({
+              name: child.name || 'Untitled',
+              meta,
+            })
+          })
+        )
       },
-    }
-
-    function processNode(node: DocumentNode, parentId: string = "root") {
-      const isFolder = node.data.isFolder === 1
-      const item: TreeItem<TreeItemData> = {
-        index: node.id,
-        isFolder,
-        children: node.children?.map((child) => child.id) || undefined,
-        data: {
-          document: node.data,
-          name: node.name || "Untitled",
-        },
-        canMove: true,
-        canRename: true,
+      {
+        root: { name: '/' },
       }
+    )
 
-      items[node.id] = item
+    // Load root directory
+    treeInstance.expand(treeInstance.root)
 
-      // Add to parent's children
-      if (items[parentId]) {
-        if (!items[parentId].children) {
-          items[parentId].children = []
-        }
-        if (!items[parentId].children!.includes(node.id)) {
-          items[parentId].children!.push(node.id)
-        }
-      }
-
-      // Process children recursively
-      if (node.children) {
-        node.children.forEach((child) => processNode(child, node.id))
-      }
-    }
-
-    data.forEach((node) => processNode(node, "root"))
-    return items
+    return treeInstance
   }, [data])
 
-  const dataProvider = useMemo(
-    () => new StaticTreeDataProvider(treeItems),
-    [treeItems]
-  )
+  const rovingFocus = useRovingFocus(tree)
+  const selections = useSelections(tree)
+  const traits = useTraits(tree, ["selected", "focused", "drop-target"])
+  const dnd = useDnd(tree, { windowRef })
+  const virtualize = useVirtualize(tree, { windowRef, nodeHeight: 24 })
+  useHotkeys(tree, { windowRef, rovingFocus, selections })
 
-  const handlePrimaryAction = (item: TreeItem<TreeItemData>) => {
-    if (!item.isFolder && item.data.document) {
-      setSelectedItems([item.index])
-      onSelect(item.data.document)
-    }
-  }
+  useObserver(selections.didChange, (value) => {
+    const selected = Array.from(value)
+    traits.set("selected", selected)
 
-  const handleSelectItems = (items: TreeItemIndex[]) => {
-    setSelectedItems(items)
-    // If a single item is selected and it's a document (not folder), trigger onSelect
-    if (items.length === 1 && items[0] !== 'root') {
-      const item = treeItems[items[0]]
-      if (item && !item.isFolder && item.data.document) {
-        onSelect(item.data.document)
+    if (selected.length === 1) {
+      const node = tree.getById(selected[0])
+
+      if (node && isFile(node) && node.meta) {
+        onSelect(node.meta.document)
       }
     }
-  }
+  })
 
-  const handleDrop = (items: TreeItem<TreeItemData>[], target: any) => {
-    if (onMove && items.length > 0) {
-      const draggedId = items[0].index as string
-      let targetId: string | null
-      let position: "before" | "after" | "child"
+  useObserver(rovingFocus.didChange, (value) => {
+    traits.set("focused", [value])
+  })
 
-      if (target.targetType === "item") {
-        // Dropping ON an item - make it a child
-        targetId = target.targetItem === "root" ? null : (target.targetItem as string)
-        position = "child"
-      } else {
-        // Dropping BETWEEN items
-        const parentId = target.parentItem === "root" ? null : (target.parentItem as string)
-        const parent = treeItems[target.parentItem]
-        const siblings = parent?.children || []
-        const childIndex = target.childIndex
+  useObserver(dnd.didChange, (event) => {
+    if (!event) return
 
-        if (childIndex === 0) {
-          // First position - use "child" of parent if we want it at the beginning
-          // Or "before" the first sibling
-          if (siblings.length > 0) {
-            targetId = siblings[0] as string
-            position = "before"
-          } else {
-            targetId = parentId
-            position = "child"
+    if (event.type === "enter" || event.type === "expanded") {
+      if (event.node.parentId === event.dir.id) {
+        return traits.clear("drop-target")
+      }
+
+      const nodes = event.dir.nodes ? [...event.dir.nodes] : []
+      const nodeIds: number[] = [event.dir.id, ...nodes]
+      let nodeId: number | undefined
+
+      while ((nodeId = nodes.pop())) {
+        const node = tree.getById(nodeId)
+
+        if (node) {
+          if (isDir(node) && node.nodes) {
+            nodeIds.push(...node.nodes)
+            nodes.push(...node.nodes)
           }
-        } else {
-          // Insert after the previous sibling
-          targetId = siblings[childIndex - 1] as string
-          position = "after"
         }
       }
 
-      onMove(draggedId, targetId, position)
+      traits.set("drop-target", nodeIds)
+    } else if (event.type === "drop") {
+      traits.clear("drop-target")
+      const selected = new Set(Array.from(selections.narrow()))
+
+      if (
+        event.node === event.dir ||
+        (selected.has(event.node.id) && selected.has(event.dir.id))
+      ) {
+        return
+      }
+
+      if (onMove) {
+        if (selected.has(event.node.id)) {
+          const moveSelections = async () => {
+            if (!tree.isVisible(event.dir)) {
+              await tree.expand(event.dir)
+            }
+
+            for (const id of Array.from(selected)) {
+              const node = tree.getById(id)
+              if (node && node.meta) {
+                onMove(node.meta.id, event.dir.meta?.id || null, "child")
+              }
+            }
+          }
+
+          moveSelections()
+          selections.clear()
+        } else {
+          if (event.node.meta && event.dir.meta) {
+            onMove(event.node.meta.id, event.dir.meta.id, "child")
+          }
+        }
+      }
+    } else if (event.type === "end") {
+      traits.clear("drop-target")
     }
-  }
+  })
 
-  const handleRenameItem = (item: TreeItem<TreeItemData>, name: string) => {
-    if (onRename) {
-      onRename(item.index as string, name)
-    }
-  }
-
-  const startRenaming = (itemIndex: TreeItemIndex) => {
-    if (treeRef.current) {
-      treeRef.current.startRenamingItem("document-tree", itemIndex)
-    }
-  }
-
-  // Sync selectedItems when activeId changes externally (e.g., from tab clicks)
-  React.useEffect(() => {
-    if (activeId) {
-      setSelectedItems([activeId])
-    } else {
-      setSelectedItems([])
-    }
-  }, [activeId])
-
-  // Create dynamic viewState that responds to activeId and selection changes
-  const viewState = useMemo(() => ({
-    "document-tree": {
-      selectedItems,
-      expandedItems,
-    },
-  }), [selectedItems, expandedItems])
-
-  // Create a key that changes when data structure changes to force re-render
-  const treeKey = useMemo(() => {
-    return `tree-${data.length}-${data.map(d => d.id).join('-')}`
-  }, [data])
+  const plugins = [traits, rovingFocus, selections, dnd]
 
   return (
-    <div style={{ height: `${height}px` }} className="w-full">
-      <UncontrolledTreeEnvironment
-        key={treeKey}
-        ref={treeRef}
-        dataProvider={dataProvider}
-        getItemTitle={(item) => item.data.name}
-        viewState={viewState}
-        onExpandItem={(item) => setExpandedItems(prev => [...prev, item.index])}
-        onCollapseItem={(item) => setExpandedItems(prev => prev.filter(id => id !== item.index))}
-        onSelectItems={(items) => handleSelectItems(items)}
-        canDragAndDrop={true}
-        canReorderItems={true}
-        canDropOnFolder={true}
-        canDropOnNonFolder={false}
-        onPrimaryAction={handlePrimaryAction}
-        onDrop={handleDrop}
-        onRenameItem={handleRenameItem}
-        renderItemTitle={({ title, item, context, info }) => {
-          if (item.index === "root") return null
-
-          const isFolder = item.isFolder
-          const document = item.data.document
-
-          const handleDelete = () => {
-            if (onDelete && confirm(`Delete "${title}"?`)) {
-              onDelete(item.index as string)
-            }
-          }
-
-          const handleRename = () => {
-            if (context.isRenaming) return
-            startRenaming(item.index)
-          }
-
-          const handleDoubleClick = () => {
-            if (!context.isRenaming) {
-              startRenaming(item.index)
-            }
-          }
-
-          // Show rename input when in renaming mode
-          if (context.isRenaming) {
-            return (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const input = e.currentTarget.querySelector('input')
-                  if (input) {
-                    info.submitRenameInput(input.value)
-                  }
-                }}
-                className="flex items-center gap-1.5 px-1.5 py-0.5"
-              >
-                <input
-                  ref={(input) => input?.focus()}
-                  defaultValue={title}
-                  onBlur={info.abortRenameInput}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      info.abortRenameInput()
-                    }
-                  }}
-                  className="flex-1 px-1 py-0.5 text-sm bg-background border border-input rounded focus:outline-none focus:ring-1 focus:ring-ring"
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </form>
-            )
-          }
-
-          const handleDuplicate = () => {
-            if (onDuplicate) {
-              onDuplicate(item.index as string)
-            }
-          }
-
-          const handleNewFile = () => {
-            if (onNewFile) {
-              onNewFile(isFolder ? (item.index as string) : null)
-            }
-          }
-
-          const handleNewFolder = () => {
-            if (onNewFolder) {
-              onNewFolder(isFolder ? (item.index as string) : null)
-            }
-          }
-
+    <div ref={windowRef} className={explorerStyles()} style={{ height: `${height}px` }}>
+      <div {...virtualize.props}>
+        {virtualize.map((props) => {
           return (
-            <ContextMenu>
-              <ContextMenuTrigger asChild>
-                <div
-                  className={cn(
-                    "flex items-center gap-1.5 px-1.5 py-0.5 cursor-pointer hover:bg-accent rounded-sm transition-colors",
-                    context.isSelected && "bg-accent",
-                    context.isFocused && "ring-1 ring-ring",
-                    context.isDraggingOver && "bg-accent/50",
-                  )}
-                  onDoubleClick={handleDoubleClick}
-                >
-                  {isFolder ? (
-                    <>
-                      <ChevronRight
-                        className={cn(
-                          "h-3.5 w-3.5 shrink-0 transition-transform text-muted-foreground",
-                          context.isExpanded && "rotate-90",
-                        )}
-                      />
-                      {context.isExpanded ? (
-                        <FolderOpen className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                      ) : (
-                        <Folder className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                      )}
-                    </>
-                  ) : (
-                    <File className="h-3.5 w-3.5 shrink-0 ml-4 text-muted-foreground" />
-                  )}
-                  <span className="text-sm truncate flex-1 text-sidebar-foreground">
-                    {title || 'Untitled'}
-                  </span>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                {isFolder && (
-                  <>
-                    <ContextMenuItem onClick={handleNewFile}>
-                      <FilePlus className="mr-2 h-4 w-4" />
-                      New File
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={handleNewFolder}>
-                      <FolderPlus className="mr-2 h-4 w-4" />
-                      New Folder
-                    </ContextMenuItem>
-                    <ContextMenuSeparator />
-                  </>
-                )}
-                <ContextMenuItem onClick={handleRename}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Rename
-                </ContextMenuItem>
-                <ContextMenuItem onClick={handleDuplicate}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Duplicate
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+            <Node plugins={plugins} {...props} key={props.node.id}>
+              {isDir(props.node) ? (
+                props.node.expanded ? (
+                  <VscFolderOpened />
+                ) : (
+                  <VscFolder />
+                )
+              ) : (
+                <VscFile />
+              )}
+
+              <span>{props.node.basename}</span>
+            </Node>
           )
-        }}
-      >
-        <Tree treeId="document-tree" rootItem="root" treeLabel="Documents" />
-      </UncontrolledTreeEnvironment>
+        })}
+      </div>
     </div>
   )
 }
+
+const styles = createStyles({
+  themes: {
+    light: {
+      colors: {
+        ...colors,
+        textColor: colors.slate.slate12,
+        bgColor: colors.blue.blue1,
+
+        selected: {
+          textColor: colors.blue.blue11,
+        },
+
+        focused: {
+          bgColor: colors.blue.blue3,
+          borderColor: colors.blue.blue11,
+        },
+
+        dropTarget: {
+          bgColor: colors.blue.blue4,
+        },
+      },
+    },
+    dark: {
+      colors: {
+        ...colors,
+        textColor: colors.slate.slate2,
+        bgColor: colors.slate.slate12,
+
+        selected: {
+          textColor: colors.blue.blue9,
+        },
+
+        focused: {
+          bgColor: colors.blackA.blackA10,
+          borderColor: colors.blue.blue9,
+        },
+
+        dropTarget: {
+          bgColor: colors.whiteA.whiteA5,
+        },
+      },
+    },
+  },
+})
+
+const explorerStyles = styles.one((t) => ({
+  background: t.colors.bgColor,
+  color: t.colors.textColor,
+  width: "100%",
+  overflow: "auto",
+
+  ...[...Array(20).keys()].reduce((acc, depth) => {
+    acc[`[data-exploration-depth="${depth}"]`] = {
+      display: "flex",
+      gap: "0.3333em",
+      alignItems: "center",
+      width: "100%",
+      paddingLeft: `${depth}rem`,
+      borderStyle: "solid",
+      borderWidth: 1,
+      borderColor: "transparent",
+      "*:last-child": {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+      },
+    }
+
+    return acc
+  }, {} as Style),
+
+  svg: {
+    opacity: 0.5,
+  },
+
+  '[data-exploration-type="dir"] svg': {
+    opacity: 1,
+    color: t.colors.amberDark.amber9,
+  },
+
+  ".selected": {
+    color: t.colors.selected.textColor,
+  },
+
+  ".focused": {
+    borderColor: t.colors.focused.borderColor,
+    backgroundColor: t.colors.focused.bgColor,
+    outline: "none",
+  },
+
+  ".drop-target": {
+    backgroundColor: t.colors.dropTarget.bgColor,
+  },
+}))
+
+styles.insertGlobal(reset)
+
+type Style = { [key: string]: React.CSSProperties | Style }
