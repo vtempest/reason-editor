@@ -252,20 +252,9 @@ export const Sidebar = ({
         )}
       </div>
 
-      {/* Footer with new note button and utility links */}
+      {/* Footer with utility links */}
       {(viewMode === 'tree' || viewMode === 'split') && (
-        <div className="border-t border-sidebar-border p-3 space-y-2">
-          <Button
-            onClick={() => onAdd(null)}
-            className="w-full bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
-            size="sm"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            New Note
-          </Button>
-
-          <Separator className="my-2" />
-
+        <div className="border-t border-sidebar-border p-3">
           <TooltipProvider delayDuration={300}>
             <nav className="flex items-center justify-around gap-1">
               {/* Theme Dropdown */}
