@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useMemo, useState, useCallback } from "react"
 import {
   createFileTree,
   isDir,
@@ -21,6 +21,17 @@ import { VscFolder, VscFolderOpened, VscFile } from "react-icons/vsc"
 import * as colors from "@radix-ui/colors"
 import type { Document } from "@/lib/db/schema"
 import type { DocumentNode } from "@/lib/document-utils"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+} from "@/components/ui/context-menu"
+import { Plus, Trash2, Copy, Edit, FolderPlus, FileText, Folder } from "lucide-react"
 
 interface DocumentTreeProps {
   data: DocumentNode[]
@@ -54,6 +65,9 @@ export function DocumentTree({
   height,
 }: DocumentTreeProps) {
   const windowRef = React.useRef<HTMLDivElement | null>(null)
+  const [renamingId, setRenamingId] = useState<number | null>(null)
+  const [renameValue, setRenameValue] = useState("")
+  const inputRef = React.useRef<HTMLInputElement | null>(null)
 
   // Create the tree with root nodes
   const tree = useMemo(() => {
@@ -188,7 +202,7 @@ export function DocumentTree({
       traits.set("drop-target", nodeIds)
     } else if (event.type === "drop") {
       traits.clear("drop-target")
-      const selected = new Set(Array.from(selections.narrow()))
+      const selected = new Set(selections.narrow())
 
       if (
         event.node === event.dir ||
@@ -197,27 +211,39 @@ export function DocumentTree({
         return
       }
 
-      if (onMove) {
-        if (selected.has(event.node.id)) {
-          const moveSelections = async () => {
-            if (!tree.isVisible(event.dir)) {
-              await tree.expand(event.dir)
-            }
+      if (selected.has(event.node.id)) {
+        const moveSelections = async () => {
+          if (!tree.isVisible(event.dir)) {
+            await tree.expand(event.dir)
+          }
 
-            for (const id of Array.from(selected)) {
-              const node = tree.getById(id)
-              if (node && node.meta) {
-                onMove(node.meta.id, event.dir.meta?.id || null, "child")
+          const promises: Promise<void>[] = []
+
+          for (const id of selected) {
+            const node = tree.getById(id)
+
+            if (node) {
+              promises.push(tree.move(node, event.dir))
+
+              // Call onMove callback if provided
+              if (onMove && node.meta && event.dir.meta) {
+                onMove(node.meta.id, event.dir.meta.id, "child")
               }
             }
           }
 
-          moveSelections()
-          selections.clear()
-        } else {
-          if (event.node.meta && event.dir.meta) {
-            onMove(event.node.meta.id, event.dir.meta.id, "child")
-          }
+          await Promise.all(promises)
+        }
+
+        moveSelections()
+        selections.clear()
+      } else {
+        // Move in tree first for visual update
+        tree.move(event.node, event.dir)
+
+        // Then call onMove callback if provided
+        if (onMove && event.node.meta && event.dir.meta) {
+          onMove(event.node.meta.id, event.dir.meta.id, "child")
         }
       }
     } else if (event.type === "end") {
@@ -227,24 +253,183 @@ export function DocumentTree({
 
   const plugins = [traits, rovingFocus, selections, dnd]
 
+  // Handle rename start
+  const handleRenameStart = useCallback((nodeId: number, currentName: string) => {
+    setRenamingId(nodeId)
+    setRenameValue(currentName)
+    setTimeout(() => {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }, 0)
+  }, [])
+
+  // Handle rename submit
+  const handleRenameSubmit = useCallback(() => {
+    if (renamingId !== null && renameValue.trim()) {
+      const node = tree.getById(renamingId)
+      if (node?.meta && onRename) {
+        onRename(node.meta.id, renameValue.trim())
+      }
+    }
+    setRenamingId(null)
+    setRenameValue("")
+  }, [renamingId, renameValue, tree, onRename])
+
+  // Handle rename cancel
+  const handleRenameCancel = useCallback(() => {
+    setRenamingId(null)
+    setRenameValue("")
+  }, [])
+
+  // Focus input when renaming starts
+  React.useEffect(() => {
+    if (renamingId !== null && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [renamingId])
+
   return (
     <div ref={windowRef} className={explorerStyles()} style={{ height: `${height}px` }}>
       <div {...virtualize.props}>
         {virtualize.map((props) => {
-          return (
-            <Node plugins={plugins} {...props} key={props.node.id}>
-              {isDir(props.node) ? (
-                props.node.expanded ? (
-                  <VscFolderOpened />
-                ) : (
-                  <VscFolder />
-                )
-              ) : (
-                <VscFile />
-              )}
+          const isRenaming = renamingId === props.node.id
+          const nodeParentId = props.node.parentId ? tree.getById(props.node.parentId)?.meta?.id : null
 
-              <span>{props.node.basename}</span>
-            </Node>
+          return (
+            <ContextMenu key={props.node.id}>
+              <ContextMenuTrigger asChild>
+                <Node
+                  plugins={plugins}
+                  {...props}
+                  onDoubleClick={() => {
+                    if (!isRenaming) {
+                      handleRenameStart(props.node.id, props.node.basename)
+                    }
+                  }}
+                >
+                  {isDir(props.node) ? (
+                    props.node.expanded ? (
+                      <VscFolderOpened />
+                    ) : (
+                      <VscFolder />
+                    )
+                  ) : (
+                    <VscFile />
+                  )}
+
+                  {isRenaming ? (
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onBlur={handleRenameSubmit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleRenameSubmit()
+                        } else if (e.key === "Escape") {
+                          handleRenameCancel()
+                        }
+                      }}
+                      className="flex-1 bg-transparent outline-none border border-blue-500 px-1"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span>{props.node.basename}</span>
+                  )}
+                </Node>
+              </ContextMenuTrigger>
+              <ContextMenuContent className="w-56">
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>
+                    <FolderPlus className="mr-2 h-4 w-4" />
+                    Add Child
+                  </ContextMenuSubTrigger>
+                  <ContextMenuSubContent>
+                    <ContextMenuItem
+                      onClick={() => {
+                        if (onNewFile && props.node.meta) {
+                          onNewFile(isDir(props.node) ? props.node.meta.id : nodeParentId)
+                        }
+                      }}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Note
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => {
+                        if (onNewFolder && props.node.meta) {
+                          onNewFolder(isDir(props.node) ? props.node.meta.id : nodeParentId)
+                        }
+                      }}
+                    >
+                      <Folder className="mr-2 h-4 w-4" />
+                      Folder
+                    </ContextMenuItem>
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Sibling
+                  </ContextMenuSubTrigger>
+                  <ContextMenuSubContent>
+                    <ContextMenuItem
+                      onClick={() => {
+                        if (onNewFile) {
+                          onNewFile(nodeParentId)
+                        }
+                      }}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Note
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => {
+                        if (onNewFolder) {
+                          onNewFolder(nodeParentId)
+                        }
+                      }}
+                    >
+                      <Folder className="mr-2 h-4 w-4" />
+                      Folder
+                    </ContextMenuItem>
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  onClick={() => {
+                    handleRenameStart(props.node.id, props.node.basename)
+                  }}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Rename
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    if (onDuplicate && props.node.meta) {
+                      onDuplicate(props.node.meta.id)
+                    }
+                  }}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicate
+                </ContextMenuItem>
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  onClick={() => {
+                    if (onDelete && props.node.meta) {
+                      onDelete(props.node.meta.id)
+                    }
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           )
         })}
       </div>
