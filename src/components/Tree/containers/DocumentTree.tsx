@@ -167,9 +167,15 @@ export function DocumentTree({
     },
   }), [activeId, expandedItems])
 
+  // Create a key that changes when data structure changes to force re-render
+  const treeKey = useMemo(() => {
+    return `tree-${data.length}-${data.map(d => d.id).join('-')}`
+  }, [data])
+
   return (
     <div style={{ height: `${height}px` }} className="w-full">
       <UncontrolledTreeEnvironment
+        key={treeKey}
         ref={treeRef}
         dataProvider={dataProvider}
         getItemTitle={(item) => item.data.name}
@@ -226,7 +232,7 @@ export function DocumentTree({
               <ContextMenuTrigger asChild>
                 <div
                   className={cn(
-                    "flex items-center gap-2 px-2 py-1 cursor-pointer hover:bg-accent rounded-sm transition-colors",
+                    "flex items-center gap-1.5 px-1.5 py-0.5 cursor-pointer hover:bg-accent rounded-sm transition-colors",
                     context.isSelected && "bg-accent",
                     context.isFocused && "ring-1 ring-ring",
                     context.isDraggingOver && "bg-accent/50",
@@ -236,18 +242,18 @@ export function DocumentTree({
                     <>
                       <ChevronRight
                         className={cn(
-                          "h-4 w-4 shrink-0 transition-transform text-muted-foreground",
+                          "h-3.5 w-3.5 shrink-0 transition-transform text-muted-foreground",
                           context.isExpanded && "rotate-90",
                         )}
                       />
                       {context.isExpanded ? (
-                        <FolderOpen className="h-4 w-4 shrink-0 text-blue-500" />
+                        <FolderOpen className="h-3.5 w-3.5 shrink-0 text-blue-500" />
                       ) : (
-                        <Folder className="h-4 w-4 shrink-0 text-blue-500" />
+                        <Folder className="h-3.5 w-3.5 shrink-0 text-blue-500" />
                       )}
                     </>
                   ) : (
-                    <File className="h-4 w-4 shrink-0 ml-6 text-muted-foreground" />
+                    <File className="h-3.5 w-3.5 shrink-0 ml-4 text-muted-foreground" />
                   )}
                   <span className="text-sm truncate flex-1 text-sidebar-foreground">
                     {title || 'Untitled'}
