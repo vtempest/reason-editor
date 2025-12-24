@@ -1,24 +1,21 @@
 "use client"
 
-import React, { useMemo } from "react"
+import type React from "react"
+import { useRef, useCallback } from "react"
+import { Tree, type NodeApi } from "react-arborist"
+import { Folder, FolderOpen, Trash2, Edit2, Copy, FileText } from "lucide-react"
 import {
-  createFileTree,
-  isDir,
-  isFile,
-  Node,
-  useDnd,
-  useHotkeys,
-  useObserver,
-  useRovingFocus,
-  useSelections,
-  useTraits,
-  useVirtualize,
-  type Dir,
-} from "exploration"
-import { createStyles } from "@dash-ui/styles"
-import reset from "@dash-ui/reset"
-import { VscFolder, VscFolderOpened, VscFile } from "react-icons/vsc"
-import * as colors from "@radix-ui/colors"
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+} from "@/components/ui/context-menu"
+import { cn } from "@/lib/utils"
+import { getFileIcon } from "@/lib/file-icons"
 import type { Document } from "@/lib/db/schema"
 import type { DocumentNode } from "@/lib/document-utils"
 
@@ -36,11 +33,6 @@ interface DocumentTreeProps {
   height: number
 }
 
-interface DocumentMeta {
-  id: string
-  document: Document
-}
-
 export function DocumentTree({
   data,
   activeId,
@@ -53,300 +45,207 @@ export function DocumentTree({
   onNewFolder,
   height,
 }: DocumentTreeProps) {
-  const windowRef = React.useRef<HTMLDivElement | null>(null)
+  const treeRef = useRef<any>(null)
 
-  // Create the tree with root nodes
-  const tree = useMemo(() => {
-    // Helper to find node in tree structure
-    const findNode = (nodes: DocumentNode[], path: string): DocumentNode | null => {
-      for (const node of nodes) {
-        if (node.id === path || node.name === path) return node
-        if (node.children) {
-          const found = findNode(node.children, path)
-          if (found) return found
-        }
-      }
-      return null
+  const handleCreate = useCallback((node: NodeApi<DocumentNode>, type: "file" | "folder") => {
+    if (type === "file" && onNewFile) {
+      // If node is a folder, add as child, otherwise add as sibling
+      const parentId = node.data.data.isFolder ? node.id : node.parent?.id || null
+      onNewFile(parentId)
+    } else if (type === "folder" && onNewFolder) {
+      const parentId = node.data.data.isFolder ? node.id : node.parent?.id || null
+      onNewFolder(parentId)
     }
+  }, [onNewFile, onNewFolder])
 
-    const treeInstance = createFileTree<DocumentMeta>(
-      (parent: Dir<DocumentMeta>, { createFile, createDir }) => {
-        // Root level - return the top-level nodes
-        if (!parent.meta || parent.path === '/') {
-          return Promise.resolve(
-            data.map((node) => {
-              const meta: DocumentMeta = {
-                id: node.id,
-                document: node.data,
-              }
-
-              if (node.data.isFolder) {
-                return createDir(
-                  {
-                    name: node.name || 'Untitled',
-                    meta,
-                  },
-                  node.data.isExpanded === 1
-                )
-              }
-              return createFile({
-                name: node.name || 'Untitled',
-                meta,
-              })
-            })
-          )
-        }
-
-        // Find the node by the parent's path
-        const node = findNode(data, parent.meta.id)
-
-        if (!node || !node.children) {
-          return Promise.resolve([])
-        }
-
-        return Promise.resolve(
-          node.children.map((child) => {
-            const meta: DocumentMeta = {
-              id: child.id,
-              document: child.data,
-            }
-
-            if (child.data.isFolder) {
-              return createDir(
-                {
-                  name: child.name || 'Untitled',
-                  meta,
-                },
-                child.data.isExpanded === 1
-              )
-            }
-            return createFile({
-              name: child.name || 'Untitled',
-              meta,
-            })
-          })
-        )
-      },
-      {
-        root: { name: '/' },
-      }
-    )
-
-    // Load root directory
-    treeInstance.expand(treeInstance.root)
-
-    return treeInstance
-  }, [data])
-
-  const rovingFocus = useRovingFocus(tree)
-  const selections = useSelections(tree)
-  const traits = useTraits(tree, ["selected", "focused", "drop-target"])
-  const dnd = useDnd(tree, { windowRef })
-  const virtualize = useVirtualize(tree, { windowRef, nodeHeight: 24 })
-  useHotkeys(tree, { windowRef, rovingFocus, selections })
-
-  useObserver(selections.didChange, (value) => {
-    const selected = Array.from(value)
-    traits.set("selected", selected)
-
-    if (selected.length === 1) {
-      const node = tree.getById(selected[0])
-
-      if (node && isFile(node) && node.meta) {
-        onSelect(node.meta.document)
-      }
+  const handleDelete = useCallback((node: NodeApi<DocumentNode>) => {
+    if (onDelete) {
+      onDelete(node.id)
     }
-  })
+  }, [onDelete])
 
-  useObserver(rovingFocus.didChange, (value) => {
-    traits.set("focused", [value])
-  })
+  const handleRename = useCallback((node: NodeApi<DocumentNode>) => {
+    treeRef.current?.edit(node.id)
+  }, [])
 
-  useObserver(dnd.didChange, (event) => {
-    if (!event) return
-
-    if (event.type === "enter" || event.type === "expanded") {
-      if (event.node.parentId === event.dir.id) {
-        return traits.clear("drop-target")
-      }
-
-      const nodes = event.dir.nodes ? [...event.dir.nodes] : []
-      const nodeIds: number[] = [event.dir.id, ...nodes]
-      let nodeId: number | undefined
-
-      while ((nodeId = nodes.pop())) {
-        const node = tree.getById(nodeId)
-
-        if (node) {
-          if (isDir(node) && node.nodes) {
-            nodeIds.push(...node.nodes)
-            nodes.push(...node.nodes)
-          }
-        }
-      }
-
-      traits.set("drop-target", nodeIds)
-    } else if (event.type === "drop") {
-      traits.clear("drop-target")
-      const selected = new Set(Array.from(selections.narrow()))
-
-      if (
-        event.node === event.dir ||
-        (selected.has(event.node.id) && selected.has(event.dir.id))
-      ) {
-        return
-      }
-
-      if (onMove) {
-        if (selected.has(event.node.id)) {
-          const moveSelections = async () => {
-            if (!tree.isVisible(event.dir)) {
-              await tree.expand(event.dir)
-            }
-
-            for (const id of Array.from(selected)) {
-              const node = tree.getById(id)
-              if (node && node.meta) {
-                onMove(node.meta.id, event.dir.meta?.id || null, "child")
-              }
-            }
-          }
-
-          moveSelections()
-          selections.clear()
-        } else {
-          if (event.node.meta && event.dir.meta) {
-            onMove(event.node.meta.id, event.dir.meta.id, "child")
-          }
-        }
-      }
-    } else if (event.type === "end") {
-      traits.clear("drop-target")
+  const handleDuplicate = useCallback((node: NodeApi<DocumentNode>) => {
+    if (onDuplicate) {
+      onDuplicate(node.id)
     }
-  })
-
-  const plugins = [traits, rovingFocus, selections, dnd]
+  }, [onDuplicate])
 
   return (
-    <div ref={windowRef} className={explorerStyles()} style={{ height: `${height}px` }}>
-      <div {...virtualize.props}>
-        {virtualize.map((props) => {
-          return (
-            <Node plugins={plugins} {...props} key={props.node.id}>
-              {isDir(props.node) ? (
-                props.node.expanded ? (
-                  <VscFolderOpened />
-                ) : (
-                  <VscFolder />
-                )
-              ) : (
-                <VscFile />
-              )}
-
-              <span>{props.node.basename}</span>
-            </Node>
-          )
-        })}
-      </div>
+    <div className="w-full" style={{ height: `${height}px` }}>
+      <Tree
+        ref={treeRef}
+        data={data}
+        openByDefault={false}
+        width="100%"
+        height={height}
+        indent={24}
+        rowHeight={28}
+        overscanCount={1}
+        className="file-tree"
+        onMove={(args) => {
+          if (onMove && args.dragIds[0]) {
+            const parentId = args.parentId || null
+            onMove(args.dragIds[0], parentId, "child")
+          }
+        }}
+        onRename={(args) => {
+          if (onRename) {
+            onRename(args.id, args.name)
+          }
+        }}
+        initialOpenState={
+          data.reduce((acc, node) => {
+            if (node.data.isFolder && node.data.isExpanded) {
+              acc[node.id] = true
+            }
+            return acc
+          }, {} as Record<string, boolean>)
+        }
+        onToggle={(id) => {
+          // Find the node and toggle its expanded state
+          const findAndToggle = (nodes: DocumentNode[]): boolean => {
+            for (const node of nodes) {
+              if (node.id === id) {
+                // Could call a callback here if needed
+                return true
+              }
+              if (node.children && findAndToggle(node.children)) {
+                return true
+              }
+            }
+            return false
+          }
+          findAndToggle(data)
+        }}
+      >
+        {(props) => (
+          <Node
+            {...props}
+            activeId={activeId}
+            onCreate={handleCreate}
+            onDelete={handleDelete}
+            onRename={handleRename}
+            onDuplicate={handleDuplicate}
+            onSelect={onSelect}
+          />
+        )}
+      </Tree>
     </div>
   )
 }
 
-const styles = createStyles({
-  themes: {
-    light: {
-      colors: {
-        ...colors,
-        textColor: colors.slate.slate12,
-        bgColor: colors.blue.blue1,
+interface NodeProps {
+  node: NodeApi<DocumentNode>
+  style: React.CSSProperties
+  dragHandle?: (el: HTMLDivElement | null) => void
+  activeId?: string | null
+  onCreate: (node: NodeApi<DocumentNode>, type: "file" | "folder") => void
+  onDelete: (node: NodeApi<DocumentNode>) => void
+  onRename: (node: NodeApi<DocumentNode>) => void
+  onDuplicate: (node: NodeApi<DocumentNode>) => void
+  onSelect: (document: Document) => void
+}
 
-        selected: {
-          textColor: colors.blue.blue11,
-        },
+function Node({
+  node,
+  style,
+  dragHandle,
+  activeId,
+  onCreate,
+  onDelete,
+  onRename,
+  onDuplicate,
+  onSelect,
+}: NodeProps) {
+  const isFolder = node.data.data.isFolder
+  const iconClass = getFileIcon(node.data.name, isFolder || false)
+  const isActive = activeId === node.id
 
-        focused: {
-          bgColor: colors.blue.blue3,
-          borderColor: colors.blue.blue11,
-        },
-
-        dropTarget: {
-          bgColor: colors.blue.blue4,
-        },
-      },
-    },
-    dark: {
-      colors: {
-        ...colors,
-        textColor: colors.slate.slate2,
-        bgColor: colors.slate.slate12,
-
-        selected: {
-          textColor: colors.blue.blue9,
-        },
-
-        focused: {
-          bgColor: colors.blackA.blackA10,
-          borderColor: colors.blue.blue9,
-        },
-
-        dropTarget: {
-          bgColor: colors.whiteA.whiteA5,
-        },
-      },
-    },
-  },
-})
-
-const explorerStyles = styles.one((t) => ({
-  background: t.colors.bgColor,
-  color: t.colors.textColor,
-  width: "100%",
-  overflow: "auto",
-
-  ...[...Array(20).keys()].reduce((acc, depth) => {
-    acc[`[data-exploration-depth="${depth}"]`] = {
-      display: "flex",
-      gap: "0.3333em",
-      alignItems: "center",
-      width: "100%",
-      paddingLeft: `${depth}rem`,
-      borderStyle: "solid",
-      borderWidth: 1,
-      borderColor: "transparent",
-      "*:last-child": {
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-      },
-    }
-
-    return acc
-  }, {} as Style),
-
-  svg: {
-    opacity: 0.5,
-  },
-
-  '[data-exploration-type="dir"] svg': {
-    opacity: 1,
-    color: t.colors.amberDark.amber9,
-  },
-
-  ".selected": {
-    color: t.colors.selected.textColor,
-  },
-
-  ".focused": {
-    borderColor: t.colors.focused.borderColor,
-    backgroundColor: t.colors.focused.bgColor,
-    outline: "none",
-  },
-
-  ".drop-target": {
-    backgroundColor: t.colors.dropTarget.bgColor,
-  },
-}))
-
-styles.insertGlobal(reset)
-
-type Style = { [key: string]: React.CSSProperties | Style }
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div
+          ref={dragHandle}
+          style={style}
+          className={cn(
+            "flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-accent transition-colors",
+            isActive && "bg-accent",
+            node.state.isDragging && "opacity-50",
+          )}
+          onClick={() => {
+            if (isFolder) {
+              node.toggle()
+            } else {
+              onSelect(node.data.data)
+            }
+          }}
+        >
+          {isFolder ? (
+            node.isOpen ? (
+              <FolderOpen className="h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-500" />
+            ) : (
+              <Folder className="h-4 w-4 flex-shrink-0 text-yellow-600 dark:text-yellow-500" />
+            )
+          ) : (
+            <span className={cn("icon flex-shrink-0", iconClass)} />
+          )}
+          {node.isEditing ? (
+            <input
+              autoFocus
+              type="text"
+              defaultValue={node.data.name}
+              onBlur={(e) => node.submit(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") node.submit(e.currentTarget.value)
+                if (e.key === "Escape") node.reset()
+              }}
+              className="flex-1 rounded border bg-background px-1 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+          ) : (
+            <span className="flex-1 truncate text-sm">{node.data.name}</span>
+          )}
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        {isFolder && (
+          <>
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>
+                <Folder className="mr-2 h-4 w-4" />
+                Add Child
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent>
+                <ContextMenuItem onClick={() => onCreate(node, "file")}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Note
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => onCreate(node, "folder")}>
+                  <Folder className="mr-2 h-4 w-4" />
+                  Folder
+                </ContextMenuItem>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+            <ContextMenuSeparator />
+          </>
+        )}
+        <ContextMenuItem onClick={() => onRename(node)}>
+          <Edit2 className="mr-2 h-4 w-4" />
+          Rename
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => onDuplicate(node)}>
+          <Copy className="mr-2 h-4 w-4" />
+          Duplicate
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => onDelete(node)} className="text-destructive">
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+}
