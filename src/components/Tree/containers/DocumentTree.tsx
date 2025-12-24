@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useRef, useCallback, useImperativeHandle, forwardRef } from "react"
+import { useRef, useCallback, useImperativeHandle, forwardRef, useState } from "react"
 import { Tree, type NodeApi } from "react-arborist"
 import { Folder, FolderOpen, Trash2, Edit2, Copy, FileText } from "lucide-react"
 import {
@@ -14,6 +14,16 @@ import {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
 } from "@/components/ui/context-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { cn } from "@/lib/utils"
 import { getFileIcon } from "@/lib/file-icons"
 import type { Document } from "@/lib/db/schema"
@@ -22,6 +32,7 @@ import type { DocumentNode } from "@/lib/document-utils"
 export interface DocumentTreeHandle {
   expandAll: () => void
   collapseAll: () => void
+  edit: (nodeId: string) => void
 }
 
 interface DocumentTreeProps {
@@ -51,6 +62,7 @@ export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
   height,
 }, ref) => {
   const treeRef = useRef<any>(null)
+  const [deleteConfirmNode, setDeleteConfirmNode] = useState<NodeApi<DocumentNode> | null>(null)
 
   useImperativeHandle(ref, () => ({
     expandAll: () => {
@@ -61,6 +73,11 @@ export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
     collapseAll: () => {
       if (treeRef.current) {
         treeRef.current.closeAll()
+      }
+    },
+    edit: (nodeId: string) => {
+      if (treeRef.current) {
+        treeRef.current.edit(nodeId)
       }
     },
   }))
@@ -77,10 +94,16 @@ export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
   }, [onNewFile, onNewFolder])
 
   const handleDelete = useCallback((node: NodeApi<DocumentNode>) => {
-    if (onDelete) {
-      onDelete(node.id)
+    // Show confirmation dialog instead of deleting immediately
+    setDeleteConfirmNode(node)
+  }, [])
+
+  const confirmDelete = useCallback(() => {
+    if (deleteConfirmNode && onDelete) {
+      onDelete(deleteConfirmNode.id)
+      setDeleteConfirmNode(null)
     }
-  }, [onDelete])
+  }, [deleteConfirmNode, onDelete])
 
   const handleRename = useCallback((node: NodeApi<DocumentNode>) => {
     treeRef.current?.edit(node.id)
@@ -93,66 +116,83 @@ export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
   }, [onDuplicate])
 
   return (
-    <div className="w-full" style={{ height: `${height}px` }}>
-      <Tree
-        ref={treeRef}
-        data={data}
-        openByDefault={false}
-        width="100%"
-        height={height}
-        indent={24}
-        rowHeight={28}
-        overscanCount={1}
-        className="file-tree"
-        onMove={(args) => {
-          if (onMove && args.dragIds[0]) {
-            const parentId = args.parentId || null
-            onMove(args.dragIds[0], parentId, "child")
-          }
-        }}
-        onRename={(args) => {
-          if (onRename) {
-            onRename(args.id, args.name)
-          }
-        }}
-        initialOpenState={
-          data.reduce((acc, node) => {
-            if (node.data.isFolder && node.data.isExpanded) {
-              acc[node.id] = true
+    <>
+      <div className="w-full pl-2" style={{ height: `${height}px` }}>
+        <Tree
+          ref={treeRef}
+          data={data}
+          openByDefault={false}
+          width="100%"
+          height={height}
+          indent={24}
+          rowHeight={28}
+          overscanCount={1}
+          className="file-tree"
+          onMove={(args) => {
+            if (onMove && args.dragIds[0]) {
+              const parentId = args.parentId || null
+              onMove(args.dragIds[0], parentId, "child")
             }
-            return acc
-          }, {} as Record<string, boolean>)
-        }
-        onToggle={(id) => {
-          // Find the node and toggle its expanded state
-          const findAndToggle = (nodes: DocumentNode[]): boolean => {
-            for (const node of nodes) {
-              if (node.id === id) {
-                // Could call a callback here if needed
-                return true
-              }
-              if (node.children && findAndToggle(node.children)) {
-                return true
-              }
+          }}
+          onRename={(args) => {
+            if (onRename) {
+              onRename(args.id, args.name)
             }
-            return false
+          }}
+          initialOpenState={
+            data.reduce((acc, node) => {
+              if (node.data.isFolder && node.data.isExpanded) {
+                acc[node.id] = true
+              }
+              return acc
+            }, {} as Record<string, boolean>)
           }
-          findAndToggle(data)
-        }}
-      >
-        {(props) => (
-          <Node
-            {...props}
-            activeId={activeId}
-            onCreate={handleCreate}
-            onDelete={handleDelete}
-            onRename={handleRename}
-            onDuplicate={handleDuplicate}
-            onSelect={onSelect}
-          />
-        )}
-      </Tree>
-    </div>
+          onToggle={(id) => {
+            // Find the node and toggle its expanded state
+            const findAndToggle = (nodes: DocumentNode[]): boolean => {
+              for (const node of nodes) {
+                if (node.id === id) {
+                  // Could call a callback here if needed
+                  return true
+                }
+                if (node.children && findAndToggle(node.children)) {
+                  return true
+                }
+              }
+              return false
+            }
+            findAndToggle(data)
+          }}
+        >
+          {(props) => (
+            <Node
+              {...props}
+              activeId={activeId}
+              onCreate={handleCreate}
+              onDelete={handleDelete}
+              onRename={handleRename}
+              onDuplicate={handleDuplicate}
+              onSelect={onSelect}
+            />
+          )}
+        </Tree>
+      </div>
+
+      <AlertDialog open={!!deleteConfirmNode} onOpenChange={(open) => !open && setDeleteConfirmNode(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Move to Trash?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to move "{deleteConfirmNode?.data.name}" to trash? You can restore it later from the trash.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Move to Trash</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 })
 
@@ -217,6 +257,8 @@ function Node({
               type="text"
               defaultValue={node.data.name}
               onBlur={(e) => node.submit(e.currentTarget.value)}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
               onKeyDown={(e) => {
                 if (e.key === "Enter") node.submit(e.currentTarget.value)
                 if (e.key === "Escape") node.reset()

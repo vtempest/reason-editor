@@ -118,6 +118,7 @@ const Index = () => {
   );
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [newDocumentId, setNewDocumentId] = useState<string | null>(null);
 
   // Build document tree structure
   const buildTree = (docs: Document[]): Document[] => {
@@ -174,7 +175,23 @@ const Index = () => {
     return buildTree(filteredDocuments);
   }, [filteredDocuments, searchQuery]);
 
-  const handleAddDocument = (parentId: string | null, isFolder: boolean = false) => {
+  const handleAddDocument = (selectedId: string | null, isFolder: boolean = false) => {
+    // Determine the parent based on the selected document
+    let parentId: string | null = null;
+
+    if (selectedId) {
+      const selectedDoc = documents.find(doc => doc.id === selectedId);
+      if (selectedDoc) {
+        if (selectedDoc.isFolder) {
+          // If selected is a folder, create as child of that folder
+          parentId = selectedId;
+        } else {
+          // If selected is a file, create as sibling (same parent as selected file)
+          parentId = selectedDoc.parentId;
+        }
+      }
+    }
+
     const newDoc: Document = {
       id: Date.now().toString(),
       title: isFolder ? 'New Folder' : '',
@@ -192,6 +209,10 @@ const Index = () => {
     if (!isFolder) {
       setActiveDocId(newDoc.id);
       setOpenTabs([...openTabs, newDoc.id]);
+      // Trigger rename mode for the new document
+      setNewDocumentId(newDoc.id);
+      // Clear the newDocumentId after a delay to allow for the next document
+      setTimeout(() => setNewDocumentId(null), 500);
     }
 
     // Expand parent if exists
@@ -540,6 +561,7 @@ const Index = () => {
               onArchive={handleArchiveDocument}
               onRestore={handleRestoreDocument}
               onPermanentDelete={handlePermanentDelete}
+              newDocumentId={newDocumentId}
             />
             <main className="flex-1 overflow-hidden flex flex-col">
               {!isMobile && (
@@ -617,6 +639,7 @@ const Index = () => {
                 onArchive={handleArchiveDocument}
                 onRestore={handleRestoreDocument}
                 onPermanentDelete={handlePermanentDelete}
+                newDocumentId={newDocumentId}
               />
             </Panel>
             <PanelResizeHandle className="w-px bg-sidebar-border hover:bg-primary/50 transition-colors" />
