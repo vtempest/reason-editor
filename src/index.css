@@ -110,4 +110,168 @@ All colors MUST be HSL.
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
+
+  /* Added styles for react-arborist tree */
+  .file-tree {
+    @apply outline-none;
+  }
+
+  .file-tree [role="tree"] {
+    @apply outline-none;
+  }
+
+  /* Add file icon styles */
+  .icon:before {
+    font-weight: normal;
+    font-style: normal;
+    text-align: center;
+    width: 16px;
+    line-height: 1;
+    position: relative;
+    display: inline-block;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* File type icons using emoji as fallback */
+  .default-icon:before {
+    content: "📄";
+  }
+  .icon-file-directory:before {
+    content: "📁";
+  }
+  .js-icon:before {
+    content: "🟨";
+  }
+  .ts-icon:before {
+    content: "🔷";
+  }
+  .react-icon:before {
+    content: "⚛️";
+  }
+  .json-icon:before {
+    content: "{ }";
+    font-size: 11px;
+  }
+  .html5-icon:before {
+    content: "🌐";
+  }
+  .css3-icon:before {
+    content: "🎨";
+  }
+  .sass-icon:before {
+    content: "💅";
+  }
+  .less-icon:before {
+    content: "📘";
+  }
+  .image-icon:before {
+    content: "🖼️";
+  }
+  .svg-icon:before {
+    content: "🎭";
+  }
+  .markdown-icon:before {
+    content: "📝";
+  }
+  .text-icon:before {
+    content: "📃";
+  }
+  .pdf-icon:before {
+    content: "📕";
+  }
+  .python-icon:before {
+    content: "🐍";
+  }
+  .java-icon:before {
+    content: "☕";
+  }
+  .c-icon:before,
+  .cpp-icon:before {
+    content: "©️";
+  }
+  .csharp-icon:before {
+    content: "#️⃣";
+  }
+  .go-icon:before {
+    content: "🐹";
+  }
+  .rust-icon:before {
+    content: "🦀";
+  }
+  .php-icon:before {
+    content: "🐘";
+  }
+  .ruby-icon:before {
+    content: "💎";
+  }
+  .swift-icon:before {
+    content: "🐦";
+  }
+  .kotlin-icon:before {
+    content: "🅺";
+  }
+  .scala-icon:before {
+    content: "📐";
+  }
+  .clojure-icon:before {
+    content: "🍀";
+  }
+  .haskell-icon:before {
+    content: "λ";
+  }
+  .elixir-icon:before {
+    content: "💧";
+  }
+  .erlang-icon:before {
+    content: "📡";
+  }
+  .lua-icon:before {
+    content: "🌙";
+  }
+  .perl-icon:before {
+    content: "🐪";
+  }
+  .xml-icon:before {
+    content: "📰";
+  }
+  .yml-icon:before {
+    content: "⚙️";
+  }
+  .config-icon:before {
+    content: "🔧";
+  }
+  .sql-icon:before {
+    content: "🗄️";
+  }
+  .database-icon:before {
+    content: "💾";
+  }
+  .zip-icon:before {
+    content: "🗜️";
+  }
+  .terminal-icon:before {
+    content: "⌨️";
+  }
+  .git-icon:before {
+    content: "🌿";
+  }
+  .docker-icon:before {
+    content: "🐳";
+  }
+  .package-icon:before {
+    content: "📦";
+  }
+  .key-icon:before {
+    content: "🔑";
+  }
+  .vue-icon:before {
+    content: "🇻";
+  }
+  .dart-icon:before {
+    content: "🎯";
+  }
+  .graphql-icon:before {
+    content: "◈";
+    font-weight: bold;
+  }
 }
