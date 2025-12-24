@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Document } from '@/components/DocumentTree';
 import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/containers/DocumentTreeWrapper';
 import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
@@ -44,6 +44,8 @@ interface SidebarProps {
   onArchive?: (id: string) => void;
   onRestore?: (id: string) => void;
   onPermanentDelete?: (id: string) => void;
+  // New document ID to trigger rename mode
+  newDocumentId?: string | null;
 }
 
 export const Sidebar = ({
@@ -72,6 +74,7 @@ export const Sidebar = ({
   onArchive,
   onRestore,
   onPermanentDelete,
+  newDocumentId,
 }: SidebarProps) => {
   // Get archived and deleted documents
   const archivedDocs = documents.filter(doc => doc.isArchived && !doc.isDeleted);
@@ -90,6 +93,20 @@ export const Sidebar = ({
   const treeRef = useRef<DocumentTreeHandle>(null);
   // Ref for outline view
   const outlineRef = useRef<OutlineViewHandle>(null);
+
+  // Trigger edit mode for newly created documents
+  useEffect(() => {
+    if (newDocumentId && treeRef.current) {
+      // Small delay to ensure the tree has rendered the new item
+      const timer = setTimeout(() => {
+        const treeElement = treeRef.current as any;
+        if (treeElement && typeof treeElement.edit === 'function') {
+          treeElement.edit(newDocumentId);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [newDocumentId]);
 
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col bg-sidebar-background relative">
@@ -118,7 +135,23 @@ export const Sidebar = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onAdd(null, false)}
+                      onClick={onSearchFocus}
+                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Search Notes</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onAdd(activeId, false)}
                       className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
                       <FilePlus className="h-3.5 w-3.5" />
@@ -134,7 +167,7 @@ export const Sidebar = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onAdd(null, true)}
+                      onClick={() => onAdd(activeId, true)}
                       className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
                       <FolderPlus className="h-3.5 w-3.5" />
