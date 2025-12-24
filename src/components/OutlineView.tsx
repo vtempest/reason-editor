@@ -1,6 +1,6 @@
 import { Hash, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -21,6 +21,11 @@ interface OutlineItem {
   headingId?: string;
 }
 
+export interface OutlineViewHandle {
+  expandAll: () => void;
+  collapseAll: () => void;
+}
+
 interface OutlineViewProps {
   content: string;
   onNavigate?: (headingText: string, headingId?: string) => void;
@@ -30,7 +35,7 @@ interface OutlineViewProps {
 
 const STORAGE_KEY = 'outline-collapse-preferences';
 
-export const OutlineView = ({ content, onNavigate, onReorder, searchQuery = '' }: OutlineViewProps) => {
+export const OutlineView = forwardRef<OutlineViewHandle, OutlineViewProps>(({ content, onNavigate, onReorder, searchQuery = '' }, ref) => {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [defaultCollapseLevel, setDefaultCollapseLevel] = useState<number | null>(null);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
@@ -60,6 +65,22 @@ export const OutlineView = ({ content, onNavigate, onReorder, searchQuery = '' }
 
     return items;
   }, [content]);
+
+  useImperativeHandle(ref, () => ({
+    expandAll: () => {
+      setCollapsedIds(new Set());
+    },
+    collapseAll: () => {
+      // Collapse all level 1 headings
+      const newCollapsed = new Set<string>();
+      outline.forEach((item) => {
+        if (item.level === 1) {
+          newCollapsed.add(item.id);
+        }
+      });
+      setCollapsedIds(newCollapsed);
+    },
+  }));
 
   // Load preferences from localStorage
   useEffect(() => {
@@ -306,4 +327,4 @@ export const OutlineView = ({ content, onNavigate, onReorder, searchQuery = '' }
         })}
     </div>
   );
-};
+});

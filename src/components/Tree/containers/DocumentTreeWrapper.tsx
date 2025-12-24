@@ -1,9 +1,11 @@
 "use client"
 
-import React from "react"
-import { DocumentTree } from "./DocumentTree"
+import React, { forwardRef } from "react"
+import { DocumentTree, type DocumentTreeHandle } from "./DocumentTree"
 import { buildDocumentTree } from "@/lib/document-utils"
 import type { Document } from "@/components/DocumentTree"
+
+export type { DocumentTreeHandle }
 
 interface DocumentTreeWrapperProps {
   documents: Document[]
@@ -20,7 +22,7 @@ interface DocumentTreeWrapperProps {
   height?: number
 }
 
-export const DocumentTreeWrapper = ({
+export const DocumentTreeWrapper = forwardRef<DocumentTreeHandle, DocumentTreeWrapperProps>(({
   documents,
   activeId,
   onSelect,
@@ -33,7 +35,7 @@ export const DocumentTreeWrapper = ({
   onRename,
   width = 300,
   height = 500,
-}: DocumentTreeWrapperProps) => {
+}, ref) => {
   // Build hierarchical tree data from flat documents array
   const treeData = React.useMemo(() => buildDocumentTree(documents), [documents])
 
@@ -74,6 +76,7 @@ export const DocumentTreeWrapper = ({
 
   return (
     <DocumentTree
+      ref={ref}
       data={treeData}
       activeId={activeId}
       onSelect={handleSelect}
@@ -86,4 +89,4 @@ export const DocumentTreeWrapper = ({
       height={height}
     />
   )
-}
+})
