@@ -79,7 +79,8 @@ export default function ShareView() {
           <h2 className="text-sm font-semibold mb-4 text-muted-foreground">Outline</h2>
           <OutlineView
             content={document.content}
-            onHeadingClick={() => {}}
+            searchQuery=""
+            onNavigate={() => {}}
           />
         </div>
       </div>
