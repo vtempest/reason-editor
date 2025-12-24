@@ -1,6 +1,8 @@
-import { Hash, ChevronRight, GripVertical } from 'lucide-react';
+import { Hash, ChevronRight, Search, FolderPlus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -34,6 +36,7 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
   const [defaultCollapseLevel, setDefaultCollapseLevel] = useState<number | null>(null);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const outline = useMemo(() => {
     const items: OutlineItem[] = [];
@@ -197,10 +200,43 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
     );
   }
 
+  // Filter outline based on search query
+  const filteredOutline = useMemo(() => {
+    if (!searchQuery.trim()) return outline;
+    const query = searchQuery.toLowerCase();
+    return outline.filter(item => item.text.toLowerCase().includes(query));
+  }, [outline, searchQuery]);
+
   return (
     <div className="flex h-full flex-col">
+      {/* Toolbar with search */}
+      <div className="px-3 pb-2 pt-3">
+        <div className="flex items-center gap-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              type="text"
+              placeholder="Search headings..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
+                onClick={() => setSearchQuery('')}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="flex-1 overflow-auto p-2">
-        {outline.map((item, index) => {
+        {filteredOutline.map((item, index) => {
           const nextItem = outline[index + 1];
           const hasChildren = nextItem && nextItem.level > item.level;
           const isCollapsed = collapsedIds.has(item.id);
@@ -214,21 +250,12 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
             <ContextMenu key={item.id}>
               <ContextMenuTrigger>
                 <div
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, item.id)}
-                  onDragOver={(e) => handleDragOver(e, item.id)}
-                  onDragEnd={handleDragEnd}
-                  onDrop={(e) => handleDrop(e, item.id)}
                   className={cn(
-                    'group flex items-center gap-1 px-2 py-1.5 hover:bg-sidebar-accent rounded-md cursor-pointer transition-colors',
-                    draggedItem === item.id && 'opacity-50',
-                    dragOverItem === item.id && 'border-t-2 border-primary'
+                    'flex items-center gap-1 px-2 py-1.5 hover:bg-sidebar-accent rounded-md cursor-pointer transition-colors'
                   )}
-                  style={{ paddingLeft: `${(item.level - 1) * 12 + 8}px` }}
+                  style={{ paddingLeft: `${(item.level - 1) * 4 + 8}px` }}
                   onClick={() => onNavigate?.(item.text, item.headingId)}
                 >
-                  <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab" />
-
                   <button
                     className={cn(
                       'h-5 w-5 p-0 flex items-center justify-center hover:bg-transparent',
