@@ -103,8 +103,6 @@ const TreeNode = ({
         onManageTags={() => onManageTags?.(document.id)}
       >
         <div
-          draggable
-          onDragStart={handleDragStart}
           onDragOver={(e) => handleDragOver(e, 'child')}
           onDrop={handleDrop}
           className={cn(
@@ -115,7 +113,14 @@ const TreeNode = ({
           )}
           style={{ paddingLeft: `${level * 12 + 8}px` }}
         >
-          <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing" />
+          <div
+            draggable
+            onDragStart={handleDragStart}
+            className="cursor-grab active:cursor-grabbing"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <GripVertical className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
 
           <Button
             variant="ghost"
@@ -241,6 +246,7 @@ export const DraggableDocumentTree = ({
           onDrop={handleDrop}
           draggedId={draggedId}
           dropTarget={dropTarget}
+          onManageTags={onManageTags}
         />
       ))}
     </div>
