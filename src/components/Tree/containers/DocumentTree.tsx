@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useRef, useCallback } from "react"
+import { useRef, useCallback, useImperativeHandle, forwardRef } from "react"
 import { Tree, type NodeApi } from "react-arborist"
 import { Folder, FolderOpen, Trash2, Edit2, Copy, FileText } from "lucide-react"
 import {
@@ -19,6 +19,11 @@ import { getFileIcon } from "@/lib/file-icons"
 import type { Document } from "@/lib/db/schema"
 import type { DocumentNode } from "@/lib/document-utils"
 
+export interface DocumentTreeHandle {
+  expandAll: () => void
+  collapseAll: () => void
+}
+
 interface DocumentTreeProps {
   data: DocumentNode[]
   activeId?: string | null
@@ -33,7 +38,7 @@ interface DocumentTreeProps {
   height: number
 }
 
-export function DocumentTree({
+export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
   data,
   activeId,
   onSelect,
@@ -44,8 +49,21 @@ export function DocumentTree({
   onNewFile,
   onNewFolder,
   height,
-}: DocumentTreeProps) {
+}, ref) => {
   const treeRef = useRef<any>(null)
+
+  useImperativeHandle(ref, () => ({
+    expandAll: () => {
+      if (treeRef.current) {
+        treeRef.current.openAll()
+      }
+    },
+    collapseAll: () => {
+      if (treeRef.current) {
+        treeRef.current.closeAll()
+      }
+    },
+  }))
 
   const handleCreate = useCallback((node: NodeApi<DocumentNode>, type: "file" | "folder") => {
     if (type === "file" && onNewFile) {
@@ -136,7 +154,7 @@ export function DocumentTree({
       </Tree>
     </div>
   )
-}
+})
 
 interface NodeProps {
   node: NodeApi<DocumentNode>

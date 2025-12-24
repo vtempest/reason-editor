@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Document } from '@/components/DocumentTree';
-import { DocumentTreeWrapper } from '@/components/Tree/containers/DocumentTreeWrapper';
-import { OutlineView } from '@/components/OutlineView';
+import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/containers/DocumentTreeWrapper';
+import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
 import { FloatingSearch } from '@/components/FloatingSearch';
 import { ThemeDropdown } from '@/components/theme-dropdown';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -80,10 +80,16 @@ export const Sidebar = ({
   // Filter to only show active documents in the tree (not archived or deleted)
   const activeDocuments = documents.filter(doc => !doc.isArchived && !doc.isDeleted);
 
-  // Track expand/collapse all state
+  // Track expand/collapse all state for file tree
   const [allExpanded, setAllExpanded] = useState(false);
+  // Track expand/collapse all state for outline
+  const [outlineExpanded, setOutlineExpanded] = useState(true);
   // Track outline search visibility
   const [showOutlineSearch, setShowOutlineSearch] = useState(false);
+  // Ref for file tree
+  const treeRef = useRef<DocumentTreeHandle>(null);
+  // Ref for outline view
+  const outlineRef = useRef<OutlineViewHandle>(null);
 
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col bg-sidebar-background relative">
@@ -147,12 +153,14 @@ export const Sidebar = ({
                       onClick={() => {
                         const newState = !allExpanded;
                         setAllExpanded(newState);
-                        // Expand or collapse all folder documents based on new state
-                        activeDocuments.forEach(doc => {
-                          if (doc.isFolder && doc.isExpanded !== newState) {
-                            onToggleExpand(doc.id);
+                        // Expand or collapse all using the tree ref
+                        if (treeRef.current) {
+                          if (newState) {
+                            treeRef.current.expandAll();
+                          } else {
+                            treeRef.current.collapseAll();
                           }
-                        });
+                        }
                       }}
                       className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
@@ -170,26 +178,59 @@ export const Sidebar = ({
               </>
             )}
 
-            {/* Show search button in outline or split view */}
+            {/* Show search button and expand/collapse in outline or split view */}
             {(viewMode === 'outline' || viewMode === 'split') && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowOutlineSearch(!showOutlineSearch)}
-                    className={cn(
-                      "flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-                      showOutlineSearch && "bg-sidebar-accent text-sidebar-foreground"
-                    )}
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Search Headings</p>
-                </TooltipContent>
-              </Tooltip>
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newState = !outlineExpanded;
+                        setOutlineExpanded(newState);
+                        // Expand or collapse all using the outline ref
+                        if (outlineRef.current) {
+                          if (newState) {
+                            outlineRef.current.expandAll();
+                          } else {
+                            outlineRef.current.collapseAll();
+                          }
+                        }
+                      }}
+                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      {outlineExpanded ? (
+                        <ChevronsUpDown className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronsDownUp className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{outlineExpanded ? 'Collapse All' : 'Expand All'}</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowOutlineSearch(!showOutlineSearch)}
+                      className={cn(
+                        "flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
+                        showOutlineSearch && "bg-sidebar-accent text-sidebar-foreground"
+                      )}
+                    >
+                      <Search className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Search Headings</p>
+                  </TooltipContent>
+                </Tooltip>
+              </>
             )}
           </TooltipProvider>
         </div>
@@ -224,6 +265,7 @@ export const Sidebar = ({
       <div className="flex-1 overflow-hidden">
         {viewMode === 'tree' ? (
           <DocumentTreeWrapper
+            ref={treeRef}
             documents={activeDocuments}
             activeId={activeId}
             onSelect={(id) => {
@@ -247,6 +289,7 @@ export const Sidebar = ({
           />
         ) : viewMode === 'outline' ? (
           <OutlineView
+            ref={outlineRef}
             content={activeDocument?.content || ''}
             searchQuery={searchQuery}
             onNavigate={(headingText) => {
@@ -262,6 +305,7 @@ export const Sidebar = ({
               <div className="h-full overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-auto">
                   <DocumentTreeWrapper
+                    ref={treeRef}
                     documents={activeDocuments}
                     activeId={activeId}
                     onSelect={(id) => {
@@ -291,6 +335,7 @@ export const Sidebar = ({
               <div className="h-full overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-auto">
                   <OutlineView
+                    ref={outlineRef}
                     content={activeDocument?.content || ''}
                     searchQuery={searchQuery}
                     onNavigate={(headingText) => {
