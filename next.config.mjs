@@ -4,10 +4,10 @@ const nextConfig = {
   // and serving the Vite frontend separately
   distDir: '.next',
 
-  // Turbopack config with @ alias pointing to project root
+  // Turbopack config with @ alias pointing to src directory
   turbopack: {
     resolveAlias: {
-      '@': './',
+      '@': './src',
     },
   },
 
@@ -25,9 +25,9 @@ const nextConfig = {
       config.externals.push('better-sqlite3');
     }
 
-    // Override @ alias to point to project root instead of src/
+    // Override @ alias to point to src directory
     const path = require('path');
-    config.resolve.alias['@'] = path.resolve(__dirname);
+    config.resolve.alias['@'] = path.resolve(__dirname, 'src');
 
     return config;
   },
