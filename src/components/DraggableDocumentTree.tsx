@@ -9,7 +9,7 @@ interface DraggableDocumentTreeProps {
   documents: Document[];
   activeId: string | null;
   onSelect: (id: string) => void;
-  onAdd: (parentId: string | null) => void;
+  onAdd: (parentId: string | null, isFolder?: boolean) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;
@@ -23,8 +23,8 @@ interface TreeNodeProps {
   isActive: boolean;
   activeId: string | null;
   onSelect: (id: string) => void;
-  onAdd: (parentId: string) => void;
-  onAddSibling: (parentId: string | null) => void;
+  onAdd: (parentId: string, isFolder?: boolean) => void;
+  onAddSibling: (parentId: string | null, isFolder?: boolean) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onToggleExpand: (id: string) => void;
@@ -90,8 +90,10 @@ const TreeNode = ({
       />
 
       <DocumentContextMenu
-        onAddChild={() => onAdd(document.id)}
-        onAddSibling={() => onAddSibling(document.parentId)}
+        onAddChild={() => onAdd(document.id, false)}
+        onAddChildFolder={() => onAdd(document.id, true)}
+        onAddSibling={() => onAddSibling(document.parentId, false)}
+        onAddSiblingFolder={() => onAddSibling(document.parentId, true)}
         onRename={() => {
           onSelect(document.id);
           // Focus will be handled by the editor
@@ -229,8 +231,8 @@ export const DraggableDocumentTree = ({
           isActive={doc.id === activeId}
           activeId={activeId}
           onSelect={onSelect}
-          onAdd={onAdd}
-          onAddSibling={(parentId) => onAdd(parentId)}
+          onAdd={(parentId, isFolder) => onAdd(parentId, isFolder)}
+          onAddSibling={(parentId, isFolder) => onAdd(parentId, isFolder)}
           onDelete={onDelete}
           onDuplicate={onDuplicate}
           onToggleExpand={onToggleExpand}
