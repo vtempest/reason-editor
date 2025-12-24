@@ -1,8 +1,6 @@
-import { Hash, ChevronRight, Search, FolderPlus, X } from 'lucide-react';
+import { Hash, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo, useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -27,16 +25,16 @@ interface OutlineViewProps {
   content: string;
   onNavigate?: (headingText: string, headingId?: string) => void;
   onReorder?: (fromIndex: number, toIndex: number) => void;
+  searchQuery?: string;
 }
 
 const STORAGE_KEY = 'outline-collapse-preferences';
 
-export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps) => {
+export const OutlineView = ({ content, onNavigate, onReorder, searchQuery = '' }: OutlineViewProps) => {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [defaultCollapseLevel, setDefaultCollapseLevel] = useState<number | null>(null);
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const outline = useMemo(() => {
     const items: OutlineItem[] = [];
@@ -208,34 +206,7 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
   }, [outline, searchQuery]);
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Toolbar with search */}
-      <div className="px-3 pb-2 pt-3">
-        <div className="flex items-center gap-1">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <Input
-              type="text"
-              placeholder="Search headings..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border"
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-                onClick={() => setSearchQuery('')}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-auto p-2">
+    <div className="flex h-full flex-col overflow-auto p-2">
         {filteredOutline.map((item, index) => {
           const nextItem = outline[index + 1];
           const hasChildren = nextItem && nextItem.level > item.level;
@@ -253,7 +224,7 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
                   className={cn(
                     'flex items-center gap-1 px-2 py-1.5 hover:bg-sidebar-accent rounded-md cursor-pointer transition-colors'
                   )}
-                  style={{ paddingLeft: `${(item.level - 1) * 4 + 8}px` }}
+                  style={{ paddingLeft: `${(item.level - 1) * 1 + 8}px` }}
                   onClick={() => onNavigate?.(item.text, item.headingId)}
                 >
                   <button
@@ -333,7 +304,6 @@ export const OutlineView = ({ content, onNavigate, onReorder }: OutlineViewProps
             </ContextMenu>
           );
         })}
-      </div>
     </div>
   );
 };
