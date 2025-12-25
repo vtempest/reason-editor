@@ -1,7 +1,5 @@
 'use client'
 
-import { Toaster } from "@/src/components/ui/toaster"
-import { Toaster as Sonner } from "@/src/components/ui/sonner"
 import { TooltipProvider } from "@/src/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
@@ -31,8 +29,6 @@ export default function Page() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />

@@ -131,6 +131,9 @@ const Index = () => {
     documents.length > 0 ? [documents[0].id] : []
   );
 
+  const [closedTabsHistory, setClosedTabsHistory] = useState<string[]>([]);
+  const [splitViewDocId, setSplitViewDocId] = useState<string | null>(null);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [newDocumentId, setNewDocumentId] = useState<string | null>(null);
 
@@ -495,6 +498,9 @@ const Index = () => {
   };
 
   const handleTabClose = (tabId: string) => {
+    // Add to closed tabs history
+    setClosedTabsHistory([tabId, ...closedTabsHistory.slice(0, 9)]); // Keep last 10 closed tabs
+
     const newOpenTabs = openTabs.filter((id) => id !== tabId);
     setOpenTabs(newOpenTabs);
 
@@ -508,6 +514,40 @@ const Index = () => {
 
   const handleTabAdd = () => {
     handleAddDocument(null);
+  };
+
+  const handleTabDelete = (tabId: string) => {
+    // Close tab and delete document
+    handleTabClose(tabId);
+    handleDeleteDocument(tabId);
+  };
+
+  const handleReopenLastClosed = () => {
+    if (closedTabsHistory.length === 0) return;
+
+    const [lastClosedId, ...restHistory] = closedTabsHistory;
+    const docExists = documents.find((d) => d.id === lastClosedId);
+
+    if (docExists) {
+      // Reopen the last closed tab
+      if (!openTabs.includes(lastClosedId)) {
+        setOpenTabs([...openTabs, lastClosedId]);
+      }
+      setActiveDocId(lastClosedId);
+      setClosedTabsHistory(restHistory);
+      toast.success('Tab reopened');
+    } else {
+      // Document was deleted, try next in history
+      setClosedTabsHistory(restHistory);
+      if (restHistory.length > 0) {
+        handleReopenLastClosed();
+      }
+    }
+  };
+
+  const handleSplitRight = (tabId: string) => {
+    setSplitViewDocId(tabId);
+    toast.success('Split view enabled');
   };
 
   const handleSelectDocument = (id: string) => {
@@ -662,26 +702,95 @@ const Index = () => {
                 onTabAdd={handleTabAdd}
                 onRename={(id, title) => handleUpdateDocument(id, { title })}
                 onMenuClick={() => setIsSidebarOpen(true)}
+                onDelete={handleTabDelete}
+                onReopenLastClosed={handleReopenLastClosed}
+                onSplitRight={handleSplitRight}
+                canReopenLastClosed={closedTabsHistory.length > 0}
               />
 
               {activeDocument ? (
                 <>
-                  {activeDocument.tags && activeDocument.tags.length > 0 && (
-                    <TagBar
-                      tags={activeDocument.tags}
-                      onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                      onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                    />
+                  {splitViewDocId && splitViewDocId !== activeDocId ? (
+                    <PanelGroup direction="horizontal" className="flex-1">
+                      <Panel defaultSize={50} minSize={30}>
+                        <div className="flex flex-col h-full border-r border-border">
+                          {activeDocument.tags && activeDocument.tags.length > 0 && (
+                            <TagBar
+                              tags={activeDocument.tags}
+                              onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
+                              onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+                            />
+                          )}
+                          <div className="flex-1 overflow-hidden">
+                            <TiptapEditor
+                              content={activeDocument.content}
+                              onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                              title={activeDocument.title}
+                              onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                              scrollToHeading={() => {}}
+                            />
+                          </div>
+                        </div>
+                      </Panel>
+                      <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors" />
+                      <Panel defaultSize={50} minSize={30}>
+                        {(() => {
+                          const splitDoc = documents.find(d => d.id === splitViewDocId);
+                          return splitDoc ? (
+                            <div className="flex flex-col h-full relative">
+                              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/30">
+                                <span className="text-sm font-medium">{splitDoc.title}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => setSplitViewDocId(null)}
+                                  title="Close split view"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              {splitDoc.tags && splitDoc.tags.length > 0 && (
+                                <TagBar
+                                  tags={splitDoc.tags}
+                                  onAddTag={(tag) => handleAddTag(splitDoc.id, tag)}
+                                  onRemoveTag={(tag) => handleRemoveTag(splitDoc.id, tag)}
+                                />
+                              )}
+                              <div className="flex-1 overflow-hidden">
+                                <TiptapEditor
+                                  content={splitDoc.content}
+                                  onChange={(content) => handleUpdateDocument(splitDoc.id, { content })}
+                                  title={splitDoc.title}
+                                  onTitleChange={(title) => handleUpdateDocument(splitDoc.id, { title })}
+                                  scrollToHeading={() => {}}
+                                />
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+                      </Panel>
+                    </PanelGroup>
+                  ) : (
+                    <>
+                      {activeDocument.tags && activeDocument.tags.length > 0 && (
+                        <TagBar
+                          tags={activeDocument.tags}
+                          onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
+                          onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+                        />
+                      )}
+                      <div className="flex-1 overflow-hidden">
+                        <TiptapEditor
+                          content={activeDocument.content}
+                          onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                          title={activeDocument.title}
+                          onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                          scrollToHeading={() => {}}
+                        />
+                      </div>
+                    </>
                   )}
-                  <div className="flex-1 overflow-hidden">
-                    <TiptapEditor
-                      content={activeDocument.content}
-                      onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
-                      title={activeDocument.title}
-                      onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                      scrollToHeading={() => {}}
-                    />
-                  </div>
                 </>
               ) : (
                 <div className="flex h-full items-center justify-center bg-editor-bg">
@@ -746,6 +855,10 @@ const Index = () => {
                         onTabClose={handleTabClose}
                         onTabAdd={handleTabAdd}
                         onRename={(id, title) => handleUpdateDocument(id, { title })}
+                        onDelete={handleTabDelete}
+                        onReopenLastClosed={handleReopenLastClosed}
+                        onSplitRight={handleSplitRight}
+                        canReopenLastClosed={closedTabsHistory.length > 0}
                       />
 
                       {activeDocument ? (
@@ -862,6 +975,10 @@ const Index = () => {
                     onTabClose={handleTabClose}
                     onTabAdd={handleTabAdd}
                     onRename={(id, title) => handleUpdateDocument(id, { title })}
+                    onDelete={handleTabDelete}
+                    onReopenLastClosed={handleReopenLastClosed}
+                    onSplitRight={handleSplitRight}
+                    canReopenLastClosed={closedTabsHistory.length > 0}
                   />
 
                   {activeDocument ? (

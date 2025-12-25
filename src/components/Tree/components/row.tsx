@@ -2,6 +2,7 @@ import React, { CSSProperties, useCallback, useMemo, useRef } from "react";
 import { useTreeApi } from "../context";
 import { useDragHook } from "../dnd/drag-hook";
 import { useDropHook } from "../dnd/drop-hook";
+import { useTouchHandler } from "../dnd/touch-handler";
 import { IdObj } from "../types";
 
 type Props = {
@@ -21,6 +22,14 @@ export const Row = React.memo(<T extends IdObj>({ index, style }: Props) => {
 
   const [{ isDragging }, dragRef] = useDragHook(node);
   const [, dropRef] = useDropHook(el, node, prev, next);
+
+  // Add touch support for mobile drag and drop
+  useTouchHandler({
+    elementRef: el,
+    canDrag: () => node.isDraggable !== false,
+    dragDelay: 200, // 200ms delay helps distinguish from scrolling
+    dragThreshold: 10, // 10px threshold
+  });
 
   const isEditing = node.id === tree.editingId;
   const isSelected = tree.isSelected(index);

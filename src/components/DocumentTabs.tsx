@@ -1,6 +1,13 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { X, Plus, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
+import { X, Plus, ChevronLeft, ChevronRight, Menu, Edit2, Trash2, RotateCcw, SplitSquareVertical } from 'lucide-react';
 import { Document } from '@/components/DocumentTree';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect } from 'react';
@@ -15,6 +22,10 @@ interface DocumentTabsProps {
   onTabAdd: () => void;
   onRename?: (tabId: string, newTitle: string) => void;
   onMenuClick?: () => void;
+  onDelete?: (tabId: string) => void;
+  onReopenLastClosed?: () => void;
+  onSplitRight?: (tabId: string) => void;
+  canReopenLastClosed?: boolean;
 }
 
 export const DocumentTabs = ({
@@ -26,6 +37,10 @@ export const DocumentTabs = ({
   onTabAdd,
   onRename,
   onMenuClick,
+  onDelete,
+  onReopenLastClosed,
+  onSplitRight,
+  canReopenLastClosed = false,
 }: DocumentTabsProps) => {
   const isMobile = useIsMobile();
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
@@ -116,52 +131,93 @@ export const DocumentTabs = ({
           <div ref={scrollContainerRef} className="flex-1 overflow-x-auto">
             <TabsList className="h-10 bg-transparent p-0 rounded-none border-0 flex-nowrap">
               {openTabs.map((tabId) => (
-                <div key={tabId} className="relative group">
-                  <TabsTrigger
-                    value={tabId}
-                    onDoubleClick={() => handleDoubleClick(tabId)}
-                    className={cn(
-                      'relative h-10 rounded-none border-r border-border px-4 py-2',
-                      'data-[state=active]:bg-background data-[state=active]:shadow-none',
-                      'data-[state=inactive]:bg-muted/50',
-                      'hover:bg-muted',
-                      'pr-8'
+                <ContextMenu key={tabId}>
+                  <ContextMenuTrigger>
+                    <div className="relative group">
+                      <TabsTrigger
+                        value={tabId}
+                        onDoubleClick={() => handleDoubleClick(tabId)}
+                        className={cn(
+                          'relative h-10 rounded-none border-r border-border px-4 py-2',
+                          'data-[state=active]:bg-background data-[state=active]:shadow-none',
+                          'data-[state=inactive]:bg-muted/50',
+                          'hover:bg-muted',
+                          'pr-8'
+                        )}
+                      >
+                        {renamingTabId === tabId ? (
+                          <input
+                            ref={inputRef}
+                            type="text"
+                            value={renameValue}
+                            onChange={(e) => setRenameValue(e.target.value)}
+                            onKeyDown={handleRenameKeyDown}
+                            onBlur={handleRenameSubmit}
+                            className="max-w-[150px] text-sm bg-transparent border-none outline-none focus:ring-1 focus:ring-primary rounded px-1"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="max-w-[150px] truncate text-sm">
+                            {getDocumentTitle(tabId)}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0',
+                          'opacity-0 group-hover:opacity-100 transition-opacity',
+                          'hover:bg-destructive/10 hover:text-destructive'
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTabClose(tabId);
+                        }}
+                        title="Close tab"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    {onRename && (
+                      <ContextMenuItem
+                        onClick={() => handleDoubleClick(tabId)}
+                      >
+                        <Edit2 className="mr-2 h-4 w-4" />
+                        Rename
+                      </ContextMenuItem>
                     )}
-                  >
-                    {renamingTabId === tabId ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onKeyDown={handleRenameKeyDown}
-                        onBlur={handleRenameSubmit}
-                        className="max-w-[150px] text-sm bg-transparent border-none outline-none focus:ring-1 focus:ring-primary rounded px-1"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    ) : (
-                      <span className="max-w-[150px] truncate text-sm">
-                        {getDocumentTitle(tabId)}
-                      </span>
+                    {onDelete && (
+                      <ContextMenuItem
+                        onClick={() => onDelete(tabId)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete
+                      </ContextMenuItem>
                     )}
-                  </TabsTrigger>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      'absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0',
-                      'opacity-0 group-hover:opacity-100 transition-opacity',
-                      'hover:bg-destructive/10 hover:text-destructive'
+                    <ContextMenuSeparator />
+                    {onSplitRight && (
+                      <ContextMenuItem
+                        onClick={() => onSplitRight(tabId)}
+                      >
+                        <SplitSquareVertical className="mr-2 h-4 w-4" />
+                        Split Right
+                      </ContextMenuItem>
                     )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTabClose(tabId);
-                    }}
-                    title="Close tab"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
+                    {onReopenLastClosed && (
+                      <ContextMenuItem
+                        onClick={onReopenLastClosed}
+                        disabled={!canReopenLastClosed}
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Reopen Last Closed Tab
+                      </ContextMenuItem>
+                    )}
+                  </ContextMenuContent>
+                </ContextMenu>
               ))}
             </TabsList>
           </div>
