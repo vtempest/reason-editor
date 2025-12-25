@@ -120,6 +120,24 @@ All colors MUST be HSL.
     @apply outline-none;
   }
 
+  /* Touch drag and drop styles */
+  .touch-dragging {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Prevent text selection during touch drag */
+  .touch-dragging * {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+
   /* Add file icon styles */
   .icon:before {
     font-weight: normal;
