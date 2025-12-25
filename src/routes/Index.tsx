@@ -563,6 +563,7 @@ const Index = () => {
     setIsAiLoading(true);
     setAiSuggestion(null);
     setShowAiPanel(true);
+    setShowRightOutline(true); // Ensure right panel is visible
 
     try {
       const fullPrompt = customPrompt ? `${customPrompt}\n\n"${textToRewrite}"` : undefined;
