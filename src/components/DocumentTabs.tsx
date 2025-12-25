@@ -1,9 +1,10 @@
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { X, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Plus, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { Document } from '@/components/DocumentTree';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DocumentTabsProps {
   openTabs: string[];
@@ -13,6 +14,7 @@ interface DocumentTabsProps {
   onTabClose: (tabId: string) => void;
   onTabAdd: () => void;
   onRename?: (tabId: string, newTitle: string) => void;
+  onMenuClick?: () => void;
 }
 
 export const DocumentTabs = ({
@@ -23,7 +25,9 @@ export const DocumentTabs = ({
   onTabClose,
   onTabAdd,
   onRename,
+  onMenuClick,
 }: DocumentTabsProps) => {
+  const isMobile = useIsMobile();
   const [renamingTabId, setRenamingTabId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,6 +91,18 @@ export const DocumentTabs = ({
     <div className="border-b border-border bg-card">
       <Tabs value={activeTab || undefined} onValueChange={onTabChange}>
         <div className="flex items-center">
+          {isMobile && onMenuClick && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-10 w-10 p-0 rounded-none border-r border-border shrink-0"
+              onClick={onMenuClick}
+              title="Menu"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="sm"
