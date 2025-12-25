@@ -87,8 +87,6 @@ export const Sidebar = ({
   const [allExpanded, setAllExpanded] = useState(false);
   // Track expand/collapse all state for outline
   const [outlineExpanded, setOutlineExpanded] = useState(true);
-  // Track outline search visibility
-  const [showOutlineSearch, setShowOutlineSearch] = useState(false);
   // Ref for file tree
   const treeRef = useRef<DocumentTreeHandle>(null);
   // Ref for outline view
@@ -223,7 +221,7 @@ export const Sidebar = ({
               </>
             )}
 
-            {/* Show search button and expand/collapse in outline or split view */}
+            {/* Show expand/collapse in outline or split view */}
             {(viewMode === 'outline' || viewMode === 'split') && (
               <>
                 <Tooltip>
@@ -256,53 +254,10 @@ export const Sidebar = ({
                     <p>{outlineExpanded ? 'Collapse All' : 'Expand All'}</p>
                   </TooltipContent>
                 </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowOutlineSearch(!showOutlineSearch)}
-                      className={cn(
-                        "flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-                        showOutlineSearch && "bg-sidebar-accent text-sidebar-foreground"
-                      )}
-                    >
-                      <Search className="h-3.5 w-3.5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Search Headings</p>
-                  </TooltipContent>
-                </Tooltip>
               </>
             )}
           </TooltipProvider>
         </div>
-
-        {/* Collapsible search input for outline */}
-        {(viewMode === 'outline' || viewMode === 'split') && showOutlineSearch && (
-          <div className="mt-2 relative">
-            <Input
-              type="text"
-              placeholder="Search headings..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="h-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border"
-              autoFocus
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-                onClick={onSearchClear}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Content area */}
