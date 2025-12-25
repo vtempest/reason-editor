@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import {
@@ -5,8 +6,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Plus, Minus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface FontSizeDropdownProps {
   editor: Editor;
@@ -27,11 +30,19 @@ const FONT_SIZES = [
 ];
 
 export const FontSizeDropdown = ({ editor }: FontSizeDropdownProps) => {
+  const [customSize, setCustomSize] = useState('');
+
   const getCurrentSize = () => {
     const currentSize = editor.getAttributes('textStyle').fontSize;
     if (!currentSize) return 'Default';
     const size = FONT_SIZES.find(s => s.value === currentSize);
-    return size?.name || 'Default';
+    return size?.name || currentSize;
+  };
+
+  const getCurrentSizeValue = () => {
+    const currentSize = editor.getAttributes('textStyle').fontSize;
+    if (!currentSize) return 16;
+    return parseInt(currentSize) || 16;
   };
 
   const setFontSize = (fontSize: string) => {
@@ -39,6 +50,32 @@ export const FontSizeDropdown = ({ editor }: FontSizeDropdownProps) => {
       editor.chain().focus().unsetFontSize().run();
     } else {
       editor.chain().focus().setFontSize(fontSize).run();
+    }
+  };
+
+  const handleCustomSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCustomSize(value);
+  };
+
+  const handleCustomSizeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const size = parseInt(customSize);
+    if (!isNaN(size) && size > 0) {
+      setFontSize(`${size}px`);
+      setCustomSize('');
+    }
+  };
+
+  const incrementSize = () => {
+    const currentSize = getCurrentSizeValue();
+    setFontSize(`${currentSize + 1}px`);
+  };
+
+  const decrementSize = () => {
+    const currentSize = getCurrentSizeValue();
+    if (currentSize > 1) {
+      setFontSize(`${currentSize - 1}px`);
     }
   };
 
@@ -55,7 +92,39 @@ export const FontSizeDropdown = ({ editor }: FontSizeDropdownProps) => {
           <ChevronDown className="h-3 w-3 ml-1 shrink-0" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-32">
+      <DropdownMenuContent align="start" className="w-48 p-2">
+        <div className="flex items-center gap-1 mb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={decrementSize}
+            title="Decrease font size"
+          >
+            <Minus className="h-3 w-3" />
+          </Button>
+          <form onSubmit={handleCustomSizeSubmit} className="flex-1">
+            <Input
+              type="number"
+              min="1"
+              max="200"
+              placeholder="Custom size"
+              value={customSize}
+              onChange={handleCustomSizeChange}
+              className="h-7 text-xs"
+            />
+          </form>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={incrementSize}
+            title="Increase font size"
+          >
+            <Plus className="h-3 w-3" />
+          </Button>
+        </div>
+        <DropdownMenuSeparator />
         {FONT_SIZES.map((size) => (
           <DropdownMenuItem
             key={size.name}
