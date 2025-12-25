@@ -11,10 +11,13 @@ import { TagBar } from '@/components/TagBar';
 import { TagManagementDialog } from '@/components/TagManagementDialog';
 import { DocumentTabs } from '@/components/DocumentTabs';
 import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
+import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
+import { rewriteText } from '@/lib/ai/rewrite';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
-import { FileText } from 'lucide-react';
+import { FileText, Loader2, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
@@ -31,6 +34,15 @@ const Index = () => {
   const [defaultSidebarView, setDefaultSidebarView] = useLocalStorage<'tree' | 'outline' | 'split' | 'last-used'>('REASON-default-sidebar-view', 'last-used');
   const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline' | 'split'>('REASON-view-mode', 'split');
   const [showRightOutline, setShowRightOutline] = useLocalStorage<boolean>('REASON-show-right-outline', false);
+  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    originalText: string;
+    suggestedText: string;
+    range: { from: number; to: number };
+    mode?: string;
+  } | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const editorRef = useRef<any>(null);
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('REASON-documents', [
     {
@@ -515,6 +527,88 @@ const Index = () => {
     setActiveDocId(id);
   };
 
+  // AI Rewrite handlers
+  const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
+    if (!editorRef.current) return;
+
+    const editor = editorRef.current;
+    const { from, to } = editor.state.selection;
+    let textToRewrite = '';
+    let selectionRange = { from, to };
+
+    // If there's selected text, use it
+    if (from !== to) {
+      textToRewrite = editor.state.doc.textBetween(from, to, ' ');
+    } else {
+      // Otherwise, get the current paragraph
+      const { $from } = editor.state.selection;
+      const currentNode = $from.node($from.depth);
+
+      if (currentNode.type.name === 'paragraph' || currentNode.type.name.includes('heading')) {
+        const start = $from.before($from.depth);
+        const end = $from.after($from.depth);
+        textToRewrite = currentNode.textContent;
+        selectionRange = { from: start + 1, to: end - 1 };
+      } else {
+        toast.error('Please select text or place cursor in a paragraph to rewrite');
+        return;
+      }
+    }
+
+    if (!textToRewrite.trim()) {
+      toast.error('No text to rewrite');
+      return;
+    }
+
+    setIsAiLoading(true);
+    setAiSuggestion(null);
+    setShowAiPanel(true);
+
+    try {
+      const fullPrompt = customPrompt ? `${customPrompt}\n\n"${textToRewrite}"` : undefined;
+      const suggestion = await rewriteText(textToRewrite, fullPrompt);
+      setAiSuggestion({
+        originalText: textToRewrite,
+        suggestedText: suggestion,
+        range: selectionRange,
+        mode: modeId,
+      });
+    } catch (error) {
+      console.error('AI rewrite error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to generate AI suggestion');
+      setShowAiPanel(false);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleAIApprove = () => {
+    if (!editorRef.current || !aiSuggestion) return;
+
+    const editor = editorRef.current;
+    editor
+      .chain()
+      .focus()
+      .deleteRange(aiSuggestion.range)
+      .insertContentAt(aiSuggestion.range.from, aiSuggestion.suggestedText)
+      .run();
+
+    setAiSuggestion(null);
+    setShowAiPanel(false);
+    toast.success('AI suggestion applied');
+  };
+
+  const handleAIReject = () => {
+    setAiSuggestion(null);
+    setShowAiPanel(false);
+    toast.info('AI suggestion rejected');
+  };
+
+  const handleAIRegenerate = async (mode: any) => {
+    if (!aiSuggestion) return;
+    await handleAIRewrite(mode.prompt, mode.id);
+  };
+
   useEffect(() => {
     // Ensure active document exists
     if (activeDocId && !documents.find((d) => d.id === activeDocId)) {
@@ -664,11 +758,18 @@ const Index = () => {
                           )}
                           <div className="flex-1 overflow-hidden">
                             <TiptapEditor
+                              ref={editorRef}
                               content={activeDocument.content}
                               onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                               title={activeDocument.title}
                               onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
                               scrollToHeading={() => {}}
+                              aiSuggestion={aiSuggestion}
+                              isAiLoading={isAiLoading}
+                              onAiRewrite={handleAIRewrite}
+                              onAiApprove={handleAIApprove}
+                              onAiReject={handleAIReject}
+                              onAiRegenerate={handleAIRegenerate}
                             />
                           </div>
                         </>
@@ -690,23 +791,63 @@ const Index = () => {
                   <PanelResizeHandle className="w-px bg-sidebar-border hover:bg-primary/50 transition-colors" />
                   <Panel defaultSize={25} minSize={15} maxSize={40}>
                     <div className="h-full border-l border-sidebar-border bg-sidebar-background">
-                      <div className="h-full overflow-hidden flex flex-col">
-                        <div className="px-3 py-2 border-b border-sidebar-border">
-                          <h3 className="text-sm font-semibold text-sidebar-foreground">Outline</h3>
+                      {showAiPanel ? (
+                        <div className="h-full overflow-hidden flex flex-col">
+                          <div className="px-3 py-2 border-b border-sidebar-border flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-sidebar-foreground">AI Suggestions</h3>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2"
+                              onClick={() => setShowAiPanel(false)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            {isAiLoading ? (
+                              <div className="h-full flex items-center justify-center p-6">
+                                <div className="text-center">
+                                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-3" />
+                                  <p className="text-sm text-muted-foreground">Generating AI suggestion...</p>
+                                </div>
+                              </div>
+                            ) : aiSuggestion ? (
+                              <AIRewriteSuggestion
+                                originalText={aiSuggestion.originalText}
+                                suggestedText={aiSuggestion.suggestedText}
+                                onApprove={handleAIApprove}
+                                onReject={handleAIReject}
+                                onRegenerate={handleAIRegenerate}
+                                currentMode={aiSuggestion.mode}
+                                isLoading={false}
+                              />
+                            ) : (
+                              <div className="h-full flex items-center justify-center p-6 text-center">
+                                <p className="text-sm text-muted-foreground">Select text and click the AI button to get suggestions</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 overflow-auto">
-                          <OutlineView
-                            content={activeDocument?.content || ''}
-                            searchQuery={searchQuery}
-                            onNavigate={(headingText) => {
-                              // Call the global scroll function set by TiptapEditor
-                              if ((window as any).__scrollToHeading) {
-                                (window as any).__scrollToHeading(headingText);
-                              }
-                            }}
-                          />
+                      ) : (
+                        <div className="h-full overflow-hidden flex flex-col">
+                          <div className="px-3 py-2 border-b border-sidebar-border">
+                            <h3 className="text-sm font-semibold text-sidebar-foreground">Outline</h3>
+                          </div>
+                          <div className="flex-1 overflow-auto">
+                            <OutlineView
+                              content={activeDocument?.content || ''}
+                              searchQuery={searchQuery}
+                              onNavigate={(headingText) => {
+                                // Call the global scroll function set by TiptapEditor
+                                if ((window as any).__scrollToHeading) {
+                                  (window as any).__scrollToHeading(headingText);
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </Panel>
                 </PanelGroup>
@@ -733,11 +874,18 @@ const Index = () => {
                       )}
                       <div className="flex-1 overflow-hidden">
                         <TiptapEditor
+                          ref={editorRef}
                           content={activeDocument.content}
                           onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                           title={activeDocument.title}
                           onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
                           scrollToHeading={() => {}}
+                          aiSuggestion={aiSuggestion}
+                          isAiLoading={isAiLoading}
+                          onAiRewrite={handleAIRewrite}
+                          onAiApprove={handleAIApprove}
+                          onAiReject={handleAIReject}
+                          onAiRegenerate={handleAIRegenerate}
                         />
                       </div>
                     </>

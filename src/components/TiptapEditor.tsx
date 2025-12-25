@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { FloatingMenu, BubbleMenu } from '@tiptap/react/menus';
+import { forwardRef, useImperativeHandle } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -17,7 +18,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { FontSize } from '@/lib/tiptap/fontSize';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, forwardRef as reactForwardRef, useImperativeHandle as reactUseImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,17 +74,44 @@ interface TiptapEditorProps {
   onTitleChange: (title: string) => void;
   scrollToHeading?: (headingText: string) => void;
   readOnly?: boolean;
+  aiSuggestion?: {
+    originalText: string;
+    suggestedText: string;
+    range: { from: number; to: number };
+    mode?: string;
+  } | null;
+  isAiLoading?: boolean;
+  onAiRewrite?: (customPrompt?: string, modeId?: string) => void;
+  onAiApprove?: () => void;
+  onAiReject?: () => void;
+  onAiRegenerate?: (mode: any) => void;
 }
 
-export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollToHeading, readOnly = false }: TiptapEditorProps) => {
+export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
+  content,
+  onChange,
+  title,
+  onTitleChange,
+  scrollToHeading,
+  readOnly = false,
+  aiSuggestion: externalAiSuggestion,
+  isAiLoading: externalIsAiLoading = false,
+  onAiRewrite: externalOnAiRewrite,
+  onAiApprove: externalOnAiApprove,
+  onAiReject: externalOnAiReject,
+  onAiRegenerate: externalOnAiRegenerate,
+}, ref) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<{
+  // Use external state if provided, otherwise use internal state (for backward compatibility)
+  const [internalAiSuggestion, setInternalAiSuggestion] = useState<{
     originalText: string;
     suggestedText: string;
     range: { from: number; to: number };
     mode?: string;
   } | null>(null);
-  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [internalIsAiLoading, setInternalIsAiLoading] = useState(false);
+  const aiSuggestion = externalAiSuggestion !== undefined ? externalAiSuggestion : internalAiSuggestion;
+  const isAiLoading = externalIsAiLoading !== undefined ? externalIsAiLoading : internalIsAiLoading;
   const [viewMode, setViewMode] = useState<ViewMode>('formatted');
   const [rawContent, setRawContent] = useState('');
 
@@ -168,6 +196,9 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       onChange(editor.getHTML());
     },
   });
+
+  // Expose editor instance to parent via ref
+  reactUseImperativeHandle(ref, () => editor, [editor]);
 
   // Update editor content when prop changes (for switching between documents)
   useEffect(() => {
@@ -268,6 +299,13 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
   };
 
   const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
+    // Use external handler if provided
+    if (externalOnAiRewrite) {
+      externalOnAiRewrite(customPrompt, modeId);
+      return;
+    }
+
+    // Otherwise use internal logic
     if (!editor) return;
 
     const { from, to } = editor.state.selection;
@@ -298,13 +336,13 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       return;
     }
 
-    setIsAiLoading(true);
-    setAiSuggestion(null);
+    setInternalIsAiLoading(true);
+    setInternalAiSuggestion(null);
 
     try {
       const fullPrompt = customPrompt ? `${customPrompt}\n\n"${textToRewrite}"` : undefined;
       const suggestion = await rewriteText(textToRewrite, fullPrompt);
-      setAiSuggestion({
+      setInternalAiSuggestion({
         originalText: textToRewrite,
         suggestedText: suggestion,
         range: selectionRange,
@@ -314,16 +352,30 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       console.error('AI rewrite error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to generate AI suggestion');
     } finally {
-      setIsAiLoading(false);
+      setInternalIsAiLoading(false);
     }
   };
 
   const handleRegenerateWithMode = async (mode: any) => {
+    // Use external handler if provided
+    if (externalOnAiRegenerate) {
+      externalOnAiRegenerate(mode);
+      return;
+    }
+
+    // Otherwise use internal logic
     if (!aiSuggestion) return;
     await handleAIRewrite(mode.prompt, mode.id);
   };
 
   const handleApproveSuggestion = () => {
+    // Use external handler if provided
+    if (externalOnAiApprove) {
+      externalOnAiApprove();
+      return;
+    }
+
+    // Otherwise use internal logic
     if (!editor || !aiSuggestion) return;
 
     editor
@@ -333,12 +385,19 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       .insertContentAt(aiSuggestion.range.from, aiSuggestion.suggestedText)
       .run();
 
-    setAiSuggestion(null);
+    setInternalAiSuggestion(null);
     toast.success('AI suggestion applied');
   };
 
   const handleRejectSuggestion = () => {
-    setAiSuggestion(null);
+    // Use external handler if provided
+    if (externalOnAiReject) {
+      externalOnAiReject();
+      return;
+    }
+
+    // Otherwise use internal logic
+    setInternalAiSuggestion(null);
     toast.info('AI suggestion rejected');
   };
 
@@ -941,8 +1000,8 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
           </div>
         </BubbleMenu>
 
-        {/* AI Suggestion Overlay */}
-        {(aiSuggestion || isAiLoading) && (
+        {/* AI Suggestion Overlay - only show if not using external state */}
+        {(aiSuggestion || isAiLoading) && externalAiSuggestion === undefined && (
           <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
             <AIRewriteSuggestion
               originalText={aiSuggestion?.originalText || ''}
@@ -1134,4 +1193,4 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       `}</style>
     </div>
   );
-};
+});
