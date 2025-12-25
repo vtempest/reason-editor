@@ -27,6 +27,7 @@ import { FontSizeDropdown } from '@/components/FontSizeDropdown';
 import { AlignmentDropdown } from '@/components/AlignmentDropdown';
 import { HeadingsDropdown } from '@/components/HeadingsDropdown';
 import { StylesDropdown } from '@/components/StylesDropdown';
+import { splitSentences } from '@/lib/sentence-splitter';
 import {
   Bold,
   Italic,
@@ -412,6 +413,14 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
       const html = markdownToHtml(value);
       onChange(html);
     }
+  };
+
+  // Helper function to count sentences
+  const getSentenceCount = () => {
+    if (!editor) return 0;
+    const text = editor.getText();
+    const sentences = splitSentences(text);
+    return sentences.length;
   };
 
   return (
@@ -957,8 +966,11 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         )}
       </div>
 
-      {/* Status Bar with Word and Character Count */}
+      {/* Status Bar with Sentence, Word and Character Count */}
       <div className="border-t border-border bg-muted/50 px-4 py-1.5 text-xs text-muted-foreground flex items-center gap-4">
+        <span>
+          Sentences: {getSentenceCount()}
+        </span>
         <span>
           Words: {editor.storage.characterCount.words()}
         </span>
