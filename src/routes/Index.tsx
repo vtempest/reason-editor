@@ -12,7 +12,7 @@ import { TagManagementDialog } from '@/components/TagManagementDialog';
 import { DocumentTabs } from '@/components/DocumentTabs';
 import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
 import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
-import { rewriteText } from '@/lib/ai/rewrite';
+import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
@@ -627,11 +627,15 @@ const Index = () => {
     if (!editorRef.current || !aiSuggestion) return;
 
     const editor = editorRef.current;
+
+    // Convert markdown to HTML before inserting
+    const htmlContent = markdownToHtml(aiSuggestion.suggestedText);
+
     editor
       .chain()
       .focus()
       .deleteRange(aiSuggestion.range)
-      .insertContentAt(aiSuggestion.range.from, aiSuggestion.suggestedText)
+      .insertContentAt(aiSuggestion.range.from, htmlContent)
       .run();
 
     setAiSuggestion(null);

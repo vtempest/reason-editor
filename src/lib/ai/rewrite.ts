@@ -1,3 +1,19 @@
+import { marked } from 'marked';
+
+/**
+ * Convert markdown text to HTML
+ */
+export function markdownToHtml(markdown: string): string {
+  // Configure marked to be safer and handle inline elements better
+  marked.setOptions({
+    breaks: true, // Convert line breaks to <br>
+    gfm: true, // GitHub Flavored Markdown
+  });
+
+  const html = marked.parse(markdown) as string;
+  return html.trim();
+}
+
 /**
  * Rewrite text using Groq's Llama 3.3 model via backend API
  */

@@ -60,7 +60,7 @@ import {
   Merge,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { rewriteText } from '@/lib/ai/rewrite';
+import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
 import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
 import { ExportDropdown } from '@/components/ExportDropdown';
 import { ViewModeDropdown, ViewMode } from '@/components/ViewModeDropdown';
@@ -378,11 +378,14 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
     // Otherwise use internal logic
     if (!editor || !aiSuggestion) return;
 
+    // Convert markdown to HTML before inserting
+    const htmlContent = markdownToHtml(aiSuggestion.suggestedText);
+
     editor
       .chain()
       .focus()
       .deleteRange(aiSuggestion.range)
-      .insertContentAt(aiSuggestion.range.from, aiSuggestion.suggestedText)
+      .insertContentAt(aiSuggestion.range.from, htmlContent)
       .run();
 
     setInternalAiSuggestion(null);
