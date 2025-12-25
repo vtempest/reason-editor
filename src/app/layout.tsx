@@ -119,20 +119,20 @@ const inconsolata = Inconsolata({
 })
 
 export const metadata: Metadata = {
-  title: "Reason - Powerful Note-Taking App",
+  title: "Reason - Research Manager",
   description:
-    "A powerful note-taking app with nested documents, rich-text editing, and full-text search",
+    "A powerful research manager with nested documents, rich-text editing, and full-text search",
   authors: [{ name: "Reason" }],
   openGraph: {
-    title: "Reason - Powerful Note-Taking App",
+    title: "Reason - Research Manager",
     description:
-      "A powerful note-taking app with nested documents, rich-text editing, and full-text search",
+      "A powerful research manager with nested documents, rich-text editing, and full-text search",
     type: "website",
     images: ["https://lovable.dev/opengraph-image-p98pqg.png"],
   },
   twitter: {
     card: "summary_large_image",
-    site: "@Lovable",
+    site: "@Reason",
     images: ["https://lovable.dev/opengraph-image-p98pqg.png"],
   },
   icons: {
