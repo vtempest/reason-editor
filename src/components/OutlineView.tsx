@@ -108,6 +108,13 @@ export const OutlineView = forwardRef<OutlineViewHandle, OutlineViewProps>(({ co
     }
   };
 
+  // Filter outline based on search query (must be before early return to avoid hooks violation)
+  const filteredOutline = useMemo(() => {
+    if (!searchQuery.trim()) return outline;
+    const query = searchQuery.toLowerCase();
+    return outline.filter(item => item.text.toLowerCase().includes(query));
+  }, [outline, searchQuery]);
+
   // Get all children (recursive) for a given item
   const getChildrenIds = (itemId: string): string[] => {
     const index = outline.findIndex((item) => item.id === itemId);
@@ -218,13 +225,6 @@ export const OutlineView = forwardRef<OutlineViewHandle, OutlineViewProps>(({ co
       </div>
     );
   }
-
-  // Filter outline based on search query
-  const filteredOutline = useMemo(() => {
-    if (!searchQuery.trim()) return outline;
-    const query = searchQuery.toLowerCase();
-    return outline.filter(item => item.text.toLowerCase().includes(query));
-  }, [outline, searchQuery]);
 
   return (
     <div className="flex h-full flex-col overflow-auto p-2">
