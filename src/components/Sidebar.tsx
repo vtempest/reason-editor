@@ -46,6 +46,9 @@ interface SidebarProps {
   onPermanentDelete?: (id: string) => void;
   // New document ID to trigger rename mode
   newDocumentId?: string | null;
+  // Right-side outline toggle
+  showRightOutline?: boolean;
+  onToggleRightOutline?: () => void;
 }
 
 export const Sidebar = ({
@@ -75,6 +78,8 @@ export const Sidebar = ({
   onRestore,
   onPermanentDelete,
   newDocumentId,
+  showRightOutline = false,
+  onToggleRightOutline,
 }: SidebarProps) => {
   // Get archived and deleted documents
   const archivedDocs = documents.filter(doc => doc.isArchived && !doc.isDeleted);
@@ -500,25 +505,77 @@ export const Sidebar = ({
                 </TooltipContent>
               </Tooltip>
 
-              {/* Split View Toggle */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onViewModeChange(viewMode === 'split' ? 'tree' : 'split')}
-                    className={cn(
-                      'h-9 w-9 p-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent',
-                      viewMode === 'split' && 'bg-sidebar-accent text-sidebar-foreground'
-                    )}
+              {/* Split View Menu */}
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          'h-9 w-9 p-0 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent',
+                          (viewMode === 'split' || showRightOutline) && 'bg-sidebar-accent text-sidebar-foreground'
+                        )}
+                      >
+                        <Columns2 className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Split View Options</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      onViewModeChange(viewMode === 'split' ? 'tree' : 'split');
+                      if (showRightOutline && onToggleRightOutline) {
+                        onToggleRightOutline();
+                      }
+                    }}
+                    className="flex items-center justify-between"
                   >
-                    <Columns2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>Toggle Split View</p>
-                </TooltipContent>
-              </Tooltip>
+                    <span>Split View in Sidebar</span>
+                    {viewMode === 'split' && !showRightOutline && (
+                      <span className="text-xs text-muted-foreground">✓</span>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (onToggleRightOutline) {
+                        onToggleRightOutline();
+                        if (viewMode === 'split') {
+                          onViewModeChange('tree');
+                        }
+                      }
+                    }}
+                    className="flex items-center justify-between"
+                  >
+                    <span>Outline on Right Side</span>
+                    {showRightOutline && (
+                      <span className="text-xs text-muted-foreground">✓</span>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (viewMode !== 'tree') {
+                        onViewModeChange('tree');
+                      }
+                      if (showRightOutline && onToggleRightOutline) {
+                        onToggleRightOutline();
+                      }
+                    }}
+                    className="flex items-center justify-between"
+                  >
+                    <span>Disable Split View</span>
+                    {viewMode === 'tree' && !showRightOutline && (
+                      <span className="text-xs text-muted-foreground">✓</span>
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </nav>
           </TooltipProvider>
         </div>
