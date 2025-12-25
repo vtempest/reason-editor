@@ -568,17 +568,15 @@ const Index = () => {
               onToggleRightOutline={() => setShowRightOutline(!showRightOutline)}
             />
             <main className="flex-1 overflow-hidden flex flex-col">
-              {!isMobile && (
-                <DocumentTabs
-                  openTabs={openTabs}
-                  activeTab={activeDocId}
-                  documents={documents}
-                  onTabChange={handleTabChange}
-                  onTabClose={handleTabClose}
-                  onTabAdd={handleTabAdd}
-                  onRename={(id, title) => handleUpdateDocument(id, { title })}
-                />
-              )}
+              <DocumentTabs
+                openTabs={openTabs}
+                activeTab={activeDocId}
+                documents={documents}
+                onTabChange={handleTabChange}
+                onTabClose={handleTabClose}
+                onTabAdd={handleTabAdd}
+                onRename={(id, title) => handleUpdateDocument(id, { title })}
+              />
 
               {activeDocument ? (
                 <>
