@@ -10,7 +10,6 @@ import {
   keyboardDragAndDropFeature,
   removeItemsFromParents,
   renamingFeature,
-  searchFeature,
   selectionFeature,
 } from "@headless-tree/core";
 import { AssistiveTreeDescription, useTree } from "@headless-tree/react";
@@ -147,7 +146,6 @@ export const ComplexDocumentTree = ({
       dragAndDropFeature,
       keyboardDragAndDropFeature,
       renamingFeature,
-      searchFeature,
     ],
   });
 
@@ -255,15 +253,6 @@ export const ComplexDocumentTree = ({
           transform: rotate(90deg);
         }
       `}</style>
-
-      {tree.isSearchOpen() && (
-        <div className="searchbox">
-          <input {...tree.getSearchInputElementProps()} placeholder="Search..." />
-          <span className="text-xs text-muted-foreground ml-2">
-            ({tree.getSearchMatchingItems().length} matches)
-          </span>
-        </div>
-      )}
 
       <div {...tree.getContainerProps()} className="tree">
         <AssistiveTreeDescription tree={tree} />
