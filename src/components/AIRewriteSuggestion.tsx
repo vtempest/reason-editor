@@ -50,11 +50,12 @@ export const AIRewriteSuggestion = ({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-popover shadow-lg max-w-xl">
-      <div className="p-3 border-b border-border">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-xs font-semibold text-muted-foreground">AI SUGGESTION</div>
-          {onRegenerate && modes.length > 0 && (
+    <div className="h-full flex flex-col">
+      <div className="p-3 border-b border-sidebar-border">
+        <div className="text-xs font-semibold text-sidebar-foreground mb-3">AI SUGGESTION</div>
+        {onRegenerate && modes.length > 0 && (
+          <div className="mb-3">
+            <div className="text-xs text-muted-foreground mb-2">Rewrite Mode:</div>
             <div className="flex flex-wrap gap-1">
               {modes.map((mode) => (
                 <Badge
@@ -71,40 +72,42 @@ export const AIRewriteSuggestion = ({
                 </Badge>
               ))}
             </div>
-          )}
+          </div>
+        )}
+      </div>
+      <div className="flex-1 overflow-auto p-3 space-y-4">
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground mb-2">Original:</div>
+          <div className="text-sm text-foreground/70 line-through bg-muted/50 p-3 rounded-md">{originalText}</div>
         </div>
-        <div className="space-y-2">
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">Original:</div>
-            <div className="text-sm text-foreground/70 line-through">{originalText}</div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">Suggested:</div>
-            <div className="text-sm text-foreground font-medium">{suggestedText}</div>
-          </div>
+        <div>
+          <div className="text-xs font-semibold text-muted-foreground mb-2">Suggested:</div>
+          <div className="text-sm text-foreground font-medium bg-primary/10 p-3 rounded-md border border-primary/20">{suggestedText}</div>
         </div>
       </div>
-      <div className="flex items-center gap-2 p-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onApprove}
-          className="flex-1 h-9 bg-green-500 hover:bg-green-600 text-white"
-          title="Approve"
-        >
-          <Check className="h-4 w-4 mr-1" />
-          Approve
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onReject}
-          className="flex-1 h-9 bg-red-500 hover:bg-red-600 text-white"
-          title="Reject"
-        >
-          <X className="h-4 w-4 mr-1" />
-          Reject
-        </Button>
+      <div className="border-t border-sidebar-border p-3">
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onApprove}
+            className="w-full h-9 bg-green-500 hover:bg-green-600 text-white"
+            title="Approve"
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Approve
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onReject}
+            className="w-full h-9"
+            title="Reject"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Reject
+          </Button>
+        </div>
       </div>
     </div>
   );
