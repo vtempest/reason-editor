@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Document } from '@/components/DocumentTree';
 import { TiptapEditor } from '@/components/TiptapEditor';
 import { Sidebar } from '@/components/Sidebar';
@@ -10,6 +10,7 @@ import { InviteModal } from '@/components/InviteModal';
 import { TagBar } from '@/components/TagBar';
 import { TagManagementDialog } from '@/components/TagManagementDialog';
 import { DocumentTabs } from '@/components/DocumentTabs';
+import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
@@ -29,6 +30,7 @@ const Index = () => {
   const [tagManagementDocId, setTagManagementDocId] = useState<string | null>(null);
   const [defaultSidebarView, setDefaultSidebarView] = useLocalStorage<'tree' | 'outline' | 'split' | 'last-used'>('REASON-default-sidebar-view', 'last-used');
   const [viewMode, setViewMode] = useLocalStorage<'tree' | 'outline' | 'split'>('REASON-view-mode', 'split');
+  const [showRightOutline, setShowRightOutline] = useLocalStorage<boolean>('REASON-show-right-outline', false);
 
   const [documents, setDocuments] = useLocalStorage<Document[]>('REASON-documents', [
     {
@@ -562,6 +564,8 @@ const Index = () => {
               onRestore={handleRestoreDocument}
               onPermanentDelete={handlePermanentDelete}
               newDocumentId={newDocumentId}
+              showRightOutline={showRightOutline}
+              onToggleRightOutline={() => setShowRightOutline(!showRightOutline)}
             />
             <main className="flex-1 overflow-hidden flex flex-col">
               {!isMobile && (
@@ -640,54 +644,129 @@ const Index = () => {
                 onRestore={handleRestoreDocument}
                 onPermanentDelete={handlePermanentDelete}
                 newDocumentId={newDocumentId}
+                showRightOutline={showRightOutline}
+                onToggleRightOutline={() => setShowRightOutline(!showRightOutline)}
               />
             </Panel>
             <PanelResizeHandle className="w-px bg-sidebar-border hover:bg-primary/50 transition-colors" />
             <Panel defaultSize={80} minSize={50}>
-              <main className="flex-1 overflow-hidden flex flex-col h-full">
-                <DocumentTabs
-                  openTabs={openTabs}
-                  activeTab={activeDocId}
-                  documents={documents}
-                  onTabChange={handleTabChange}
-                  onTabClose={handleTabClose}
-                  onTabAdd={handleTabAdd}
-                  onRename={(id, title) => handleUpdateDocument(id, { title })}
-                />
+              {showRightOutline ? (
+                <PanelGroup direction="horizontal" className="flex-1">
+                  <Panel defaultSize={75} minSize={50}>
+                    <main className="flex-1 overflow-hidden flex flex-col h-full">
+                      <DocumentTabs
+                        openTabs={openTabs}
+                        activeTab={activeDocId}
+                        documents={documents}
+                        onTabChange={handleTabChange}
+                        onTabClose={handleTabClose}
+                        onTabAdd={handleTabAdd}
+                        onRename={(id, title) => handleUpdateDocument(id, { title })}
+                      />
 
-                {activeDocument ? (
-                  <>
-                    {activeDocument.tags && activeDocument.tags.length > 0 && (
-                      <TagBar
-                        tags={activeDocument.tags}
-                        onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                        onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                      />
-                    )}
-                    <div className="flex-1 overflow-hidden">
-                      <TiptapEditor
-                        content={activeDocument.content}
-                        onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
-                        title={activeDocument.title}
-                        onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                        scrollToHeading={() => {}}
-                      />
+                      {activeDocument ? (
+                        <>
+                          {activeDocument.tags && activeDocument.tags.length > 0 && (
+                            <TagBar
+                              tags={activeDocument.tags}
+                              onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
+                              onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+                            />
+                          )}
+                          <div className="flex-1 overflow-hidden">
+                            <TiptapEditor
+                              content={activeDocument.content}
+                              onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                              title={activeDocument.title}
+                              onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                              scrollToHeading={() => {}}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-editor-bg">
+                          <div className="text-center">
+                            <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+                            <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                              No Note Selected
+                            </h2>
+                            <p className="text-muted-foreground">
+                              Select a note from the sidebar or create a new one
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </main>
+                  </Panel>
+                  <PanelResizeHandle className="w-px bg-sidebar-border hover:bg-primary/50 transition-colors" />
+                  <Panel defaultSize={25} minSize={15} maxSize={40}>
+                    <div className="h-full border-l border-sidebar-border bg-sidebar-background">
+                      <div className="h-full overflow-hidden flex flex-col">
+                        <div className="px-3 py-2 border-b border-sidebar-border">
+                          <h3 className="text-sm font-semibold text-sidebar-foreground">Outline</h3>
+                        </div>
+                        <div className="flex-1 overflow-auto">
+                          <OutlineView
+                            content={activeDocument?.content || ''}
+                            searchQuery={searchQuery}
+                            onNavigate={(headingText) => {
+                              // Call the global scroll function set by TiptapEditor
+                              if ((window as any).__scrollToHeading) {
+                                (window as any).__scrollToHeading(headingText);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex h-full items-center justify-center bg-editor-bg">
-                    <div className="text-center">
-                      <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-                      <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
-                        No Note Selected
-                      </h2>
-                      <p className="text-muted-foreground">
-                        Select a note from the sidebar or create a new one
-                      </p>
+                  </Panel>
+                </PanelGroup>
+              ) : (
+                <main className="flex-1 overflow-hidden flex flex-col h-full">
+                  <DocumentTabs
+                    openTabs={openTabs}
+                    activeTab={activeDocId}
+                    documents={documents}
+                    onTabChange={handleTabChange}
+                    onTabClose={handleTabClose}
+                    onTabAdd={handleTabAdd}
+                    onRename={(id, title) => handleUpdateDocument(id, { title })}
+                  />
+
+                  {activeDocument ? (
+                    <>
+                      {activeDocument.tags && activeDocument.tags.length > 0 && (
+                        <TagBar
+                          tags={activeDocument.tags}
+                          onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
+                          onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
+                        />
+                      )}
+                      <div className="flex-1 overflow-hidden">
+                        <TiptapEditor
+                          content={activeDocument.content}
+                          onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                          title={activeDocument.title}
+                          onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                          scrollToHeading={() => {}}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-editor-bg">
+                      <div className="text-center">
+                        <FileText className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
+                        <h2 className="text-2xl font-serif font-semibold text-foreground mb-2">
+                          No Note Selected
+                        </h2>
+                        <p className="text-muted-foreground">
+                          Select a note from the sidebar or create a new one
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </main>
+                  )}
+                </main>
+              )}
             </Panel>
           </PanelGroup>
         )}
