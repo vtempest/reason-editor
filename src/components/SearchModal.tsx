@@ -176,7 +176,7 @@ export const SearchModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 gap-0">
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full p-0 gap-0 max-h-[90vh] sm:max-h-[85vh]">
         <DialogHeader className="px-4 py-4 border-b border-border">
           <div className="relative">
             <Command className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -186,7 +186,7 @@ export const SearchModal = ({
               placeholder="Search notes or type a command..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 pr-9 border-none shadow-none focus-visible:ring-0"
+              className="pl-9 pr-9 border-none shadow-none focus-visible:ring-0 text-sm sm:text-base"
             />
             {query && (
               <button
@@ -199,7 +199,7 @@ export const SearchModal = ({
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[60vh]">
+        <ScrollArea className="max-h-[50vh] sm:max-h-[60vh]">
           {query.trim() === '' ? (
             <div className="py-2">
               {commandActions.length > 0 && (
@@ -308,8 +308,11 @@ export const SearchModal = ({
         </ScrollArea>
 
         <div className="px-4 py-3 border-t border-border bg-muted/30">
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center hidden sm:block">
             Press <kbd className="px-1.5 py-0.5 rounded bg-background border border-border">⌘K</kbd> or <kbd className="px-1.5 py-0.5 rounded bg-background border border-border">Ctrl+K</kbd> to open • <kbd className="px-1.5 py-0.5 rounded bg-background border border-border">ESC</kbd> to close
+          </p>
+          <p className="text-xs text-muted-foreground text-center sm:hidden">
+            Tap <kbd className="px-1.5 py-0.5 rounded bg-background border border-border">ESC</kbd> to close
           </p>
         </div>
       </DialogContent>

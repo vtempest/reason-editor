@@ -110,6 +110,18 @@ export const Sidebar = ({
 
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col bg-sidebar-background relative">
+      {/* Mobile close button */}
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onOpenChange?.(false)}
+          className="absolute top-3 right-3 z-30 h-8 w-8 p-0 rounded-full hover:bg-sidebar-accent"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+
       {/* Floating search */}
       <div className="absolute top-3 left-3 right-3 z-20">
         <FloatingSearch
@@ -271,13 +283,12 @@ export const Sidebar = ({
         {/* Collapsible search input for outline */}
         {(viewMode === 'outline' || viewMode === 'split') && showOutlineSearch && (
           <div className="mt-2 relative">
-            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
               placeholder="Search headings..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="h-7 pl-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border"
+              className="h-7 pr-7 text-xs bg-sidebar-accent/50 border-sidebar-border"
               autoFocus
             />
             {searchQuery && (
