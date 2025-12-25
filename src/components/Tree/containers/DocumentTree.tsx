@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useRef, useCallback, useImperativeHandle, forwardRef, useState } from "react"
+import { useRef, useCallback, useImperativeHandle, forwardRef, useState, useEffect } from "react"
 import { Tree, type NodeApi } from "react-arborist"
 import { Folder, FolderOpen, Trash2, Edit2, Copy, FileText } from "lucide-react"
 import {
@@ -222,6 +222,19 @@ function Node({
   const isFolder = node.data.data.isFolder
   const iconClass = getFileIcon(node.data.name, isFolder || false)
   const isActive = activeId === node.id
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Ensure input maintains focus when entering edit mode
+  useEffect(() => {
+    if (node.isEditing && inputRef.current) {
+      // Small delay to ensure context menu has fully closed
+      const timer = setTimeout(() => {
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [node.isEditing])
 
   return (
     <ContextMenu>
@@ -253,6 +266,7 @@ function Node({
           )}
           {node.isEditing ? (
             <input
+              ref={inputRef}
               autoFocus
               type="text"
               defaultValue={node.data.name}
