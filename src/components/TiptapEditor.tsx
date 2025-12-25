@@ -17,8 +17,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { FontSize } from '@/lib/tiptap/fontSize';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
-import { useEffect, useState, useMemo } from 'react';
-import { splitSentences } from '@/lib/split-sentences';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -244,16 +243,6 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
   if (!editor) {
     return null;
   }
-
-  // Calculate sentence count
-  // Note: We recalculate on every render since editor content may change
-  // This could be optimized with a custom extension if performance becomes an issue
-  const text = editor.getText();
-  const sentenceCount = useMemo(() => {
-    if (!text || !text.trim()) return 0;
-    const sentences = splitSentences(text);
-    return sentences.length;
-  }, [text]);
 
   const addLink = () => {
     const url = window.prompt('Enter URL:');
@@ -968,16 +957,13 @@ export const TiptapEditor = ({ content, onChange, title, onTitleChange, scrollTo
         )}
       </div>
 
-      {/* Status Bar with Word, Character, and Sentence Count */}
+      {/* Status Bar with Word and Character Count */}
       <div className="border-t border-border bg-muted/50 px-4 py-1.5 text-xs text-muted-foreground flex items-center gap-4">
         <span>
           Words: {editor.storage.characterCount.words()}
         </span>
         <span>
           Characters: {editor.storage.characterCount.characters()}
-        </span>
-        <span>
-          Sentences: {sentenceCount}
         </span>
       </div>
 
