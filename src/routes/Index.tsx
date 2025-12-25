@@ -524,16 +524,6 @@ const Index = () => {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      {isMobile && (
-        <Header
-          onMenuClick={() => setIsSidebarOpen(true)}
-          onSearchClick={() => setIsSearchModalOpen(true)}
-          onSettingsClick={() => setIsSettingsOpen(true)}
-          onShareClick={() => setIsInviteModalOpen(true)}
-          documentTitle={activeDocument?.title}
-        />
-      )}
-
       <div className="flex flex-1 overflow-hidden">
         {isMobile ? (
           <>
@@ -576,6 +566,7 @@ const Index = () => {
                 onTabClose={handleTabClose}
                 onTabAdd={handleTabAdd}
                 onRename={(id, title) => handleUpdateDocument(id, { title })}
+                onMenuClick={() => setIsSidebarOpen(true)}
               />
 
               {activeDocument ? (
