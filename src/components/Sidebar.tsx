@@ -4,6 +4,7 @@ import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/
 import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
 import { FloatingSearch } from '@/components/FloatingSearch';
 import { ThemeDropdown } from '@/components/theme-dropdown';
+import { FileSourceDropdown } from '@/components/FileSourceDropdown';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,6 +50,9 @@ interface SidebarProps {
   // Right-side outline toggle
   showRightOutline?: boolean;
   onToggleRightOutline?: () => void;
+  // File source
+  activeFileSourceId?: string;
+  onFileSourceChange?: (sourceId: string) => void;
 }
 
 export const Sidebar = ({
@@ -80,6 +84,8 @@ export const Sidebar = ({
   newDocumentId,
   showRightOutline = false,
   onToggleRightOutline,
+  activeFileSourceId = 'local-default',
+  onFileSourceChange,
 }: SidebarProps) => {
   // Get archived and deleted documents
   const archivedDocs = documents.filter(doc => doc.isArchived && !doc.isDeleted);
@@ -137,6 +143,16 @@ export const Sidebar = ({
 
       {/* Spacer for floating search */}
       <div className="h-16"></div>
+
+      {/* File Source Dropdown */}
+      {(viewMode === 'tree' || viewMode === 'split') && onFileSourceChange && (
+        <div className="px-3 pb-2">
+          <FileSourceDropdown
+            activeSourceId={activeFileSourceId}
+            onSourceChange={onFileSourceChange}
+          />
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="px-3 pb-2">
