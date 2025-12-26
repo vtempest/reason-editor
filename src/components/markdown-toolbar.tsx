@@ -68,10 +68,12 @@ import {
   ArrowRight,
   Columns,
   Rows,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorState, type Editor } from "@tiptap/react";
 import { exportDocument, type ExportFormat } from "@/lib/utils/document-export";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MarkdownToolbarProps {
   editor: Editor;
@@ -98,6 +100,7 @@ export function MarkdownToolbar({
   hasChanges = false,
   sandboxId,
 }: MarkdownToolbarProps) {
+  const isMobile = useIsMobile();
   const [isExporting, setIsExporting] = useState(false);
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
@@ -564,6 +567,207 @@ export function MarkdownToolbar({
         );
     }
   };
+
+  // Mobile toolbar with ellipsis dropdown
+  const mobileToolbarContent = (
+    <>
+      {/* Essential formatting buttons */}
+      <div className="flex items-center shrink-0">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          isActive={isBold}
+          icon={Bold}
+          tooltip="Bold"
+          shortcut="⌘B"
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          isActive={isItalic}
+          icon={Italic}
+          tooltip="Italic"
+          shortcut="⌘I"
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          isActive={isUnderline}
+          icon={UnderlineIcon}
+          tooltip="Underline"
+          shortcut="⌘U"
+        />
+      </div>
+
+      {/* More options dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {/* Headings submenu */}
+          <DropdownMenuItem
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
+          >
+            <Heading1 className="mr-2 h-4 w-4" />
+            Heading 1
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
+          >
+            <Heading2 className="mr-2 h-4 w-4" />
+            Heading 2
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
+          >
+            <Heading3 className="mr-2 h-4 w-4" />
+            Heading 3
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+          {/* Text formatting */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <Strikethrough className="mr-2 h-4 w-4" />
+            Strikethrough
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleCode().run()}
+          >
+            <Code className="mr-2 h-4 w-4" />
+            Inline Code
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+          {/* Lists */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+          >
+            <List className="mr-2 h-4 w-4" />
+            Bullet List
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          >
+            <ListOrdered className="mr-2 h-4 w-4" />
+            Numbered List
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+          >
+            <ListTodo className="mr-2 h-4 w-4" />
+            Task List
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+          {/* Blocks */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          >
+            <Quote className="mr-2 h-4 w-4" />
+            Quote
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          >
+            <Code className="mr-2 h-4 w-4" />
+            Code Block
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          >
+            <Minus className="mr-2 h-4 w-4" />
+            Divider
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+          {/* Insert */}
+          <DropdownMenuItem onClick={insertLink}>
+            <LinkIcon className="mr-2 h-4 w-4" />
+            Link
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={openImageDialog}>
+            <ImageIcon className="mr-2 h-4 w-4" />
+            Image
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={insertTable}>
+            <TableIcon className="mr-2 h-4 w-4" />
+            Table
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+          {/* Undo/Redo */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!canUndo}
+          >
+            <Undo className="mr-2 h-4 w-4" />
+            Undo
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!canRedo}
+          >
+            <Redo className="mr-2 h-4 w-4" />
+            Redo
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Word count & Export - Right side */}
+      {!isBubbleMenu && !isFloatingMenu && (
+        <div className="ml-auto flex items-center gap-1.5 shrink-0">
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {wordCount}
+          </span>
+
+          {!hideActions && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  disabled={isExporting}
+                >
+                  {isExporting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport("pdf")}>
+                  <FileType className="h-4 w-4 text-muted-foreground" />
+                  PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("docx")}>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  Word
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("html")}>
+                  <FileCode className="h-4 w-4 text-muted-foreground" />
+                  HTML
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("markdown")}>
+                  <FileCode className="h-4 w-4 text-muted-foreground" />
+                  Markdown
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      )}
+    </>
+  );
 
   const toolbarContent = (
     <>
@@ -1066,7 +1270,9 @@ export function MarkdownToolbar({
     <TooltipProvider delayDuration={300}>
       <div className="border-b bg-background sticky top-0 z-10">
         <div className="px-2 py-1.5 flex items-center gap-0.5 overflow-x-auto scrollbar-none">
-          {toolbarContent}
+          {isMobile && !isBubbleMenu && !isFloatingMenu
+            ? mobileToolbarContent
+            : toolbarContent}
         </div>
       </div>
       {imageDialog}
