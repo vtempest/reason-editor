@@ -568,9 +568,29 @@ export function MarkdownToolbar({
     }
   };
 
-  // Mobile toolbar with ellipsis dropdown
+  // Mobile toolbar with ellipsis dropdown - SINGLE ROW ONLY
   const mobileToolbarContent = (
     <>
+      {/* Undo/Redo - Left side */}
+      <div className="flex items-center shrink-0">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!canUndo}
+          icon={Undo}
+          tooltip="Undo"
+          shortcut="⌘Z"
+        />
+        <ToolbarButton
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!canRedo}
+          icon={Redo}
+          tooltip="Redo"
+          shortcut="⌘⇧Z"
+        />
+      </div>
+
+      <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
+
       {/* Essential formatting buttons */}
       <div className="flex items-center shrink-0">
         <ToolbarButton
@@ -587,24 +607,38 @@ export function MarkdownToolbar({
           tooltip="Italic"
           shortcut="⌘I"
         />
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          isActive={isUnderline}
-          icon={UnderlineIcon}
-          tooltip="Underline"
-          shortcut="⌘U"
-        />
       </div>
 
-      {/* More options dropdown */}
+      {/* More options dropdown - Contains everything else */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          {/* Headings submenu */}
+        <DropdownMenuContent align="end" className="w-48 max-h-[80vh] overflow-y-auto">
+          {/* Text Formatting */}
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+          >
+            <UnderlineIcon className="mr-2 h-4 w-4" />
+            Underline
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <Strikethrough className="mr-2 h-4 w-4" />
+            Strikethrough
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleCode().run()}
+          >
+            <Code className="mr-2 h-4 w-4" />
+            Inline Code
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+
+          {/* Headings */}
           <DropdownMenuItem
             onClick={() =>
               editor.chain().focus().toggleHeading({ level: 1 }).run()
@@ -628,21 +662,6 @@ export function MarkdownToolbar({
           >
             <Heading3 className="mr-2 h-4 w-4" />
             Heading 3
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-
-          {/* Text formatting */}
-          <DropdownMenuItem
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-          >
-            <Strikethrough className="mr-2 h-4 w-4" />
-            Strikethrough
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => editor.chain().focus().toggleCode().run()}
-          >
-            <Code className="mr-2 h-4 w-4" />
-            Inline Code
           </DropdownMenuItem>
           <DropdownMenuSeparator />
 
@@ -701,30 +720,13 @@ export function MarkdownToolbar({
             <TableIcon className="mr-2 h-4 w-4" />
             Table
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-
-          {/* Undo/Redo */}
-          <DropdownMenuItem
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!canUndo}
-          >
-            <Undo className="mr-2 h-4 w-4" />
-            Undo
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => editor.chain().focus().redo().run()}
-            disabled={!canRedo}
-          >
-            <Redo className="mr-2 h-4 w-4" />
-            Redo
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* Word count & Export - Right side */}
       {!isBubbleMenu && !isFloatingMenu && (
-        <div className="ml-auto flex items-center gap-1.5 shrink-0">
-          <span className="text-xs text-muted-foreground tabular-nums">
+        <div className="ml-auto flex items-center gap-0.5 shrink-0">
+          <span className="text-[10px] text-muted-foreground tabular-nums px-1">
             {wordCount}
           </span>
 
@@ -1269,7 +1271,10 @@ export function MarkdownToolbar({
   return (
     <TooltipProvider delayDuration={300}>
       <div className="border-b bg-background sticky top-0 z-10">
-        <div className="px-2 py-1.5 flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+        <div className={cn(
+          "px-2 py-1.5 flex items-center gap-0.5 overflow-x-auto scrollbar-none",
+          isMobile && "flex-nowrap" // Ensure single row on mobile
+        )}>
           {isMobile && !isBubbleMenu && !isFloatingMenu
             ? mobileToolbarContent
             : toolbarContent}
