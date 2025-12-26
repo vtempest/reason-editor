@@ -11,7 +11,11 @@ import {
   Edit2,
   Paintbrush,
   Info,
-  Wand2
+  Wand2,
+  HardDrive,
+  Server,
+  Cloud,
+  Database
 } from 'lucide-react';
 import {
   Breadcrumb,
@@ -46,6 +50,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ThemeDropdown } from '@/components/theme-dropdown';
 import { getRewriteModes, saveRewriteModes, resetRewriteModes, RewriteMode } from '@/lib/ai/rewriteModes';
+import { getFileSources, addFileSource, updateFileSource, deleteFileSource } from '@/lib/fileSources';
+import { AnyFileSource, FileSourceType, SSHCredentials, S3Credentials, R2Credentials } from '@/types/fileSource';
 import { toast } from 'sonner';
 
 interface SettingsProps {
@@ -57,6 +63,7 @@ interface SettingsProps {
 
 const settingsNav = [
   { name: "Appearance", icon: Paintbrush },
+  { name: "File Sources", icon: HardDrive },
   { name: "AI Rewrite Modes", icon: Wand2 },
   { name: "About", icon: Info },
 ];
@@ -68,9 +75,23 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
   const [editingMode, setEditingMode] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<RewriteMode>>({});
 
+  // File sources state
+  const [fileSources, setFileSources] = useState<AnyFileSource[]>([]);
+  const [editingSource, setEditingSource] = useState<string | null>(null);
+  const [sourceForm, setSourceForm] = useState<{
+    name: string;
+    type: FileSourceType;
+    credentials: Partial<SSHCredentials & S3Credentials & R2Credentials>;
+  }>({
+    name: '',
+    type: 'local',
+    credentials: {},
+  });
+
   useEffect(() => {
     if (open) {
       setRewriteModes(getRewriteModes());
+      setFileSources(getFileSources());
     }
   }, [open]);
 
@@ -142,6 +163,59 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
   const cancelEditing = () => {
     setEditingMode(null);
     setEditForm({});
+  };
+
+  // File source handlers
+  const handleSaveSource = () => {
+    if (!sourceForm.name.trim()) {
+      toast.error('Please enter a source name');
+      return;
+    }
+
+    if (editingSource && editingSource !== 'new') {
+      // Update existing source
+      const source = fileSources.find((s) => s.id === editingSource);
+      if (source) {
+        updateFileSource(editingSource, {
+          name: sourceForm.name,
+          credentials: sourceForm.type !== 'local' ? sourceForm.credentials : undefined,
+        } as Partial<AnyFileSource>);
+        setFileSources(getFileSources());
+        toast.success('Source updated');
+      }
+    } else {
+      // Add new source
+      addFileSource({
+        name: sourceForm.name,
+        type: sourceForm.type,
+        credentials: sourceForm.type !== 'local' ? sourceForm.credentials : undefined,
+      } as any);
+      setFileSources(getFileSources());
+      toast.success('Source added');
+    }
+
+    setEditingSource(null);
+    setSourceForm({ name: '', type: 'local', credentials: {} });
+  };
+
+  const handleDeleteSource = (id: string) => {
+    deleteFileSource(id);
+    setFileSources(getFileSources());
+    toast.success('Source deleted');
+  };
+
+  const startEditingSource = (source: AnyFileSource) => {
+    setEditingSource(source.id);
+    setSourceForm({
+      name: source.name,
+      type: source.type,
+      credentials: source.credentials || {},
+    });
+  };
+
+  const cancelEditingSource = () => {
+    setEditingSource(null);
+    setSourceForm({ name: '', type: 'local', credentials: {} });
   };
 
   const renderContent = () => {
@@ -262,6 +336,552 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
                 </div>
               </RadioGroup>
             </div>
+          </div>
+        );
+
+      case "File Sources":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-2">File Sources</h2>
+              <p className="text-sm text-muted-foreground">
+                Manage remote file sources (SSH, S3, R2)
+              </p>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              {fileSources.map((source) => (
+                <div
+                  key={source.id}
+                  className="border rounded-lg p-3 space-y-2"
+                >
+                  {editingSource === source.id ? (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor={`source-name-${source.id}`}>Source Name</Label>
+                        <Input
+                          id={`source-name-${source.id}`}
+                          value={sourceForm.name}
+                          onChange={(e) =>
+                            setSourceForm({ ...sourceForm, name: e.target.value })
+                          }
+                          placeholder="My Remote Files"
+                        />
+                      </div>
+
+                      {source.type === 'ssh' && (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Host</Label>
+                            <Input
+                              value={(sourceForm.credentials as SSHCredentials).host || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, host: e.target.value },
+                                })
+                              }
+                              placeholder="example.com"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-2">
+                              <Label>Port</Label>
+                              <Input
+                                type="number"
+                                value={(sourceForm.credentials as SSHCredentials).port || 22}
+                                onChange={(e) =>
+                                  setSourceForm({
+                                    ...sourceForm,
+                                    credentials: { ...sourceForm.credentials, port: parseInt(e.target.value) },
+                                  })
+                                }
+                                placeholder="22"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Username</Label>
+                              <Input
+                                value={(sourceForm.credentials as SSHCredentials).username || ''}
+                                onChange={(e) =>
+                                  setSourceForm({
+                                    ...sourceForm,
+                                    credentials: { ...sourceForm.credentials, username: e.target.value },
+                                  })
+                                }
+                                placeholder="user"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Password (Optional)</Label>
+                            <Input
+                              type="password"
+                              value={(sourceForm.credentials as SSHCredentials).password || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, password: e.target.value },
+                                })
+                              }
+                              placeholder="••••••••"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Base Path (Optional)</Label>
+                            <Input
+                              value={(sourceForm.credentials as SSHCredentials).basePath || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, basePath: e.target.value },
+                                })
+                              }
+                              placeholder="/home/user/documents"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {source.type === 's3' && (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Access Key ID</Label>
+                            <Input
+                              value={(sourceForm.credentials as S3Credentials).accessKeyId || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, accessKeyId: e.target.value },
+                                })
+                              }
+                              placeholder="AKIAIOSFODNN7EXAMPLE"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Secret Access Key</Label>
+                            <Input
+                              type="password"
+                              value={(sourceForm.credentials as S3Credentials).secretAccessKey || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, secretAccessKey: e.target.value },
+                                })
+                              }
+                              placeholder="••••••••"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-2">
+                              <Label>Region</Label>
+                              <Input
+                                value={(sourceForm.credentials as S3Credentials).region || ''}
+                                onChange={(e) =>
+                                  setSourceForm({
+                                    ...sourceForm,
+                                    credentials: { ...sourceForm.credentials, region: e.target.value },
+                                  })
+                                }
+                                placeholder="us-east-1"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Bucket</Label>
+                              <Input
+                                value={(sourceForm.credentials as S3Credentials).bucket || ''}
+                                onChange={(e) =>
+                                  setSourceForm({
+                                    ...sourceForm,
+                                    credentials: { ...sourceForm.credentials, bucket: e.target.value },
+                                  })
+                                }
+                                placeholder="my-bucket"
+                              />
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {source.type === 'r2' && (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Account ID</Label>
+                            <Input
+                              value={(sourceForm.credentials as R2Credentials).accountId || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, accountId: e.target.value },
+                                })
+                              }
+                              placeholder="your-account-id"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Access Key ID</Label>
+                            <Input
+                              value={(sourceForm.credentials as R2Credentials).accessKeyId || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, accessKeyId: e.target.value },
+                                })
+                              }
+                              placeholder="your-access-key-id"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Secret Access Key</Label>
+                            <Input
+                              type="password"
+                              value={(sourceForm.credentials as R2Credentials).secretAccessKey || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, secretAccessKey: e.target.value },
+                                })
+                              }
+                              placeholder="••••••••"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Bucket</Label>
+                            <Input
+                              value={(sourceForm.credentials as R2Credentials).bucket || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, bucket: e.target.value },
+                                })
+                              }
+                              placeholder="my-bucket"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleSaveSource}>
+                          Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={cancelEditingSource}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {source.type === 'local' && <HardDrive className="h-4 w-4" />}
+                          {source.type === 'ssh' && <Server className="h-4 w-4" />}
+                          {source.type === 's3' && <Cloud className="h-4 w-4" />}
+                          {source.type === 'r2' && <Database className="h-4 w-4" />}
+                          <span className="font-medium">{source.name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {source.type.toUpperCase()}
+                          </Badge>
+                        </div>
+                        {source.id !== 'local-default' && (
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              onClick={() => startEditingSource(source)}
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-destructive"
+                              onClick={() => handleDeleteSource(source.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      {source.type === 'ssh' && source.credentials && (
+                        <p className="text-xs text-muted-foreground">
+                          {(source.credentials as SSHCredentials).username}@
+                          {(source.credentials as SSHCredentials).host}:
+                          {(source.credentials as SSHCredentials).port || 22}
+                        </p>
+                      )}
+                      {source.type === 's3' && source.credentials && (
+                        <p className="text-xs text-muted-foreground">
+                          {(source.credentials as S3Credentials).bucket} ({(source.credentials as S3Credentials).region})
+                        </p>
+                      )}
+                      {source.type === 'r2' && source.credentials && (
+                        <p className="text-xs text-muted-foreground">
+                          {(source.credentials as R2Credentials).bucket}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {editingSource === 'new' && (
+                <div className="border rounded-lg p-3 space-y-3">
+                  <div className="space-y-2">
+                    <Label>Source Name</Label>
+                    <Input
+                      value={sourceForm.name}
+                      onChange={(e) =>
+                        setSourceForm({ ...sourceForm, name: e.target.value })
+                      }
+                      placeholder="My Remote Files"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Source Type</Label>
+                    <select
+                      value={sourceForm.type}
+                      onChange={(e) => {
+                        const newType = e.target.value as FileSourceType;
+                        setSourceForm({ ...sourceForm, type: newType, credentials: {} });
+                      }}
+                      className="w-full border rounded-md px-3 py-2 text-sm"
+                    >
+                      <option value="ssh">SSH</option>
+                      <option value="s3">Amazon S3</option>
+                      <option value="r2">Cloudflare R2</option>
+                    </select>
+                  </div>
+
+                  {sourceForm.type === 'ssh' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Host</Label>
+                        <Input
+                          value={(sourceForm.credentials as SSHCredentials).host || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, host: e.target.value },
+                            })
+                          }
+                          placeholder="example.com"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label>Port</Label>
+                          <Input
+                            type="number"
+                            value={(sourceForm.credentials as SSHCredentials).port || 22}
+                            onChange={(e) =>
+                              setSourceForm({
+                                ...sourceForm,
+                                credentials: { ...sourceForm.credentials, port: parseInt(e.target.value) },
+                              })
+                            }
+                            placeholder="22"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Username</Label>
+                          <Input
+                            value={(sourceForm.credentials as SSHCredentials).username || ''}
+                            onChange={(e) =>
+                              setSourceForm({
+                                ...sourceForm,
+                                credentials: { ...sourceForm.credentials, username: e.target.value },
+                              })
+                            }
+                            placeholder="user"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Password (Optional)</Label>
+                        <Input
+                          type="password"
+                          value={(sourceForm.credentials as SSHCredentials).password || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, password: e.target.value },
+                            })
+                          }
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Base Path (Optional)</Label>
+                        <Input
+                          value={(sourceForm.credentials as SSHCredentials).basePath || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, basePath: e.target.value },
+                            })
+                          }
+                          placeholder="/home/user/documents"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {sourceForm.type === 's3' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Access Key ID</Label>
+                        <Input
+                          value={(sourceForm.credentials as S3Credentials).accessKeyId || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, accessKeyId: e.target.value },
+                            })
+                          }
+                          placeholder="AKIAIOSFODNN7EXAMPLE"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Secret Access Key</Label>
+                        <Input
+                          type="password"
+                          value={(sourceForm.credentials as S3Credentials).secretAccessKey || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, secretAccessKey: e.target.value },
+                            })
+                          }
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label>Region</Label>
+                          <Input
+                            value={(sourceForm.credentials as S3Credentials).region || ''}
+                            onChange={(e) =>
+                              setSourceForm({
+                                ...sourceForm,
+                                credentials: { ...sourceForm.credentials, region: e.target.value },
+                              })
+                            }
+                            placeholder="us-east-1"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Bucket</Label>
+                          <Input
+                            value={(sourceForm.credentials as S3Credentials).bucket || ''}
+                            onChange={(e) =>
+                              setSourceForm({
+                                ...sourceForm,
+                                credentials: { ...sourceForm.credentials, bucket: e.target.value },
+                              })
+                            }
+                            placeholder="my-bucket"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {sourceForm.type === 'r2' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Account ID</Label>
+                        <Input
+                          value={(sourceForm.credentials as R2Credentials).accountId || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, accountId: e.target.value },
+                            })
+                          }
+                          placeholder="your-account-id"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Access Key ID</Label>
+                        <Input
+                          value={(sourceForm.credentials as R2Credentials).accessKeyId || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, accessKeyId: e.target.value },
+                            })
+                          }
+                          placeholder="your-access-key-id"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Secret Access Key</Label>
+                        <Input
+                          type="password"
+                          value={(sourceForm.credentials as R2Credentials).secretAccessKey || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, secretAccessKey: e.target.value },
+                            })
+                          }
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Bucket</Label>
+                        <Input
+                          value={(sourceForm.credentials as R2Credentials).bucket || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, bucket: e.target.value },
+                            })
+                          }
+                          placeholder="my-bucket"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={handleSaveSource}>
+                      Add Source
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={cancelEditingSource}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {editingSource !== 'new' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setEditingSource('new');
+                  setSourceForm({ name: '', type: 'ssh', credentials: { port: 22 } });
+                }}
+                className="w-full gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add New File Source
+              </Button>
+            )}
           </div>
         );
 

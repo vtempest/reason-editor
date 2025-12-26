@@ -13,6 +13,7 @@ import { DocumentTabs } from '@/components/DocumentTabs';
 import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
 import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
+import { getActiveFileSourceId, setActiveFileSourceId } from '@/lib/fileSources';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
@@ -136,6 +137,9 @@ const Index = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [newDocumentId, setNewDocumentId] = useState<string | null>(null);
+
+  // File source state
+  const [activeFileSourceId, setActiveFileSourceIdState] = useState<string>(getActiveFileSourceId());
 
   // Build document tree structure
   const buildTree = (docs: Document[]): Document[] => {
@@ -438,6 +442,14 @@ const Index = () => {
     setIsTagDialogOpen(true);
   };
 
+  const handleFileSourceChange = (sourceId: string) => {
+    setActiveFileSourceIdState(sourceId);
+    setActiveFileSourceId(sourceId);
+    toast.success('File source changed');
+    // TODO: In a real implementation, this would load documents from the selected source
+    // For now, it just updates the UI to show which source is selected
+  };
+
   const handleUpdateTags = (tags: string[]) => {
     if (tagManagementDocId) {
       setDocuments((docs) =>
@@ -695,6 +707,8 @@ const Index = () => {
               newDocumentId={newDocumentId}
               showRightOutline={showRightOutline}
               onToggleRightOutline={() => setShowRightOutline(!showRightOutline)}
+              activeFileSourceId={activeFileSourceId}
+              onFileSourceChange={handleFileSourceChange}
             />
             <main className="flex-1 overflow-hidden flex flex-col">
               <DocumentTabs
@@ -843,6 +857,8 @@ const Index = () => {
                 newDocumentId={newDocumentId}
                 showRightOutline={showRightOutline}
                 onToggleRightOutline={() => setShowRightOutline(!showRightOutline)}
+                activeFileSourceId={activeFileSourceId}
+                onFileSourceChange={handleFileSourceChange}
               />
             </Panel>
             <PanelResizeHandle className="w-px bg-sidebar-border hover:bg-primary/50 transition-colors" />
