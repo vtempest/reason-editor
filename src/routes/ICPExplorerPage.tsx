@@ -1,4 +1,4 @@
-import { ICPExplorer } from '@/components/ICPExplorer'
+import { ICPExplorer } from '@/components/editor/ICPExplorer'
 
 export default function ICPExplorerPage() {
   return <ICPExplorer />

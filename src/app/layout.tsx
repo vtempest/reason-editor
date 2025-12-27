@@ -20,10 +20,10 @@ import {
   PT_Serif,
   Inconsolata
 } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "@/components/editor/theme-provider"
 import { Toaster } from "sonner"
 import "../index.css"
-import "../components/themes-shadcn.css"
+import "../components/editor/themes-shadcn.css"
 
 // Configure Google Fonts
 const inter = Inter({

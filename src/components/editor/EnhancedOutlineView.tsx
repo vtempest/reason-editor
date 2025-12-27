@@ -235,8 +235,8 @@ export const EnhancedOutlineView = ({
             onSharingUpdate={(sharing) =>
               onDocumentUpdate?.({ sharing })
             }
-            onDelete={() => {}}
-            onDuplicate={() => {}}
+            onDelete={() => { }}
+            onDuplicate={() => { }}
           />
         </div>
 

@@ -68,13 +68,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentListResponse'
+                $ref: '#/components/editor/schemas/DocumentListResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
     post:
       tags:
@@ -87,7 +87,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDocumentRequest'
+              $ref: '#/components/editor/schemas/CreateDocumentRequest'
             examples:
               root-document:
                 summary: Create root document
@@ -106,19 +106,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentResponse'
+                $ref: '#/components/editor/schemas/DocumentResponse'
         '400':
           description: Bad request (missing required fields)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/documents/{id}:
     get:
@@ -141,19 +141,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentResponse'
+                $ref: '#/components/editor/schemas/DocumentResponse'
         '404':
           description: Document not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
     put:
       tags:
@@ -174,7 +174,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDocumentRequest'
+              $ref: '#/components/editor/schemas/UpdateDocumentRequest'
             examples:
               update-title:
                 summary: Update title only
@@ -196,19 +196,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentResponse'
+                $ref: '#/components/editor/schemas/DocumentResponse'
         '404':
           description: Document not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
     delete:
       tags:
@@ -246,13 +246,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/documents/{id}/duplicate:
     post:
@@ -275,19 +275,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentResponse'
+                $ref: '#/components/editor/schemas/DocumentResponse'
         '404':
           description: Document not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/documents/move:
     post:
@@ -301,7 +301,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MoveDocumentRequest'
+              $ref: '#/components/editor/schemas/MoveDocumentRequest'
             examples:
               move-as-child:
                 summary: Move as child
@@ -327,19 +327,19 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    $ref: '#/components/schemas/MoveDocumentRequest'
+                    $ref: '#/components/editor/schemas/MoveDocumentRequest'
         '400':
           description: Bad request (invalid operation)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/documents/search/{query}:
     get:
@@ -362,13 +362,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentListResponse'
+                $ref: '#/components/editor/schemas/DocumentListResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/documents/bulk:
     post:
@@ -387,7 +387,7 @@ paths:
                 documents:
                   type: array
                   items:
-                    $ref: '#/components/schemas/Document'
+                    $ref: '#/components/editor/schemas/Document'
               required:
                 - documents
             example:
@@ -406,19 +406,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DocumentListResponse'
+                $ref: '#/components/editor/schemas/DocumentListResponse'
         '400':
           description: Bad request (invalid data)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: Internal server error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/teams:
     get:
@@ -441,7 +441,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Team'
+                      $ref: '#/components/editor/schemas/Team'
 
     post:
       tags:
@@ -480,7 +480,7 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    $ref: '#/components/schemas/Team'
+                    $ref: '#/components/editor/schemas/Team'
 
   /api/teams/{id}/members:
     post:
@@ -508,7 +508,7 @@ paths:
                   format: email
                   example: "user@example.com"
                 role:
-                  $ref: '#/components/schemas/UserRole'
+                  $ref: '#/components/editor/schemas/UserRole'
               required:
                 - email
                 - role
@@ -524,7 +524,7 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    $ref: '#/components/schemas/TeamMember'
+                    $ref: '#/components/editor/schemas/TeamMember'
 
   /api/organizations:
     get:
@@ -547,7 +547,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Organization'
+                      $ref: '#/components/editor/schemas/Organization'
 
   /api/ai/rewrite:
     post:
@@ -586,13 +586,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
         '500':
           description: AI service error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/google-docs/auth:
     get:
@@ -687,7 +687,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/google-docs/import:
     post:
@@ -726,7 +726,7 @@ paths:
                   success:
                     type: boolean
                   data:
-                    $ref: '#/components/schemas/Document'
+                    $ref: '#/components/editor/schemas/Document'
 
   /api/google-docs/share:
     post:
@@ -800,13 +800,13 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Quote'
+                      $ref: '#/components/editor/schemas/Quote'
         '400':
           description: Missing documentId parameter
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
     post:
       tags:
@@ -858,13 +858,13 @@ paths:
                   success:
                     type: boolean
                   data:
-                    $ref: '#/components/schemas/Quote'
+                    $ref: '#/components/editor/schemas/Quote'
         '400':
           description: Invalid request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/editor/schemas/ErrorResponse'
 
   /api/quotes/{id}:
     put:
@@ -961,7 +961,7 @@ components:
         children:
           type: array
           items:
-            $ref: '#/components/schemas/Document'
+            $ref: '#/components/editor/schemas/Document'
           description: Child documents
         isExpanded:
           type: boolean
@@ -1065,7 +1065,7 @@ components:
           format: email
           example: "john@example.com"
         role:
-          $ref: '#/components/schemas/UserRole'
+          $ref: '#/components/editor/schemas/UserRole'
         avatarUrl:
           type: string
           format: uri
@@ -1090,7 +1090,7 @@ components:
         members:
           type: array
           items:
-            $ref: '#/components/schemas/TeamMember'
+            $ref: '#/components/editor/schemas/TeamMember'
         createdAt:
           type: string
           format: date-time
@@ -1122,7 +1122,7 @@ components:
         teams:
           type: array
           items:
-            $ref: '#/components/schemas/Team'
+            $ref: '#/components/editor/schemas/Team'
         createdAt:
           type: string
           format: date-time
@@ -1139,7 +1139,7 @@ components:
           type: boolean
           example: true
         data:
-          $ref: '#/components/schemas/Document'
+          $ref: '#/components/editor/schemas/Document'
 
     DocumentListResponse:
       type: object
@@ -1150,7 +1150,7 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Document'
+            $ref: '#/components/editor/schemas/Document'
 
     Quote:
       type: object

@@ -22,12 +22,12 @@ import { useEffect, useState, forwardRef as reactForwardRef, useImperativeHandle
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { SearchReplaceBar } from '@/components/SearchReplaceBar';
-import { FontFamilyDropdown } from '@/components/FontFamilyDropdown';
-import { FontSizeDropdown } from '@/components/FontSizeDropdown';
-import { AlignmentDropdown } from '@/components/AlignmentDropdown';
-import { HeadingsDropdown } from '@/components/HeadingsDropdown';
-import { StylesDropdown } from '@/components/StylesDropdown';
+import { SearchReplaceBar } from '@/components/editor/SearchReplaceBar';
+import { FontFamilyDropdown } from '@/components/editor/FontFamilyDropdown';
+import { FontSizeDropdown } from '@/components/editor/FontSizeDropdown';
+import { AlignmentDropdown } from '@/components/editor/AlignmentDropdown';
+import { HeadingsDropdown } from '@/components/editor/HeadingsDropdown';
+import { StylesDropdown } from '@/components/editor/StylesDropdown';
 import { splitSentences } from '@/lib/sentence-splitter';
 import {
   Bold,
@@ -61,9 +61,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
-import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
-import { ExportDropdown } from '@/components/ExportDropdown';
-import { ViewModeDropdown, ViewMode } from '@/components/ViewModeDropdown';
+import { AIRewriteSuggestion } from '@/components/editor/AIRewriteSuggestion';
+import { ExportDropdown } from '@/components/editor/ExportDropdown';
+import { ViewModeDropdown, ViewMode } from '@/components/editor/ViewModeDropdown';
 import TurndownService from 'turndown';
 import { toast } from 'sonner';
 
@@ -498,318 +498,57 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
 
       {/* Toolbar */}
       {!readOnly && (
-      <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card px-4 py-2">
-        {/* History */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().undo().run()}
-          disabled={!editor.can().undo()}
-          className="h-8 w-8 p-0"
-          title="Undo"
-        >
-          <Undo className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().redo().run()}
-          disabled={!editor.can().redo()}
-          className="h-8 w-8 p-0"
-          title="Redo"
-        >
-          <Redo className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Font Family and Size */}
-        <FontFamilyDropdown editor={editor} />
-        <FontSizeDropdown editor={editor} />
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Headings */}
-        <HeadingsDropdown editor={editor} />
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Styles */}
-        <StylesDropdown editor={editor} />
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Text Formatting */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('bold') && 'bg-muted'
-          )}
-          title="Bold (Ctrl+B)"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('italic') && 'bg-muted'
-          )}
-          title="Italic (Ctrl+I)"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('underline') && 'bg-muted'
-          )}
-          title="Underline (Ctrl+U)"
-        >
-          <UnderlineIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('strike') && 'bg-muted'
-          )}
-          title="Strikethrough"
-        >
-          <Strikethrough className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('code') && 'bg-muted'
-          )}
-          title="Inline Code"
-        >
-          <Code className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleHighlight().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('highlight') && 'bg-muted'
-          )}
-          title="Highlight"
-        >
-          <Highlighter className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Lists */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('bulletList') && 'bg-muted'
-          )}
-          title="Bullet List"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('orderedList') && 'bg-muted'
-          )}
-          title="Numbered List"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('taskList') && 'bg-muted'
-          )}
-          title="Task List"
-        >
-          <ListTodo className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('blockquote') && 'bg-muted'
-          )}
-          title="Blockquote"
-        >
-          <Quote className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Alignment */}
-        <AlignmentDropdown editor={editor} />
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Link */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={addLink}
-          className={cn(
-            'h-8 w-8 p-0',
-            editor.isActive('link') && 'bg-muted'
-          )}
-          title="Add Link"
-        >
-          <Link2 className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Table */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={insertTable}
-          className="h-8 w-8 p-0"
-          title="Insert Table"
-        >
-          <Table className="h-4 w-4" />
-        </Button>
-
-        {/* Image */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={insertImage}
-          className="h-8 w-8 p-0"
-          title="Insert Image"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* AI Rewrite */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleAIRewrite}
-          disabled={isAiLoading}
-          className="h-8 w-8 p-0"
-          title="AI Rewrite"
-        >
-          <Bot className="h-4 w-4" />
-        </Button>
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* View Mode */}
-        <ViewModeDropdown value={viewMode} onChange={handleViewModeChange} />
-
-        <Separator orientation="vertical" className="mx-1 h-6" />
-
-        {/* Export */}
-        <ExportDropdown title={title} htmlContent={editor.getHTML()} />
-      </div>
-      )}
-
-      {/* Editor Content */}
-      <div className="flex-1 overflow-auto relative">
-        {viewMode === 'formatted' ? (
-        <>
-          <EditorContent editor={editor} className="h-full" />
-
-        {/* Floating Menu - appears on empty lines */}
-        <FloatingMenu
-          editor={editor}
-          shouldShow={({ state }) => {
-            const { $from } = state.selection;
-            const isEmptyParagraph = $from.parent.type.name === 'paragraph' &&
-                                    $from.parent.textContent.length === 0;
-            return isEmptyParagraph;
-          }}
-          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
-        >
+        <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card px-4 py-2">
+          {/* History */}
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-            className="h-8 px-2 text-xs"
-            title="Heading 1"
-          >
-            H1
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-            className="h-8 px-2 text-xs"
-            title="Heading 2"
-          >
-            H2
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
             className="h-8 w-8 p-0"
-            title="Bullet List"
+            title="Undo"
           >
-            <List className="h-4 w-4" />
+            <Undo className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
             className="h-8 w-8 p-0"
-            title="Task List"
+            title="Redo"
           >
-            <ListTodo className="h-4 w-4" />
+            <Redo className="h-4 w-4" />
           </Button>
-        </FloatingMenu>
 
-        {/* Bubble Menu - appears on text selection */}
-        <BubbleMenu
-          editor={editor}
-          shouldShow={({ editor, state }) => {
-            const { from, to } = state.selection;
-            const hasSelection = from !== to;
-            return hasSelection && !editor.isActive('codeBlock');
-          }}
-          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
-        >
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Font Family and Size */}
+          <FontFamilyDropdown editor={editor} />
+          <FontSizeDropdown editor={editor} />
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Headings */}
+          <HeadingsDropdown editor={editor} />
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Styles */}
+          <StylesDropdown editor={editor} />
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Text Formatting */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={cn(
               'h-8 w-8 p-0',
-              editor.isActive('bold') && 'bg-accent'
+              editor.isActive('bold') && 'bg-muted'
             )}
-            title="Bold"
+            title="Bold (Ctrl+B)"
           >
             <Bold className="h-4 w-4" />
           </Button>
@@ -819,9 +558,9 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={cn(
               'h-8 w-8 p-0',
-              editor.isActive('italic') && 'bg-accent'
+              editor.isActive('italic') && 'bg-muted'
             )}
-            title="Italic"
+            title="Italic (Ctrl+I)"
           >
             <Italic className="h-4 w-4" />
           </Button>
@@ -831,9 +570,9 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
             onClick={() => editor.chain().focus().toggleUnderline().run()}
             className={cn(
               'h-8 w-8 p-0',
-              editor.isActive('underline') && 'bg-accent'
+              editor.isActive('underline') && 'bg-muted'
             )}
-            title="Underline"
+            title="Underline (Ctrl+U)"
           >
             <UnderlineIcon className="h-4 w-4" />
           </Button>
@@ -843,34 +582,104 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
             onClick={() => editor.chain().focus().toggleStrike().run()}
             className={cn(
               'h-8 w-8 p-0',
-              editor.isActive('strike') && 'bg-accent'
+              editor.isActive('strike') && 'bg-muted'
             )}
             title="Strikethrough"
           >
             <Strikethrough className="h-4 w-4" />
           </Button>
-
-          <Separator orientation="vertical" className="mx-1 h-6" />
-
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('code') && 'bg-muted'
+            )}
+            title="Inline Code"
+          >
+            <Code className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => editor.chain().focus().toggleHighlight().run()}
             className={cn(
               'h-8 w-8 p-0',
-              editor.isActive('highlight') && 'bg-accent'
+              editor.isActive('highlight') && 'bg-muted'
             )}
             title="Highlight"
           >
             <Highlighter className="h-4 w-4" />
           </Button>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Lists */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('bulletList') && 'bg-muted'
+            )}
+            title="Bullet List"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('orderedList') && 'bg-muted'
+            )}
+            title="Numbered List"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('taskList') && 'bg-muted'
+            )}
+            title="Task List"
+          >
+            <ListTodo className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('blockquote') && 'bg-muted'
+            )}
+            title="Blockquote"
+          >
+            <Quote className="h-4 w-4" />
+          </Button>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Alignment */}
+          <AlignmentDropdown editor={editor} />
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Link */}
           <Button
             variant="ghost"
             size="sm"
             onClick={addLink}
             className={cn(
               'h-8 w-8 p-0',
-              editor.isActive('link') && 'bg-accent'
+              editor.isActive('link') && 'bg-muted'
             )}
             title="Add Link"
           >
@@ -879,6 +688,31 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
 
           <Separator orientation="vertical" className="mx-1 h-6" />
 
+          {/* Table */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={insertTable}
+            className="h-8 w-8 p-0"
+            title="Insert Table"
+          >
+            <Table className="h-4 w-4" />
+          </Button>
+
+          {/* Image */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={insertImage}
+            className="h-8 w-8 p-0"
+            title="Insert Image"
+          >
+            <ImageIcon className="h-4 w-4" />
+          </Button>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* AI Rewrite */}
           <Button
             variant="ghost"
             size="sm"
@@ -889,135 +723,301 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
           >
             <Bot className="h-4 w-4" />
           </Button>
-        </BubbleMenu>
 
-        {/* Table Bubble Menu - appears when inside a table */}
-        <BubbleMenu
-          editor={editor}
-          shouldShow={({ editor }) => {
-            return (
-              editor.isActive('table') ||
-              editor.isActive('tableCell') ||
-              editor.isActive('tableHeader') ||
-              editor.isActive('tableRow')
-            );
-          }}
-          className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
-        >
-          <div className="flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().addColumnBefore().run()}
-              className="h-8 px-2 text-xs"
-              title="Add column before"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Col ←
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().addColumnAfter().run()}
-              className="h-8 px-2 text-xs"
-              title="Add column after"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Col →
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().deleteColumn().run()}
-              className="h-8 px-2 text-xs text-destructive"
-              title="Delete column"
-            >
-              <Trash className="h-3 w-3 mr-1" />
-              Col
-            </Button>
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
-            <Separator orientation="vertical" className="mx-1 h-6" />
+          {/* View Mode */}
+          <ViewModeDropdown value={viewMode} onChange={handleViewModeChange} />
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().addRowBefore().run()}
-              className="h-8 px-2 text-xs"
-              title="Add row before"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Row ↑
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().addRowAfter().run()}
-              className="h-8 px-2 text-xs"
-              title="Add row after"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Row ↓
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().deleteRow().run()}
-              className="h-8 px-2 text-xs text-destructive"
-              title="Delete row"
-            >
-              <Trash className="h-3 w-3 mr-1" />
-              Row
-            </Button>
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
-            <Separator orientation="vertical" className="mx-1 h-6" />
+          {/* Export */}
+          <ExportDropdown title={title} htmlContent={editor.getHTML()} />
+        </div>
+      )}
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().mergeOrSplit().run()}
-              className="h-8 px-2 text-xs"
-              title="Merge or split cells"
-            >
-              <Merge className="h-3 w-3 mr-1" />
-              Merge
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().toggleHeaderRow().run()}
-              className="h-8 px-2 text-xs"
-              title="Toggle header row"
-            >
-              Header
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => editor.chain().focus().deleteTable().run()}
-              className="h-8 px-2 text-xs text-destructive"
-              title="Delete table"
-            >
-              <Trash className="h-3 w-3 mr-1" />
-              Table
-            </Button>
-          </div>
-        </BubbleMenu>
+      {/* Editor Content */}
+      <div className="flex-1 overflow-auto relative">
+        {viewMode === 'formatted' ? (
+          <>
+            <EditorContent editor={editor} className="h-full" />
 
-        {/* AI Suggestion Overlay - only show if not using external state */}
-        {(aiSuggestion || isAiLoading) && externalAiSuggestion === undefined && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-            <AIRewriteSuggestion
-              originalText={aiSuggestion?.originalText || ''}
-              suggestedText={aiSuggestion?.suggestedText || ''}
-              onApprove={handleApproveSuggestion}
-              onReject={handleRejectSuggestion}
-              onRegenerate={handleRegenerateWithMode}
-              currentMode={aiSuggestion?.mode}
-              isLoading={isAiLoading}
-            />
-          </div>
-        )}
-        </>
+            {/* Floating Menu - appears on empty lines */}
+            <FloatingMenu
+              editor={editor}
+              shouldShow={({ state }) => {
+                const { $from } = state.selection;
+                const isEmptyParagraph = $from.parent.type.name === 'paragraph' &&
+                  $from.parent.textContent.length === 0;
+                return isEmptyParagraph;
+              }}
+              className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                className="h-8 px-2 text-xs"
+                title="Heading 1"
+              >
+                H1
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                className="h-8 px-2 text-xs"
+                title="Heading 2"
+              >
+                H2
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                className="h-8 w-8 p-0"
+                title="Bullet List"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleTaskList().run()}
+                className="h-8 w-8 p-0"
+                title="Task List"
+              >
+                <ListTodo className="h-4 w-4" />
+              </Button>
+            </FloatingMenu>
+
+            {/* Bubble Menu - appears on text selection */}
+            <BubbleMenu
+              editor={editor}
+              shouldShow={({ editor, state }) => {
+                const { from, to } = state.selection;
+                const hasSelection = from !== to;
+                return hasSelection && !editor.isActive('codeBlock');
+              }}
+              className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                className={cn(
+                  'h-8 w-8 p-0',
+                  editor.isActive('bold') && 'bg-accent'
+                )}
+                title="Bold"
+              >
+                <Bold className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                className={cn(
+                  'h-8 w-8 p-0',
+                  editor.isActive('italic') && 'bg-accent'
+                )}
+                title="Italic"
+              >
+                <Italic className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                className={cn(
+                  'h-8 w-8 p-0',
+                  editor.isActive('underline') && 'bg-accent'
+                )}
+                title="Underline"
+              >
+                <UnderlineIcon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                className={cn(
+                  'h-8 w-8 p-0',
+                  editor.isActive('strike') && 'bg-accent'
+                )}
+                title="Strikethrough"
+              >
+                <Strikethrough className="h-4 w-4" />
+              </Button>
+
+              <Separator orientation="vertical" className="mx-1 h-6" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => editor.chain().focus().toggleHighlight().run()}
+                className={cn(
+                  'h-8 w-8 p-0',
+                  editor.isActive('highlight') && 'bg-accent'
+                )}
+                title="Highlight"
+              >
+                <Highlighter className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={addLink}
+                className={cn(
+                  'h-8 w-8 p-0',
+                  editor.isActive('link') && 'bg-accent'
+                )}
+                title="Add Link"
+              >
+                <Link2 className="h-4 w-4" />
+              </Button>
+
+              <Separator orientation="vertical" className="mx-1 h-6" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleAIRewrite}
+                disabled={isAiLoading}
+                className="h-8 w-8 p-0"
+                title="AI Rewrite"
+              >
+                <Bot className="h-4 w-4" />
+              </Button>
+            </BubbleMenu>
+
+            {/* Table Bubble Menu - appears when inside a table */}
+            <BubbleMenu
+              editor={editor}
+              shouldShow={({ editor }) => {
+                return (
+                  editor.isActive('table') ||
+                  editor.isActive('tableCell') ||
+                  editor.isActive('tableHeader') ||
+                  editor.isActive('tableRow')
+                );
+              }}
+              className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg"
+            >
+              <div className="flex items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().addColumnBefore().run()}
+                  className="h-8 px-2 text-xs"
+                  title="Add column before"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Col ←
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().addColumnAfter().run()}
+                  className="h-8 px-2 text-xs"
+                  title="Add column after"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Col →
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().deleteColumn().run()}
+                  className="h-8 px-2 text-xs text-destructive"
+                  title="Delete column"
+                >
+                  <Trash className="h-3 w-3 mr-1" />
+                  Col
+                </Button>
+
+                <Separator orientation="vertical" className="mx-1 h-6" />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().addRowBefore().run()}
+                  className="h-8 px-2 text-xs"
+                  title="Add row before"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Row ↑
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().addRowAfter().run()}
+                  className="h-8 px-2 text-xs"
+                  title="Add row after"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Row ↓
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().deleteRow().run()}
+                  className="h-8 px-2 text-xs text-destructive"
+                  title="Delete row"
+                >
+                  <Trash className="h-3 w-3 mr-1" />
+                  Row
+                </Button>
+
+                <Separator orientation="vertical" className="mx-1 h-6" />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().mergeOrSplit().run()}
+                  className="h-8 px-2 text-xs"
+                  title="Merge or split cells"
+                >
+                  <Merge className="h-3 w-3 mr-1" />
+                  Merge
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+                  className="h-8 px-2 text-xs"
+                  title="Toggle header row"
+                >
+                  Header
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => editor.chain().focus().deleteTable().run()}
+                  className="h-8 px-2 text-xs text-destructive"
+                  title="Delete table"
+                >
+                  <Trash className="h-3 w-3 mr-1" />
+                  Table
+                </Button>
+              </div>
+            </BubbleMenu>
+
+            {/* AI Suggestion Overlay - only show if not using external state */}
+            {(aiSuggestion || isAiLoading) && externalAiSuggestion === undefined && (
+              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+                <AIRewriteSuggestion
+                  originalText={aiSuggestion?.originalText || ''}
+                  suggestedText={aiSuggestion?.suggestedText || ''}
+                  onApprove={handleApproveSuggestion}
+                  onReject={handleRejectSuggestion}
+                  onRegenerate={handleRegenerateWithMode}
+                  currentMode={aiSuggestion?.mode}
+                  isLoading={isAiLoading}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <Textarea
             value={rawContent}

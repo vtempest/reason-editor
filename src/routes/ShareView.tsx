@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { TiptapEditor } from '@/components/TiptapEditor';
-import { OutlineView } from '@/components/OutlineView';
+import { TiptapEditor } from '@/components/editor/TiptapEditor';
+import { OutlineView } from '@/components/editor/OutlineView';
 import { Loader2 } from 'lucide-react';
 
 interface Document {
@@ -80,7 +80,7 @@ export default function ShareView() {
           <OutlineView
             content={document.content}
             searchQuery=""
-            onNavigate={() => {}}
+            onNavigate={() => { }}
           />
         </div>
       </div>
@@ -90,9 +90,9 @@ export default function ShareView() {
         <div className="max-w-4xl mx-auto">
           <TiptapEditor
             content={document.content}
-            onChange={() => {}} // No-op for read-only
+            onChange={() => { }} // No-op for read-only
             title={document.title}
-            onTitleChange={() => {}} // No-op for read-only
+            onTitleChange={() => { }} // No-op for read-only
             readOnly={true}
           />
         </div>

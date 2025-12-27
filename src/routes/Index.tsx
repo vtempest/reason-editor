@@ -1,17 +1,17 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Document } from '@/components/DocumentTree';
-import { TiptapEditor } from '@/components/TiptapEditor';
-import { Sidebar } from '@/components/Sidebar';
-import { Header } from '@/components/Header';
-import { SearchModal } from '@/components/SearchModal';
-import { Settings } from '@/components/Settings';
-import { TeamManagement } from '@/components/TeamManagement';
-import { InviteModal } from '@/components/InviteModal';
-import { TagBar } from '@/components/TagBar';
-import { TagManagementDialog } from '@/components/TagManagementDialog';
-import { DocumentTabs } from '@/components/DocumentTabs';
-import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
-import { AIRewriteSuggestion } from '@/components/AIRewriteSuggestion';
+import { Document } from '@/components/editor/DocumentTree';
+import { TiptapEditor } from '@/components/editor/TiptapEditor';
+import { Sidebar } from '@/components/editor/Sidebar';
+import { Header } from '@/components/editor/Header';
+import { SearchModal } from '@/components/editor/SearchModal';
+import { Settings } from '@/components/editor/Settings';
+import { TeamManagement } from '@/components/editor/TeamManagement';
+import { InviteModal } from '@/components/editor/InviteModal';
+import { TagBar } from '@/components/editor/TagBar';
+import { TagManagementDialog } from '@/components/editor/TagManagementDialog';
+import { DocumentTabs } from '@/components/editor/DocumentTabs';
+import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
+import { AIRewriteSuggestion } from '@/components/editor/AIRewriteSuggestion';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -731,7 +731,7 @@ const Index = () => {
                               onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                               title={activeDocument.title}
                               onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                              scrollToHeading={() => {}}
+                              scrollToHeading={() => { }}
                             />
                           </div>
                         </div>
@@ -767,7 +767,7 @@ const Index = () => {
                                   onChange={(content) => handleUpdateDocument(splitDoc.id, { content })}
                                   title={splitDoc.title}
                                   onTitleChange={(title) => handleUpdateDocument(splitDoc.id, { title })}
-                                  scrollToHeading={() => {}}
+                                  scrollToHeading={() => { }}
                                 />
                               </div>
                             </div>
@@ -790,7 +790,7 @@ const Index = () => {
                           onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                           title={activeDocument.title}
                           onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                          scrollToHeading={() => {}}
+                          scrollToHeading={() => { }}
                         />
                       </div>
                     </>
@@ -885,7 +885,7 @@ const Index = () => {
                                       onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                                       title={activeDocument.title}
                                       onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                                      scrollToHeading={() => {}}
+                                      scrollToHeading={() => { }}
                                       aiSuggestion={aiSuggestion}
                                       isAiLoading={isAiLoading}
                                       onAiRewrite={handleAIRewrite}
@@ -927,7 +927,7 @@ const Index = () => {
                                           onChange={(content) => handleUpdateDocument(splitDoc.id, { content })}
                                           title={splitDoc.title}
                                           onTitleChange={(title) => handleUpdateDocument(splitDoc.id, { title })}
-                                          scrollToHeading={() => {}}
+                                          scrollToHeading={() => { }}
                                         />
                                       </div>
                                     </div>
@@ -951,7 +951,7 @@ const Index = () => {
                                   onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                                   title={activeDocument.title}
                                   onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                                  scrollToHeading={() => {}}
+                                  scrollToHeading={() => { }}
                                   aiSuggestion={aiSuggestion}
                                   isAiLoading={isAiLoading}
                                   onAiRewrite={handleAIRewrite}
@@ -1077,7 +1077,7 @@ const Index = () => {
                                   onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                                   title={activeDocument.title}
                                   onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                                  scrollToHeading={() => {}}
+                                  scrollToHeading={() => { }}
                                   aiSuggestion={aiSuggestion}
                                   isAiLoading={isAiLoading}
                                   onAiRewrite={handleAIRewrite}
@@ -1119,7 +1119,7 @@ const Index = () => {
                                       onChange={(content) => handleUpdateDocument(splitDoc.id, { content })}
                                       title={splitDoc.title}
                                       onTitleChange={(title) => handleUpdateDocument(splitDoc.id, { title })}
-                                      scrollToHeading={() => {}}
+                                      scrollToHeading={() => { }}
                                     />
                                   </div>
                                 </div>
@@ -1143,7 +1143,7 @@ const Index = () => {
                               onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
                               title={activeDocument.title}
                               onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                              scrollToHeading={() => {}}
+                              scrollToHeading={() => { }}
                               aiSuggestion={aiSuggestion}
                               isAiLoading={isAiLoading}
                               onAiRewrite={handleAIRewrite}

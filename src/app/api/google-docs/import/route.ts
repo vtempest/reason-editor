@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleDocsService } from '@/lib/services/googleDocsService';
-import { DocumentService } from '@/lib/services/documentService';
 
 // POST /api/google-docs/import - Import document from Google Docs
 export async function POST(request: NextRequest) {
@@ -34,20 +33,20 @@ export async function POST(request: NextRequest) {
 
     // Create a new document with imported content
     const userId = request.headers.get('x-user-id') || undefined;
-    const newDocument = await DocumentService.createDocument(
-      {
-        title: imported.title,
-        content: imported.content,
-        parentId: parentId || null,
-        isExpanded: false,
-      },
-      userId
-    );
+    // const newDocument = await DocumentService.createDocument(
+    //   {
+    //     title: imported.title,
+    //     content: imported.content,
+    //     parentId: parentId || null,
+    //     isExpanded: false,
+    //   },
+    //   userId
+    // );
 
     return NextResponse.json(
       {
         success: true,
-        data: newDocument,
+        // data: newDocument,
       },
       { status: 201 }
     );

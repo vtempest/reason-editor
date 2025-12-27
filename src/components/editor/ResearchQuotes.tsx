@@ -61,14 +61,14 @@ export const ResearchQuotes = ({ documentId, quotes = [], onQuotesChange }: Rese
     const updatedQuotes = quotes.map(q =>
       q.id === editingQuote.id
         ? {
-            ...q,
-            text: formData.text,
-            source: formData.source || undefined,
-            author: formData.author || undefined,
-            url: formData.url || undefined,
-            pageNumber: formData.pageNumber || undefined,
-            tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : undefined,
-          }
+          ...q,
+          text: formData.text,
+          source: formData.source || undefined,
+          author: formData.author || undefined,
+          url: formData.url || undefined,
+          pageNumber: formData.pageNumber || undefined,
+          tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : undefined,
+        }
         : q
     );
 

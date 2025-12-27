@@ -1,6 +1,5 @@
 import { google, docs_v1 } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import { tursoQueries } from '../db/turso';
 
 export interface GoogleDocsConfig {
   clientId: string;
@@ -200,12 +199,6 @@ export class GoogleDocsService {
       }
 
       // Save sync information
-      await tursoQueries.createGoogleDocSync(
-        documentId,
-        googleDocId,
-        new Date().toISOString(),
-        userId || 'anonymous'
-      );
 
       return {
         googleDocId,

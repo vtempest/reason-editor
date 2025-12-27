@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Document } from '@/components/DocumentTree';
+import { Document } from '@/components/editor/DocumentTree';
 import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/containers/DocumentTreeWrapper';
-import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
-import { FloatingSearch } from '@/components/FloatingSearch';
-import { ThemeDropdown } from '@/components/theme-dropdown';
+import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
+import { FloatingSearch } from '@/components/editor/FloatingSearch';
+import { ThemeDropdown } from '@/components/editor/theme-dropdown';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

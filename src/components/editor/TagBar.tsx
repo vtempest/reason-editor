@@ -49,7 +49,7 @@ export const TagBar = ({ tags, onAddTag, onRemoveTag }: TagBarProps) => {
           </button>
         </Badge>
       ))}
-      
+
       {isAdding ? (
         <div className="flex items-center gap-1">
           <Input

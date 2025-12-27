@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleDocsService } from '@/lib/services/googleDocsService';
-import { DocumentService } from '@/lib/services/documentService';
 
 // POST /api/google-docs/export - Export document to Google Docs
 export async function POST(request: NextRequest) {
@@ -18,16 +17,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the document
-    const document = await DocumentService.getDocument(documentId);
-    if (!document) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Document not found',
-        },
-        { status: 404 }
-      );
-    }
+    // const document = await DocumentService.getDocument(documentId);
+    // if (!document) {
+    //   return NextResponse.json(
+    //     {
+    //       success: false,
+    //       error: 'Document not found',
+    //     },
+    //     { status: 404 }
+    //   );
+    // }
 
     // Get Google OAuth credentials
     const clientId = process.env.GOOGLE_CLIENT_ID!;

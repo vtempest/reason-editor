@@ -41,7 +41,7 @@ import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 import { cn } from "@/lib/utils";
 import { MarkdownToolbar } from "./markdown-toolbar";
-import { UnifiedMarkdown } from "@/components/markdown";
+import { UnifiedMarkdown } from "@/components/editor/markdown";
 
 // Configure marked for GFM
 marked.setOptions({

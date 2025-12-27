@@ -1,8 +1,8 @@
 import React, { FocusEvent, KeyboardEvent } from "react";
 import { ChevronRight, FileText, Folder } from "lucide-react";
 import { NodeRendererProps, NodeHandlers } from "../types";
-import { Document } from "@/components/DocumentTree";
-import { DocumentContextMenu } from "@/components/DocumentContextMenu";
+import { Document } from "@/components/editor/DocumentTree";
+import { DocumentContextMenu } from "@/components/editor/DocumentContextMenu";
 import { cn } from "@/lib/utils";
 
 type FormProps = { defaultValue: string } & NodeHandlers;

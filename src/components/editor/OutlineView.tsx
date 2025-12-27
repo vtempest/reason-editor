@@ -228,103 +228,103 @@ export const OutlineView = forwardRef<OutlineViewHandle, OutlineViewProps>(({ co
 
   return (
     <div className="flex h-full flex-col overflow-auto p-2">
-        {filteredOutline.map((item, index) => {
-          const nextItem = outline[index + 1];
-          const hasChildren = nextItem && nextItem.level > item.level;
-          const isCollapsed = collapsedIds.has(item.id);
+      {filteredOutline.map((item, index) => {
+        const nextItem = outline[index + 1];
+        const hasChildren = nextItem && nextItem.level > item.level;
+        const isCollapsed = collapsedIds.has(item.id);
 
-          // Skip items that are hidden by collapsed parent
-          if (isHiddenByParent(index)) {
-            return null;
-          }
+        // Skip items that are hidden by collapsed parent
+        if (isHiddenByParent(index)) {
+          return null;
+        }
 
-          return (
-            <ContextMenu key={item.id}>
-              <ContextMenuTrigger>
-                <div
+        return (
+          <ContextMenu key={item.id}>
+            <ContextMenuTrigger>
+              <div
+                className={cn(
+                  'flex items-center gap-1 px-2 py-1.5 hover:bg-sidebar-accent rounded-md cursor-pointer transition-colors'
+                )}
+                style={{ paddingLeft: `${(item.level - 1) * 1 + 8}px` }}
+                onClick={() => onNavigate?.(item.text, item.headingId)}
+              >
+                <button
                   className={cn(
-                    'flex items-center gap-1 px-2 py-1.5 hover:bg-sidebar-accent rounded-md cursor-pointer transition-colors'
+                    'h-5 w-5 p-0 flex items-center justify-center hover:bg-transparent',
+                    !hasChildren && 'invisible'
                   )}
-                  style={{ paddingLeft: `${(item.level - 1) * 1 + 8}px` }}
-                  onClick={() => onNavigate?.(item.text, item.headingId)}
-                >
-                  <button
-                    className={cn(
-                      'h-5 w-5 p-0 flex items-center justify-center hover:bg-transparent',
-                      !hasChildren && 'invisible'
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleCollapse(item.id);
-                    }}
-                  >
-                    <ChevronRight
-                      className={cn(
-                        'h-3 w-3 transition-transform text-muted-foreground',
-                        !isCollapsed && 'rotate-90'
-                      )}
-                    />
-                  </button>
-
-                  <Hash
-                    className={cn(
-                      'h-3 w-3 flex-shrink-0 text-muted-foreground',
-                      item.level === 1 && 'h-4 w-4'
-                    )}
-                  />
-                  <span
-                    className={cn(
-                      'flex-1 truncate text-sm',
-                      item.level === 1 && 'font-semibold',
-                      item.level === 2 && 'font-medium'
-                    )}
-                  >
-                    {item.text}
-                  </span>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuSub>
-                  <ContextMenuSubTrigger>Collapse to...</ContextMenuSubTrigger>
-                  <ContextMenuSubContent>
-                    <ContextMenuItem onClick={() => applyCollapseToLevel(1)}>
-                      Heading 1
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => applyCollapseToLevel(2)}>
-                      Heading 2
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => applyCollapseToLevel(3)}>
-                      Heading 3
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => applyCollapseToLevel(4)}>
-                      Heading 4
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => setCollapsedIds(new Set())}>
-                      Expand All
-                    </ContextMenuItem>
-                  </ContextMenuSubContent>
-                </ContextMenuSub>
-                <ContextMenuSeparator />
-                <ContextMenuCheckboxItem
-                  checked={defaultCollapseLevel !== null}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      // Save current first collapsed level as default
-                      const firstCollapsed = outline.find(item => collapsedIds.has(item.id));
-                      if (firstCollapsed) {
-                        saveDefaultCollapseLevel(firstCollapsed.level);
-                      }
-                    } else {
-                      saveDefaultCollapseLevel(null);
-                    }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCollapse(item.id);
                   }}
                 >
-                  Keep this collapse level as default
-                </ContextMenuCheckboxItem>
-              </ContextMenuContent>
-            </ContextMenu>
-          );
-        })}
+                  <ChevronRight
+                    className={cn(
+                      'h-3 w-3 transition-transform text-muted-foreground',
+                      !isCollapsed && 'rotate-90'
+                    )}
+                  />
+                </button>
+
+                <Hash
+                  className={cn(
+                    'h-3 w-3 flex-shrink-0 text-muted-foreground',
+                    item.level === 1 && 'h-4 w-4'
+                  )}
+                />
+                <span
+                  className={cn(
+                    'flex-1 truncate text-sm',
+                    item.level === 1 && 'font-semibold',
+                    item.level === 2 && 'font-medium'
+                  )}
+                >
+                  {item.text}
+                </span>
+              </div>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuSub>
+                <ContextMenuSubTrigger>Collapse to...</ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                  <ContextMenuItem onClick={() => applyCollapseToLevel(1)}>
+                    Heading 1
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => applyCollapseToLevel(2)}>
+                    Heading 2
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => applyCollapseToLevel(3)}>
+                    Heading 3
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => applyCollapseToLevel(4)}>
+                    Heading 4
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => setCollapsedIds(new Set())}>
+                    Expand All
+                  </ContextMenuItem>
+                </ContextMenuSubContent>
+              </ContextMenuSub>
+              <ContextMenuSeparator />
+              <ContextMenuCheckboxItem
+                checked={defaultCollapseLevel !== null}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    // Save current first collapsed level as default
+                    const firstCollapsed = outline.find(item => collapsedIds.has(item.id));
+                    if (firstCollapsed) {
+                      saveDefaultCollapseLevel(firstCollapsed.level);
+                    }
+                  } else {
+                    saveDefaultCollapseLevel(null);
+                  }
+                }}
+              >
+                Keep this collapse level as default
+              </ContextMenuCheckboxItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        );
+      })}
     </div>
   );
 });
