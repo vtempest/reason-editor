@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Document } from '@/components/editor/DocumentTree';
 import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/containers/DocumentTreeWrapper';
 import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
-import { FloatingSearch } from '@/components/FloatingSearch';
+import { FloatingSearch } from '@/components/editor/FloatingSearch';
 import { ThemeDropdown } from '@/components/theme-dropdown';
 import { FileSourceDropdown } from '@/components/FileSourceDropdown';
 import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
