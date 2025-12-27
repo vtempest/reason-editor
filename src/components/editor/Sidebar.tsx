@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Document } from '@/components/editor/DocumentTree';
 import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/containers/DocumentTreeWrapper';
+import { OutlineView, type OutlineViewHandle } from '@/components/OutlineView';
+import { FloatingSearch } from '@/components/FloatingSearch';
+import { ThemeDropdown } from '@/components/theme-dropdown';
+import { FileSourceDropdown } from '@/components/FileSourceDropdown';
 import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
 import { FloatingSearch } from '@/components/editor/FloatingSearch';
 import { ThemeDropdown } from '@/components/editor/theme-dropdown';
@@ -49,6 +53,9 @@ interface SidebarProps {
   // Right-side outline toggle
   showRightOutline?: boolean;
   onToggleRightOutline?: () => void;
+  // File source
+  activeFileSourceId?: string;
+  onFileSourceChange?: (sourceId: string) => void;
 }
 
 export const Sidebar = ({
@@ -80,6 +87,8 @@ export const Sidebar = ({
   newDocumentId,
   showRightOutline = false,
   onToggleRightOutline,
+  activeFileSourceId = 'local-default',
+  onFileSourceChange,
 }: SidebarProps) => {
   // Get archived and deleted documents
   const archivedDocs = documents.filter(doc => doc.isArchived && !doc.isDeleted);
@@ -137,6 +146,16 @@ export const Sidebar = ({
 
       {/* Spacer for floating search */}
       <div className="h-16"></div>
+
+      {/* File Source Dropdown */}
+      {(viewMode === 'tree' || viewMode === 'split') && onFileSourceChange && (
+        <div className="px-3 pb-2">
+          <FileSourceDropdown
+            activeSourceId={activeFileSourceId}
+            onSourceChange={onFileSourceChange}
+          />
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="px-3 pb-2">
