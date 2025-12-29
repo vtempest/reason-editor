@@ -4,8 +4,8 @@ import { useRef, useCallback, useState } from "react";
 import { getData, getDrive } from "./filemanager-data";
 // @ts-ignore - @svar-ui/react-filemanager may not have types
 import { Filemanager, getMenuOptions } from "@svar-ui/react-filemanager";
-// Using style.css instead of all.css to avoid Turbopack parsing issues with :global pseudo-class
-import "@svar-ui/react-filemanager/style.css";
+import { Willow } from "@svar-ui/react-core";
+import "@svar-ui/react-filemanager/all.css";
 import {
   Dialog,
   DialogContent,
@@ -73,12 +73,14 @@ export function FileManagerModal({ open, onOpenChange }: FileManagerModalProps) 
         </DialogHeader>
         <div className="flex-1 overflow-hidden px-6 pb-6">
           <div className="h-full border rounded-md">
-            <Filemanager
-              init={init}
-              data={getData()}
-              drive={getDrive()}
-              menuOptions={menuOptions}
-            />
+            <Willow>
+              <Filemanager
+                init={init}
+                data={getData()}
+                drive={getDrive()}
+                menuOptions={menuOptions}
+              />
+            </Willow>
           </div>
         </div>
       </DialogContent>
