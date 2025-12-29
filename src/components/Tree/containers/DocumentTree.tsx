@@ -313,27 +313,15 @@ function Node({
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        {isFolder && (
-          <>
-            <ContextMenuSub>
-              <ContextMenuSubTrigger>
-                <Folder className="mr-2 h-4 w-4" />
-                Add Child
-              </ContextMenuSubTrigger>
-              <ContextMenuSubContent>
-                <ContextMenuItem onClick={() => onCreate(node, "file")}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Note
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => onCreate(node, "folder")}>
-                  <Folder className="mr-2 h-4 w-4" />
-                  Folder
-                </ContextMenuItem>
-              </ContextMenuSubContent>
-            </ContextMenuSub>
-            <ContextMenuSeparator />
-          </>
-        )}
+        <ContextMenuItem onClick={() => onCreate(node, "file")}>
+          <FileText className="mr-2 h-4 w-4" />
+          Add New File
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => onCreate(node, "folder")}>
+          <Folder className="mr-2 h-4 w-4" />
+          Add New Folder
+        </ContextMenuItem>
+        <ContextMenuSeparator />
         <ContextMenuItem onClick={() => onRename(node)}>
           <Edit2 className="mr-2 h-4 w-4" />
           Rename
