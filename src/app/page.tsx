@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes"
 import Index from "@/src/routes/Index"
 import ShareView from "@/src/routes/ShareView"
 import ICPExplorerPage from "@/src/routes/ICPExplorerPage"
+import PagesDemo from "@/src/routes/PagesDemo"
 import NotFound from "@/src/routes/NotFound"
 import { useState, useEffect } from "react"
 
@@ -33,6 +34,7 @@ export default function Page() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/icp-explorer" element={<ICPExplorerPage />} />
+              <Route path="/pages-demo" element={<PagesDemo />} />
               <Route path="/share/:shareId" element={<ShareView />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
