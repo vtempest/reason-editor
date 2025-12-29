@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Document } from '@/components/editor/DocumentTree';
+import { Document } from '../documents/DocumentTree';
 import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/containers/DocumentTreeWrapper';
-import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
-import { ThemeDropdown } from '@/components/editor/theme-dropdown';
+import { OutlineView, type OutlineViewHandle } from '../search/OutlineView';
+import { ThemeDropdown } from '../theme/theme-dropdown';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { getFileSources } from '@/lib/fileSources';
 import { AnyFileSource } from '@/types/fileSource';
-import { FileManagerModal } from '@/components/editor/FileManagerModal';
+import { FileManagerModal } from '../modals/FileManagerModal';
 
 interface SidebarProps {
   documents: Document[];

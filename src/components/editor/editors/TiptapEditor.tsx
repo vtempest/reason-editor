@@ -25,12 +25,12 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { SearchReplaceBar } from '@/components/editor/SearchReplaceBar';
-import { FontFamilyDropdown } from '@/components/editor/FontFamilyDropdown';
-import { FontSizeDropdown } from '@/components/editor/FontSizeDropdown';
-import { AlignmentDropdown } from '@/components/editor/AlignmentDropdown';
-import { HeadingsDropdown } from '@/components/editor/HeadingsDropdown';
-import { StylesDropdown } from '@/components/editor/StylesDropdown';
+import { SearchReplaceBar } from '../search/SearchReplaceBar';
+import { FontFamilyDropdown } from '../toolbars/FontFamilyDropdown';
+import { FontSizeDropdown } from '../toolbars/FontSizeDropdown';
+import { AlignmentDropdown } from '../toolbars/AlignmentDropdown';
+import { HeadingsDropdown } from '../toolbars/HeadingsDropdown';
+import { StylesDropdown } from '../toolbars/StylesDropdown';
 import { splitSentences } from '@/lib/sentence-splitter';
 import {
   Bold,
@@ -67,9 +67,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
-import { AIRewriteSuggestion } from '@/components/editor/AIRewriteSuggestion';
-import { ExportDropdown } from '@/components/editor/ExportDropdown';
-import { ViewModeDropdown, ViewMode } from '@/components/editor/ViewModeDropdown';
+import { AIRewriteSuggestion } from '../features/AIRewriteSuggestion';
+import { ExportDropdown } from '../toolbars/ExportDropdown';
+import { ViewModeDropdown, ViewMode } from '../toolbars/ViewModeDropdown';
 import TurndownService from 'turndown';
 import { toast } from 'sonner';
 

@@ -1,10 +1,10 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { cookies } from "next/headers"
-import { ThemeProvider } from "@/components/editor/theme-provider"
+import { ThemeProvider } from "@/components/editor/theme/theme-provider"
 import { Toaster } from "sonner"
 import "../index.css"
-import "../components/editor/themes-shadcn.css"
+import "../components/editor/theme/themes-shadcn.css"
 
 // Font CSS variables are defined in globals.css with system font fallbacks
 // This avoids Google Fonts download issues during build
