@@ -13,6 +13,7 @@ import {
   ContextMenuSub,
   ContextMenuSubTrigger,
   ContextMenuSubContent,
+  ContextMenuShortcut,
 } from "@/components/ui/context-menu"
 import {
   AlertDialog,
@@ -251,6 +252,7 @@ function Node({
   const iconClass = getFileIcon(node.data.name, isFolder || false)
   const isActive = activeId === node.id
   const inputRef = useRef<HTMLInputElement>(null)
+  const nodeRef = useRef<HTMLDivElement>(null)
 
   // Ensure input maintains focus when entering edit mode
   useEffect(() => {
@@ -263,6 +265,50 @@ function Node({
       return () => clearTimeout(timer)
     }
   }, [node.isEditing])
+
+  // Handle keyboard shortcuts when node is active
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle shortcuts if this node is active and not editing
+      if (!isActive || node.isEditing) return
+
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+      const modKey = isMac ? e.metaKey : e.ctrlKey
+
+      // Delete
+      if (e.key === 'Delete' || e.key === 'Del') {
+        e.preventDefault()
+        onDelete(node)
+      }
+      // Rename (F2)
+      else if (e.key === 'F2') {
+        e.preventDefault()
+        onRename(node)
+      }
+      // Copy (Ctrl/Cmd+C)
+      else if (e.key === 'c' && modKey && !e.shiftKey && !e.altKey) {
+        e.preventDefault()
+        onCopy(node)
+      }
+      // Paste (Ctrl/Cmd+V)
+      else if (e.key === 'v' && modKey && !e.shiftKey && !e.altKey) {
+        e.preventDefault()
+        if (hasCopiedNode) {
+          onPaste(node)
+        }
+      }
+      // Duplicate (Ctrl/Cmd+D)
+      else if (e.key === 'd' && modKey && !e.shiftKey && !e.altKey) {
+        e.preventDefault()
+        onDuplicate(node)
+      }
+    }
+
+    if (isActive) {
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isActive, node, onDelete, onRename, onCopy, onPaste, onDuplicate, hasCopiedNode])
 
   return (
     <ContextMenu>
@@ -313,48 +359,41 @@ function Node({
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        {isFolder && (
-          <>
-            <ContextMenuSub>
-              <ContextMenuSubTrigger>
-                <Folder className="mr-2 h-4 w-4" />
-                Add Child
-              </ContextMenuSubTrigger>
-              <ContextMenuSubContent>
-                <ContextMenuItem onClick={() => onCreate(node, "file")}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Note
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => onCreate(node, "folder")}>
-                  <Folder className="mr-2 h-4 w-4" />
-                  Folder
-                </ContextMenuItem>
-              </ContextMenuSubContent>
-            </ContextMenuSub>
-            <ContextMenuSeparator />
-          </>
-        )}
+        <ContextMenuItem onClick={() => onCreate(node, "file")}>
+          <FileText className="mr-2 h-4 w-4" />
+          Add New File
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => onCreate(node, "folder")}>
+          <Folder className="mr-2 h-4 w-4" />
+          Add New Folder
+        </ContextMenuItem>
+        <ContextMenuSeparator />
         <ContextMenuItem onClick={() => onRename(node)}>
           <Edit2 className="mr-2 h-4 w-4" />
           Rename
+          <ContextMenuShortcut>F2</ContextMenuShortcut>
         </ContextMenuItem>
         <ContextMenuItem onClick={() => onDuplicate(node)}>
           <Copy className="mr-2 h-4 w-4" />
           Duplicate
+          <ContextMenuShortcut>⌘D</ContextMenuShortcut>
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={() => onCopy(node)}>
           <Clipboard className="mr-2 h-4 w-4" />
           Copy
+          <ContextMenuShortcut>⌘C</ContextMenuShortcut>
         </ContextMenuItem>
         <ContextMenuItem onClick={() => onPaste(node)} disabled={!hasCopiedNode}>
           <ClipboardPaste className="mr-2 h-4 w-4" />
           Paste
+          <ContextMenuShortcut>⌘V</ContextMenuShortcut>
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={() => onDelete(node)} className="text-destructive">
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
+          <ContextMenuShortcut>Del</ContextMenuShortcut>
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
