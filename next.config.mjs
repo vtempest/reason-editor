@@ -16,6 +16,7 @@ const nextConfig = {
     serverActions: {
       enabled: true,
     },
+    turbopackUseSystemTlsCerts: true,
   },
 
   // Exclude better-sqlite3 from webpack bundle (we're using Turso instead)

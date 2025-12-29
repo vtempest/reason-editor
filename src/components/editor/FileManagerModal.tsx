@@ -5,7 +5,7 @@ import { getData, getDrive } from "./filemanager-data";
 // @ts-ignore - @svar-ui/react-filemanager may not have types
 import { Filemanager, getMenuOptions } from "@svar-ui/react-filemanager";
 import { Willow } from "@svar-ui/react-core";
-import "@svar-ui/react-filemanager/all.css";
+import "@svar-ui/react-filemanager/style.css";
 import {
   Dialog,
   DialogContent,
