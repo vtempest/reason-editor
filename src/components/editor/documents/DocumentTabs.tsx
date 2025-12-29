@@ -8,7 +8,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { X, Plus, ChevronLeft, ChevronRight, Menu, Edit2, Trash2, RotateCcw, SplitSquareVertical } from 'lucide-react';
-import { Document } from '@/components/editor/DocumentTree';
+import { Document } from '@/components/editor/documents/DocumentTree';
 import { cn } from '@/lib/utils';
 import { useState, useRef, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';

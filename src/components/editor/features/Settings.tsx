@@ -51,7 +51,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ThemeDropdown } from '@/components/editor/theme-dropdown';
+import { ThemeDropdown } from '@/components/editor/theme/theme-dropdown';
 import { getRewriteModes, saveRewriteModes, resetRewriteModes, RewriteMode } from '@/lib/ai/rewriteModes';
 import { getFileSources, addFileSource, updateFileSource, deleteFileSource } from '@/lib/fileSources';
 import { AnyFileSource, FileSourceType, SSHCredentials, S3Credentials, R2Credentials, GoogleDocsCredentials, TursoDBCredentials } from '@/types/fileSource';

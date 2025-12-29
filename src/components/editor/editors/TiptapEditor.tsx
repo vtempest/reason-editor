@@ -26,12 +26,12 @@ import { useEffect, useState, forwardRef as reactForwardRef, useImperativeHandle
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { SearchReplaceBar } from '@/components/editor/SearchReplaceBar';
-import { FontFamilyDropdown } from '@/components/editor/FontFamilyDropdown';
-import { FontSizeDropdown } from '@/components/editor/FontSizeDropdown';
-import { AlignmentDropdown } from '@/components/editor/AlignmentDropdown';
-import { HeadingsDropdown } from '@/components/editor/HeadingsDropdown';
-import { StylesDropdown } from '@/components/editor/StylesDropdown';
+import { SearchReplaceBar } from '@/components/editor/search/SearchReplaceBar';
+import { FontFamilyDropdown } from '@/components/editor/toolbars/FontFamilyDropdown';
+import { FontSizeDropdown } from '@/components/editor/toolbars/FontSizeDropdown';
+import { AlignmentDropdown } from '@/components/editor/toolbars/AlignmentDropdown';
+import { HeadingsDropdown } from '@/components/editor/toolbars/HeadingsDropdown';
+import { StylesDropdown } from '@/components/editor/toolbars/StylesDropdown';
 import { splitSentences } from '@/lib/sentence-splitter';
 import {
   Bold,
@@ -68,9 +68,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
-import { AIRewriteSuggestion } from '@/components/editor/AIRewriteSuggestion';
-import { ExportDropdown } from '@/components/editor/ExportDropdown';
-import { ViewModeDropdown, ViewMode } from '@/components/editor/ViewModeDropdown';
+import { AIRewriteSuggestion } from '@/components/editor/features/AIRewriteSuggestion';
+import { ExportDropdown } from '@/components/editor/toolbars/ExportDropdown';
+import { ViewModeDropdown, ViewMode } from '@/components/editor/toolbars/ViewModeDropdown';
 import TurndownService from 'turndown';
 import { toast } from 'sonner';
 
