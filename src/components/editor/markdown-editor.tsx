@@ -341,8 +341,8 @@ export function MarkdownEditor({
           },
         },
       }),
-      Underline,
-      Strike,
+      Underline.configure(),
+      Strike.configure(),
       Link.configure({
         openOnClick: false,
         autolink: true,

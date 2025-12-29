@@ -1,6 +1,5 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { FloatingMenu, BubbleMenu } from '@tiptap/react/menus';
-import { forwardRef, useImperativeHandle } from 'react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -22,7 +21,7 @@ import { common, createLowlight } from 'lowlight';
 import { FontSize } from '@/lib/tiptap/fontSize';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { Mermaid } from '@/lib/tiptap/mermaid.tsx';
-import { useEffect, useState, forwardRef as reactForwardRef, useImperativeHandle as reactUseImperativeHandle } from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -94,7 +93,7 @@ interface TiptapEditorProps {
   onAiRegenerate?: (mode: any) => void;
 }
 
-export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
+export const TiptapEditor = forwardRef<any, TiptapEditorProps>(({
   content,
   onChange,
   title,
@@ -158,7 +157,7 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
           class: 'text-primary underline cursor-pointer',
         },
       }),
-      Underline,
+      Underline.configure(),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -223,7 +222,7 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
   });
 
   // Expose editor instance to parent via ref
-  reactUseImperativeHandle(ref, () => editor, [editor]);
+  useImperativeHandle(ref, () => editor, [editor]);
 
   // Update editor content when prop changes (for switching between documents)
   useEffect(() => {
