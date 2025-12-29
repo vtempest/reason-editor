@@ -195,7 +195,7 @@ export const Sidebar = ({
 
       {/* Toolbar */}
       <div className="px-3 pb-2">
-        <div className="flex items-center gap-0.5 bg-sidebar-accent/50 rounded-md p-0.5">
+        <div className="flex items-center gap-2 bg-sidebar-accent/50 rounded-md p-1.5">
           <TooltipProvider delayDuration={300}>
             {/* Show file/folder buttons only in tree or split view */}
             {(viewMode === 'tree' || viewMode === 'split') && (
@@ -209,7 +209,7 @@ export const Sidebar = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                            className="flex-1 h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                           >
                             {activeSource && getSourceIcon(activeSource.type)}
                           </Button>
@@ -262,9 +262,9 @@ export const Sidebar = ({
                       variant="ghost"
                       size="sm"
                       onClick={onSearchFocus}
-                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      className="flex-1 h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
-                      <Search className="h-3.5 w-3.5" />
+                      <Search className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -278,9 +278,9 @@ export const Sidebar = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsFileManagerOpen(true)}
-                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      className="flex-1 h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
-                      <Folders className="h-3.5 w-3.5" />
+                      <Folders className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -294,9 +294,9 @@ export const Sidebar = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => onAdd(activeId, false)}
-                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      className="flex-1 h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
-                      <FilePlus className="h-3.5 w-3.5" />
+                      <FilePlus className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -310,9 +310,9 @@ export const Sidebar = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => onAdd(activeId, true)}
-                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      className="flex-1 h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
-                      <FolderPlus className="h-3.5 w-3.5" />
+                      <FolderPlus className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
@@ -337,12 +337,12 @@ export const Sidebar = ({
                           }
                         }
                       }}
-                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      className="flex-1 h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
                       {allExpanded ? (
-                        <ChevronsUpDown className="h-3.5 w-3.5" />
+                        <ChevronsUpDown className="h-4 w-4" />
                       ) : (
-                        <ChevronsDownUp className="h-3.5 w-3.5" />
+                        <ChevronsDownUp className="h-4 w-4" />
                       )}
                     </Button>
                   </TooltipTrigger>
@@ -373,12 +373,12 @@ export const Sidebar = ({
                           }
                         }
                       }}
-                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                      className="flex-1 h-8 px-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     >
                       {outlineExpanded ? (
-                        <ChevronsUpDown className="h-3.5 w-3.5" />
+                        <ChevronsUpDown className="h-4 w-4" />
                       ) : (
-                        <ChevronsDownUp className="h-3.5 w-3.5" />
+                        <ChevronsDownUp className="h-4 w-4" />
                       )}
                     </Button>
                   </TooltipTrigger>
