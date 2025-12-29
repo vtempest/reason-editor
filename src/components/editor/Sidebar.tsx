@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus, Columns2, RotateCcw, FilePlus, FolderPlus, ChevronsDownUp, ChevronsUpDown, Search, X, HardDrive, Server, Cloud, Database, Workflow, Check } from 'lucide-react';
+import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus, Columns2, RotateCcw, FilePlus, FolderPlus, ChevronsDownUp, ChevronsUpDown, Search, X, HardDrive, Server, Cloud, Database, Workflow, Check, Folders } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { getFileSources } from '@/lib/fileSources';
 import { AnyFileSource } from '@/types/fileSource';
+import { FileManagerModal } from '@/components/editor/FileManagerModal';
 
 interface SidebarProps {
   documents: Document[];
@@ -105,6 +106,9 @@ export const Sidebar = ({
   // File sources
   const [sources, setSources] = useState<AnyFileSource[]>([]);
   const [activeSource, setActiveSource] = useState<AnyFileSource | null>(null);
+
+  // File manager modal state
+  const [isFileManagerOpen, setIsFileManagerOpen] = useState(false);
 
   // Load file sources
   useEffect(() => {
@@ -265,6 +269,22 @@ export const Sidebar = ({
                   </TooltipTrigger>
                   <TooltipContent side="bottom">
                     <p>Search Notes</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsFileManagerOpen(true)}
+                      className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                    >
+                      <Folders className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>File Manager</p>
                   </TooltipContent>
                 </Tooltip>
 
@@ -687,6 +707,9 @@ export const Sidebar = ({
           </TooltipProvider>
         </div>
       )}
+
+      {/* File Manager Modal */}
+      <FileManagerModal open={isFileManagerOpen} onOpenChange={setIsFileManagerOpen} />
     </aside>
   );
 
