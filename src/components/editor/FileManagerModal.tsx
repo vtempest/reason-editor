@@ -4,7 +4,8 @@ import { useRef, useCallback, useState } from "react";
 import { getData, getDrive } from "./filemanager-data";
 // @ts-ignore - @svar-ui/react-filemanager may not have types
 import { Filemanager, getMenuOptions } from "@svar-ui/react-filemanager";
-import "@svar-ui/react-filemanager/all.css";
+// Using style.css instead of all.css to avoid Turbopack parsing issues with :global pseudo-class
+import "@svar-ui/react-filemanager/style.css";
 import {
   Dialog,
   DialogContent,
