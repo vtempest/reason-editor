@@ -1,0 +1,224 @@
+/**
+ * Tiptap Pages Extension Styles
+ * Provides page-like layout with visual page breaks
+ */
+
+/* Root container for pages */
+.tiptap-pages-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f7f7f7;
+  min-height: 100%;
+  padding: 40px 20px;
+}
+
+/* Individual page container */
+.tiptap-page {
+  position: relative;
+  background: white;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 4px 16px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  transition: box-shadow 0.2s ease;
+}
+
+.tiptap-page:hover {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Inner writable area with margins */
+.tiptap-page-inner {
+  position: absolute;
+  overflow: hidden;
+}
+
+.tiptap-page-inner .ProseMirror {
+  height: 100%;
+  outline: none;
+}
+
+/* Page footer with page number */
+.tiptap-page-footer {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 12px;
+  color: #777;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Page content typography */
+.tiptap-page-inner .ProseMirror {
+  font-family: 'Verdana', 'Arial', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Headings in pages */
+.tiptap-page-inner .ProseMirror h1 {
+  font-size: 2em;
+  margin: 0.5em 0;
+  font-weight: 600;
+}
+
+.tiptap-page-inner .ProseMirror h2 {
+  font-size: 1.5em;
+  margin: 0.5em 0;
+  font-weight: 600;
+}
+
+.tiptap-page-inner .ProseMirror h3 {
+  font-size: 1.25em;
+  margin: 0.5em 0;
+  font-weight: 600;
+}
+
+/* Paragraphs */
+.tiptap-page-inner .ProseMirror p {
+  margin: 0.5em 0;
+}
+
+/* Lists */
+.tiptap-page-inner .ProseMirror ul,
+.tiptap-page-inner .ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.tiptap-page-inner .ProseMirror li {
+  margin: 0.25em 0;
+}
+
+/* Tables in pages */
+.tiptap-page-inner .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.tiptap-page-inner .ProseMirror table td,
+.tiptap-page-inner .ProseMirror table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.tiptap-page-inner .ProseMirror table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+/* Images in pages */
+.tiptap-page-inner .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em 0;
+}
+
+/* Blockquotes */
+.tiptap-page-inner .ProseMirror blockquote {
+  border-left: 3px solid #ccc;
+  padding-left: 1em;
+  margin: 1em 0;
+  font-style: italic;
+  color: #666;
+}
+
+/* Code blocks */
+.tiptap-page-inner .ProseMirror pre {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.tiptap-page-inner .ProseMirror code {
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+/* Page break indicator (optional visual element) */
+.tiptap-page-break {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tiptap-page-break::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    #ccc 20%,
+    #ccc 80%,
+    transparent
+  );
+}
+
+.tiptap-page-break::after {
+  content: 'Page Break';
+  background: white;
+  padding: 0 1em;
+  color: #999;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 1;
+}
+
+/* Print styles */
+@media print {
+  .tiptap-pages-root {
+    background: white;
+    padding: 0;
+  }
+
+  .tiptap-page {
+    box-shadow: none;
+    margin-bottom: 0;
+    page-break-after: always;
+  }
+
+  .tiptap-page-footer {
+    display: none;
+  }
+
+  .tiptap-page-break {
+    display: none;
+  }
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 900px) {
+  .tiptap-pages-root {
+    padding: 20px 10px;
+  }
+
+  .tiptap-page {
+    transform: scale(0.8);
+    transform-origin: top center;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .tiptap-page {
+    transform: scale(0.6);
+  }
+}
