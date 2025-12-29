@@ -15,7 +15,10 @@ import {
   HardDrive,
   Server,
   Cloud,
-  Database
+  Database,
+  FileText,
+  Workflow,
+  LogIn
 } from 'lucide-react';
 import {
   Breadcrumb,
@@ -51,7 +54,7 @@ import { Badge } from '@/components/ui/badge';
 import { ThemeDropdown } from '@/components/editor/theme-dropdown';
 import { getRewriteModes, saveRewriteModes, resetRewriteModes, RewriteMode } from '@/lib/ai/rewriteModes';
 import { getFileSources, addFileSource, updateFileSource, deleteFileSource } from '@/lib/fileSources';
-import { AnyFileSource, FileSourceType, SSHCredentials, S3Credentials, R2Credentials } from '@/types/fileSource';
+import { AnyFileSource, FileSourceType, SSHCredentials, S3Credentials, R2Credentials, GoogleDocsCredentials, TursoDBCredentials } from '@/types/fileSource';
 import { toast } from 'sonner';
 
 interface SettingsProps {
@@ -81,7 +84,7 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
   const [sourceForm, setSourceForm] = useState<{
     name: string;
     type: FileSourceType;
-    credentials: Partial<SSHCredentials & S3Credentials & R2Credentials>;
+    credentials: Partial<SSHCredentials & S3Credentials & R2Credentials & GoogleDocsCredentials & TursoDBCredentials>;
   }>({
     name: '',
     type: 'local',
@@ -345,7 +348,7 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
             <div>
               <h2 className="text-xl font-semibold mb-2">File Sources</h2>
               <p className="text-sm text-muted-foreground">
-                Manage remote file sources (SSH, S3, R2)
+                Manage storage sources (SSH, S3, R2, Google Docs, Turso DB)
               </p>
             </div>
 
@@ -563,6 +566,133 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
                         </>
                       )}
 
+                      {source.type === 'gdocs' && (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Email</Label>
+                            <Input
+                              value={(sourceForm.credentials as GoogleDocsCredentials).email || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, email: e.target.value },
+                                })
+                              }
+                              placeholder="user@gmail.com"
+                              disabled
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Folder IDs (comma-separated)</Label>
+                            <Textarea
+                              value={(sourceForm.credentials as GoogleDocsCredentials).folderIds?.join(', ') || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: {
+                                    ...sourceForm.credentials,
+                                    folderIds: e.target.value.split(',').map(id => id.trim()).filter(Boolean)
+                                  },
+                                })
+                              }
+                              placeholder="folder-id-1, folder-id-2"
+                              rows={3}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                              Enter Google Drive folder IDs to sync (one per line or comma-separated)
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">
+                                {(sourceForm.credentials as GoogleDocsCredentials).isAuthenticated
+                                  ? 'Connected to Google'
+                                  : 'Not authenticated'}
+                              </p>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              <LogIn className="h-4 w-4 mr-2" />
+                              {(sourceForm.credentials as GoogleDocsCredentials).isAuthenticated
+                                ? 'Reconnect'
+                                : 'Authenticate'}
+                            </Button>
+                          </div>
+                        </>
+                      )}
+
+                      {source.type === 'turso' && (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Database Endpoint</Label>
+                            <Input
+                              value={(sourceForm.credentials as TursoDBCredentials).endpoint || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, endpoint: e.target.value },
+                                })
+                              }
+                              placeholder="https://your-db.turso.io"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Auth Token (Optional)</Label>
+                            <Input
+                              type="password"
+                              value={(sourceForm.credentials as TursoDBCredentials).authToken || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, authToken: e.target.value },
+                                })
+                              }
+                              placeholder="••••••••"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Database Name (Optional)</Label>
+                            <Input
+                              value={(sourceForm.credentials as TursoDBCredentials).database || ''}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, database: e.target.value },
+                                })
+                              }
+                              placeholder="my-database"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="enable-gdocs-sync"
+                              checked={(sourceForm.credentials as TursoDBCredentials).enableGoogleDocsSync || false}
+                              onChange={(e) =>
+                                setSourceForm({
+                                  ...sourceForm,
+                                  credentials: { ...sourceForm.credentials, enableGoogleDocsSync: e.target.checked },
+                                })
+                              }
+                              className="h-4 w-4"
+                            />
+                            <Label htmlFor="enable-gdocs-sync" className="cursor-pointer">
+                              Enable Google Docs Sync
+                            </Label>
+                          </div>
+                          {(sourceForm.credentials as TursoDBCredentials).enableGoogleDocsSync && (
+                            <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                              <div className="flex-1">
+                                <p className="text-sm">Authenticate with Google to sync documents</p>
+                              </div>
+                              <Button size="sm" variant="outline">
+                                <LogIn className="h-4 w-4 mr-2" />
+                                Login with Google
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      )}
+
                       <div className="flex gap-2">
                         <Button size="sm" onClick={handleSaveSource}>
                           Save
@@ -584,9 +714,11 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
                           {source.type === 'ssh' && <Server className="h-4 w-4" />}
                           {source.type === 's3' && <Cloud className="h-4 w-4" />}
                           {source.type === 'r2' && <Database className="h-4 w-4" />}
+                          {source.type === 'gdocs' && <FileText className="h-4 w-4" />}
+                          {source.type === 'turso' && <Workflow className="h-4 w-4" />}
                           <span className="font-medium">{source.name}</span>
                           <Badge variant="outline" className="text-xs">
-                            {source.type.toUpperCase()}
+                            {source.type === 'gdocs' ? 'Google Docs' : source.type === 'turso' ? 'Turso DB' : source.type.toUpperCase()}
                           </Badge>
                         </div>
                         {source.id !== 'local-default' && (
@@ -627,6 +759,19 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
                           {(source.credentials as R2Credentials).bucket}
                         </p>
                       )}
+                      {source.type === 'gdocs' && source.credentials && (
+                        <p className="text-xs text-muted-foreground">
+                          {(source.credentials as GoogleDocsCredentials).isAuthenticated
+                            ? `${(source.credentials as GoogleDocsCredentials).email || 'Authenticated'} - ${(source.credentials as GoogleDocsCredentials).folderIds?.length || 0} folder(s)`
+                            : 'Not authenticated'}
+                        </p>
+                      )}
+                      {source.type === 'turso' && source.credentials && (
+                        <p className="text-xs text-muted-foreground">
+                          {(source.credentials as TursoDBCredentials).endpoint}
+                          {(source.credentials as TursoDBCredentials).enableGoogleDocsSync && ' (Google Docs sync enabled)'}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -650,13 +795,15 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
                       value={sourceForm.type}
                       onChange={(e) => {
                         const newType = e.target.value as FileSourceType;
-                        setSourceForm({ ...sourceForm, type: newType, credentials: {} });
+                        setSourceForm({ ...sourceForm, type: newType, credentials: newType === 'gdocs' ? { isAuthenticated: false } : {} });
                       }}
                       className="w-full border rounded-md px-3 py-2 text-sm"
                     >
                       <option value="ssh">SSH</option>
                       <option value="s3">Amazon S3</option>
                       <option value="r2">Cloudflare R2</option>
+                      <option value="gdocs">Google Docs</option>
+                      <option value="turso">Turso DB</option>
                     </select>
                   </div>
 
@@ -849,6 +996,133 @@ export const Settings = ({ open, onOpenChange, defaultSidebarView = 'last-used',
                           placeholder="my-bucket"
                         />
                       </div>
+                    </>
+                  )}
+
+                  {sourceForm.type === 'gdocs' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input
+                          value={(sourceForm.credentials as GoogleDocsCredentials).email || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, email: e.target.value },
+                            })
+                          }
+                          placeholder="user@gmail.com"
+                          disabled
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Folder IDs (comma-separated)</Label>
+                        <Textarea
+                          value={(sourceForm.credentials as GoogleDocsCredentials).folderIds?.join(', ') || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: {
+                                ...sourceForm.credentials,
+                                folderIds: e.target.value.split(',').map(id => id.trim()).filter(Boolean)
+                              },
+                            })
+                          }
+                          placeholder="folder-id-1, folder-id-2"
+                          rows={3}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Enter Google Drive folder IDs to sync (one per line or comma-separated)
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {(sourceForm.credentials as GoogleDocsCredentials).isAuthenticated
+                              ? 'Connected to Google'
+                              : 'Not authenticated'}
+                          </p>
+                        </div>
+                        <Button size="sm" variant="outline">
+                          <LogIn className="h-4 w-4 mr-2" />
+                          {(sourceForm.credentials as GoogleDocsCredentials).isAuthenticated
+                            ? 'Reconnect'
+                            : 'Authenticate'}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {sourceForm.type === 'turso' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Database Endpoint</Label>
+                        <Input
+                          value={(sourceForm.credentials as TursoDBCredentials).endpoint || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, endpoint: e.target.value },
+                            })
+                          }
+                          placeholder="https://your-db.turso.io"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Auth Token (Optional)</Label>
+                        <Input
+                          type="password"
+                          value={(sourceForm.credentials as TursoDBCredentials).authToken || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, authToken: e.target.value },
+                            })
+                          }
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Database Name (Optional)</Label>
+                        <Input
+                          value={(sourceForm.credentials as TursoDBCredentials).database || ''}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, database: e.target.value },
+                            })
+                          }
+                          placeholder="my-database"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="enable-gdocs-sync-new"
+                          checked={(sourceForm.credentials as TursoDBCredentials).enableGoogleDocsSync || false}
+                          onChange={(e) =>
+                            setSourceForm({
+                              ...sourceForm,
+                              credentials: { ...sourceForm.credentials, enableGoogleDocsSync: e.target.checked },
+                            })
+                          }
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="enable-gdocs-sync-new" className="cursor-pointer">
+                          Enable Google Docs Sync
+                        </Label>
+                      </div>
+                      {(sourceForm.credentials as TursoDBCredentials).enableGoogleDocsSync && (
+                        <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                          <div className="flex-1">
+                            <p className="text-sm">Authenticate with Google to sync documents</p>
+                          </div>
+                          <Button size="sm" variant="outline">
+                            <LogIn className="h-4 w-4 mr-2" />
+                            Login with Google
+                          </Button>
+                        </div>
+                      )}
                     </>
                   )}
 

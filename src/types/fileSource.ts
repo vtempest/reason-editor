@@ -1,6 +1,6 @@
 // File source types for different storage backends
 
-export type FileSourceType = 'local' | 'ssh' | 's3' | 'r2';
+export type FileSourceType = 'local' | 'ssh' | 's3' | 'r2' | 'gdocs' | 'turso';
 
 export interface SSHCredentials {
   host: string;
@@ -29,11 +29,26 @@ export interface R2Credentials {
   basePath?: string;
 }
 
+export interface GoogleDocsCredentials {
+  accessToken?: string;
+  refreshToken?: string;
+  email?: string;
+  folderIds?: string[]; // Array of Google Drive folder IDs to sync
+  isAuthenticated: boolean;
+}
+
+export interface TursoDBCredentials {
+  endpoint: string;
+  authToken?: string;
+  database?: string;
+  enableGoogleDocsSync?: boolean; // If true, Turso DB is used to enable Google Docs sync
+}
+
 export interface FileSource {
   id: string;
   name: string;
   type: FileSourceType;
-  credentials?: SSHCredentials | S3Credentials | R2Credentials;
+  credentials?: SSHCredentials | S3Credentials | R2Credentials | GoogleDocsCredentials | TursoDBCredentials;
   isDefault?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -59,4 +74,14 @@ export interface R2FileSource extends FileSource {
   credentials: R2Credentials;
 }
 
-export type AnyFileSource = LocalFileSource | SSHFileSource | S3FileSource | R2FileSource;
+export interface GoogleDocsFileSource extends FileSource {
+  type: 'gdocs';
+  credentials: GoogleDocsCredentials;
+}
+
+export interface TursoDBFileSource extends FileSource {
+  type: 'turso';
+  credentials: TursoDBCredentials;
+}
+
+export type AnyFileSource = LocalFileSource | SSHFileSource | S3FileSource | R2FileSource | GoogleDocsFileSource | TursoDBFileSource;

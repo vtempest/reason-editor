@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, HardDrive, Server, Cloud, Database, Check } from 'lucide-react';
+import { ChevronDown, HardDrive, Server, Cloud, Database, Check, FileText, Workflow } from 'lucide-react';
 import { getFileSources, getActiveFileSourceId } from '@/lib/fileSources';
 import { AnyFileSource } from '@/types/fileSource';
 import { cn } from '@/lib/utils';
@@ -27,6 +27,10 @@ const getSourceIcon = (type: string) => {
       return <Cloud className="h-4 w-4" />;
     case 'r2':
       return <Database className="h-4 w-4" />;
+    case 'gdocs':
+      return <FileText className="h-4 w-4" />;
+    case 'turso':
+      return <Workflow className="h-4 w-4" />;
     default:
       return <HardDrive className="h-4 w-4" />;
   }
@@ -42,6 +46,10 @@ const getSourceTypeLabel = (type: string) => {
       return 'S3';
     case 'r2':
       return 'R2';
+    case 'gdocs':
+      return 'Google Docs';
+    case 'turso':
+      return 'Turso DB';
     default:
       return type;
   }
