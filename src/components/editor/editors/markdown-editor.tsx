@@ -40,8 +40,8 @@ import { marked } from "marked";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 import { cn } from "@/lib/utils";
-import { MarkdownToolbar } from "./markdown-toolbar";
-import { UnifiedMarkdown } from "@/components/editor/markdown";
+import { MarkdownToolbar } from "../toolbars/markdown-toolbar";
+import { UnifiedMarkdown } from "./markdown";
 
 // Configure marked for GFM
 marked.setOptions({
@@ -341,8 +341,8 @@ export function MarkdownEditor({
           },
         },
       }),
-      Underline,
-      Strike,
+      Underline.configure(),
+      Strike.configure(),
       Link.configure({
         openOnClick: false,
         autolink: true,

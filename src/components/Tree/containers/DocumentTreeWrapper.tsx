@@ -3,7 +3,7 @@
 import React, { forwardRef } from "react"
 import { DocumentTree, type DocumentTreeHandle } from "./DocumentTree"
 import { buildDocumentTree } from "@/lib/document-utils"
-import type { Document } from "@/components/editor/DocumentTree"
+import type { Document } from "@/components/editor/documents/DocumentTree"
 
 export type { DocumentTreeHandle }
 

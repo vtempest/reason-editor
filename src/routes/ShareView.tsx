@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { TiptapEditor } from '@/components/editor/TiptapEditor';
-import { OutlineView } from '@/components/editor/OutlineView';
+import { TiptapEditor } from '@/components/editor/editors/TiptapEditor';
+import { OutlineView } from '@/components/editor/search/OutlineView';
 import { Loader2 } from 'lucide-react';
 
 interface Document {

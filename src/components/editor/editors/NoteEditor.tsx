@@ -68,11 +68,11 @@ export const NoteEditor = ({ content, onChange, title, onTitleChange }: NoteEdit
           class: 'max-w-full h-auto rounded-md my-4',
         },
       }),
-      Underline,
+      Underline.configure(),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      Highlight,
+      Highlight.configure(),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
