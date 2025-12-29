@@ -3,7 +3,7 @@
 import type React from "react"
 import { useRef, useCallback, useImperativeHandle, forwardRef, useState, useEffect } from "react"
 import { Tree, type NodeApi } from "react-arborist"
-import { Folder, FolderOpen, Trash2, Edit2, Copy, FileText } from "lucide-react"
+import { Folder, FolderOpen, Trash2, Edit2, Copy, FileText, Clipboard, ClipboardPaste } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -43,6 +43,8 @@ interface DocumentTreeProps {
   onDelete?: (nodeId: string) => void
   onRename?: (nodeId: string, newName: string) => void
   onDuplicate?: (nodeId: string) => void
+  onCopy?: (nodeId: string) => void
+  onPaste?: (targetNodeId: string | null) => void
   onNewFile?: (parentId: string | null) => void
   onNewFolder?: (parentId: string | null) => void
   searchTerm?: string
@@ -57,12 +59,15 @@ export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
   onDelete,
   onRename,
   onDuplicate,
+  onCopy,
+  onPaste,
   onNewFile,
   onNewFolder,
   height,
 }, ref) => {
   const treeRef = useRef<any>(null)
   const [deleteConfirmNode, setDeleteConfirmNode] = useState<NodeApi<DocumentNode> | null>(null)
+  const [copiedNodeId, setCopiedNodeId] = useState<string | null>(null)
 
   useImperativeHandle(ref, () => ({
     expandAll: () => {
@@ -114,6 +119,20 @@ export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
       onDuplicate(node.id)
     }
   }, [onDuplicate])
+
+  const handleCopy = useCallback((node: NodeApi<DocumentNode>) => {
+    setCopiedNodeId(node.id)
+    if (onCopy) {
+      onCopy(node.id)
+    }
+  }, [onCopy])
+
+  const handlePaste = useCallback((targetNode: NodeApi<DocumentNode> | null) => {
+    if (onPaste && copiedNodeId) {
+      const targetId = targetNode?.data.data.isFolder ? targetNode.id : (targetNode?.parent?.id || null)
+      onPaste(targetId)
+    }
+  }, [onPaste, copiedNodeId])
 
   return (
     <>
@@ -172,6 +191,9 @@ export const DocumentTree = forwardRef<DocumentTreeHandle, DocumentTreeProps>(({
               onDelete={handleDelete}
               onRename={handleRename}
               onDuplicate={handleDuplicate}
+              onCopy={handleCopy}
+              onPaste={handlePaste}
+              hasCopiedNode={!!copiedNodeId}
               onSelect={onSelect}
             />
           )}
@@ -205,6 +227,9 @@ interface NodeProps {
   onDelete: (node: NodeApi<DocumentNode>) => void
   onRename: (node: NodeApi<DocumentNode>) => void
   onDuplicate: (node: NodeApi<DocumentNode>) => void
+  onCopy: (node: NodeApi<DocumentNode>) => void
+  onPaste: (node: NodeApi<DocumentNode> | null) => void
+  hasCopiedNode: boolean
   onSelect: (document: Document) => void
 }
 
@@ -217,6 +242,9 @@ function Node({
   onDelete,
   onRename,
   onDuplicate,
+  onCopy,
+  onPaste,
+  hasCopiedNode,
   onSelect,
 }: NodeProps) {
   const isFolder = node.data.data.isFolder
@@ -313,6 +341,15 @@ function Node({
         <ContextMenuItem onClick={() => onDuplicate(node)}>
           <Copy className="mr-2 h-4 w-4" />
           Duplicate
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={() => onCopy(node)}>
+          <Clipboard className="mr-2 h-4 w-4" />
+          Copy
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => onPaste(node)} disabled={!hasCopiedNode}>
+          <ClipboardPaste className="mr-2 h-4 w-4" />
+          Paste
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={() => onDelete(node)} className="text-destructive">

@@ -139,10 +139,11 @@ export const DocumentTabs = ({
                         onDoubleClick={() => handleDoubleClick(tabId)}
                         className={cn(
                           'relative h-10 rounded-none border-r border-border px-4 py-2',
-                          'data-[state=active]:bg-background data-[state=active]:shadow-none',
+                          'data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:font-bold',
                           'data-[state=inactive]:bg-muted/50',
                           'hover:bg-muted',
-                          'pr-8'
+                          'pr-8',
+                          'transition-all duration-200'
                         )}
                       >
                         {renamingTabId === tabId ? (
@@ -153,8 +154,10 @@ export const DocumentTabs = ({
                             onChange={(e) => setRenameValue(e.target.value)}
                             onKeyDown={handleRenameKeyDown}
                             onBlur={handleRenameSubmit}
-                            className="max-w-[150px] text-sm bg-transparent border-none outline-none focus:ring-1 focus:ring-primary rounded px-1"
+                            className="max-w-[150px] text-sm bg-transparent border-none outline-none focus:ring-1 focus:ring-primary rounded px-1 font-normal"
                             onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            autoFocus
                           />
                         ) : (
                           <span className="max-w-[150px] truncate text-sm">

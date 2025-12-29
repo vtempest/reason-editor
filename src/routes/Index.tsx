@@ -7,7 +7,6 @@ import { SearchModal } from '@/components/editor/SearchModal';
 import { Settings } from '@/components/editor/Settings';
 import { TeamManagement } from '@/components/editor/TeamManagement';
 import { InviteModal } from '@/components/editor/InviteModal';
-import { TagBar } from '@/components/editor/TagBar';
 import { TagManagementDialog } from '@/components/editor/TagManagementDialog';
 import { DocumentTabs } from '@/components/editor/DocumentTabs';
 import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
@@ -751,13 +750,6 @@ const Index = () => {
                     <PanelGroup direction="horizontal" className="flex-1">
                       <Panel defaultSize={50} minSize={30}>
                         <div className="flex flex-col h-full border-r border-border">
-                          {activeDocument.tags && activeDocument.tags.length > 0 && (
-                            <TagBar
-                              tags={activeDocument.tags}
-                              onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                              onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                            />
-                          )}
                           <div className="flex-1 overflow-hidden">
                             <TiptapEditor
                               content={activeDocument.content}
@@ -787,13 +779,6 @@ const Index = () => {
                                   <X className="h-3 w-3" />
                                 </Button>
                               </div>
-                              {splitDoc.tags && splitDoc.tags.length > 0 && (
-                                <TagBar
-                                  tags={splitDoc.tags}
-                                  onAddTag={(tag) => handleAddTag(splitDoc.id, tag)}
-                                  onRemoveTag={(tag) => handleRemoveTag(splitDoc.id, tag)}
-                                />
-                              )}
                               <div className="flex-1 overflow-hidden">
                                 <TiptapEditor
                                   content={splitDoc.content}
@@ -1164,13 +1149,6 @@ const Index = () => {
                         </PanelGroup>
                       ) : (
                         <>
-                          {activeDocument.tags && activeDocument.tags.length > 0 && (
-                            <TagBar
-                              tags={activeDocument.tags}
-                              onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                              onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                            />
-                          )}
                           <div className="flex-1 overflow-hidden">
                             <TiptapEditor
                               ref={editorRef}
