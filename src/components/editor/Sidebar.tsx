@@ -2,18 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { Document } from '@/components/editor/DocumentTree';
 import { DocumentTreeWrapper, type DocumentTreeHandle } from '@/components/Tree/containers/DocumentTreeWrapper';
 import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
-import { FloatingSearch } from '@/components/editor/FloatingSearch';
 import { ThemeDropdown } from '@/components/editor/theme-dropdown';
-import { FileSourceDropdown } from '@/components/FileSourceDropdown';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus, Columns2, RotateCcw, FilePlus, FolderPlus, ChevronsDownUp, ChevronsUpDown, Search, X } from 'lucide-react';
+import { FolderOpen, List, FileText, Settings, Archive, Trash2, UserPlus, Columns2, RotateCcw, FilePlus, FolderPlus, ChevronsDownUp, ChevronsUpDown, Search, X, HardDrive, Server, Cloud, Database, Workflow, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { getFileSources } from '@/lib/fileSources';
+import { AnyFileSource } from '@/types/fileSource';
 
 interface SidebarProps {
   documents: Document[];
@@ -103,6 +102,65 @@ export const Sidebar = ({
   // Ref for outline view
   const outlineRef = useRef<OutlineViewHandle>(null);
 
+  // File sources
+  const [sources, setSources] = useState<AnyFileSource[]>([]);
+  const [activeSource, setActiveSource] = useState<AnyFileSource | null>(null);
+
+  // Load file sources
+  useEffect(() => {
+    const loadedSources = getFileSources();
+    setSources(loadedSources);
+    const active = loadedSources.find((s) => s.id === activeFileSourceId);
+    setActiveSource(active || loadedSources[0]);
+  }, [activeFileSourceId]);
+
+  // Helper functions for file source icons and labels
+  const getSourceIcon = (type: string) => {
+    switch (type) {
+      case 'local':
+        return <HardDrive className="h-3.5 w-3.5" />;
+      case 'ssh':
+        return <Server className="h-3.5 w-3.5" />;
+      case 's3':
+        return <Cloud className="h-3.5 w-3.5" />;
+      case 'r2':
+        return <Database className="h-3.5 w-3.5" />;
+      case 'gdocs':
+        return <FileText className="h-3.5 w-3.5" />;
+      case 'turso':
+        return <Workflow className="h-3.5 w-3.5" />;
+      default:
+        return <HardDrive className="h-3.5 w-3.5" />;
+    }
+  };
+
+  const getSourceTypeLabel = (type: string) => {
+    switch (type) {
+      case 'local':
+        return 'Local';
+      case 'ssh':
+        return 'SSH';
+      case 's3':
+        return 'S3';
+      case 'r2':
+        return 'R2';
+      case 'gdocs':
+        return 'Google Docs';
+      case 'turso':
+        return 'Turso DB';
+      default:
+        return type;
+    }
+  };
+
+  const handleSourceSelect = (sourceId: string) => {
+    const selected = sources.find((s) => s.id === sourceId);
+    if (selected) {
+      setActiveSource(selected);
+      onFileSourceChange?.(sourceId);
+    }
+  };
+
   // Trigger edit mode for newly created documents
   useEffect(() => {
     if (newDocumentId && treeRef.current) {
@@ -131,29 +189,6 @@ export const Sidebar = ({
         </Button>
       )}
 
-      {/* Floating search */}
-      <div className="absolute top-3 left-3 right-3 z-20">
-        <FloatingSearch
-          value={searchQuery}
-          onChange={onSearchChange}
-          onClear={onSearchClear}
-          onFocus={onSearchFocus}
-        />
-      </div>
-
-      {/* Spacer for floating search */}
-      <div className="h-16"></div>
-
-      {/* File Source Dropdown */}
-      {(viewMode === 'tree' || viewMode === 'split') && onFileSourceChange && (
-        <div className="px-3 pb-2">
-          <FileSourceDropdown
-            activeSourceId={activeFileSourceId}
-            onSourceChange={onFileSourceChange}
-          />
-        </div>
-      )}
-
       {/* Toolbar */}
       <div className="px-3 pb-2">
         <div className="flex items-center gap-0.5 bg-sidebar-accent/50 rounded-md p-0.5">
@@ -161,6 +196,62 @@ export const Sidebar = ({
             {/* Show file/folder buttons only in tree or split view */}
             {(viewMode === 'tree' || viewMode === 'split') && (
               <>
+                {/* File Source Dropdown */}
+                {onFileSourceChange && (
+                  <DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex-1 h-6 px-1.5 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                          >
+                            {activeSource && getSourceIcon(activeSource.type)}
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Storage Source: {activeSource?.name || 'Select Source'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="start" className="w-56">
+                      {sources.map((source, index) => (
+                        <div key={source.id}>
+                          {index > 0 && sources[index - 1]?.type !== source.type && (
+                            <DropdownMenuSeparator />
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleSourceSelect(source.id)}
+                            className="flex items-center justify-between cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              {getSourceIcon(source.type)}
+                              <div className="flex flex-col flex-1 min-w-0">
+                                <span className="truncate text-sm">{source.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {getSourceTypeLabel(source.type)}
+                                </span>
+                              </div>
+                            </div>
+                            {source.id === activeFileSourceId && (
+                              <Check className="h-4 w-4 ml-2 shrink-0" />
+                            )}
+                          </DropdownMenuItem>
+                        </div>
+                      ))}
+                      {sources.length === 1 && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem disabled className="text-xs text-center text-muted-foreground">
+                            Add sources in Settings
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
