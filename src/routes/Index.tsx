@@ -11,6 +11,7 @@ import { TagManagementDialog } from '@/components/editor/TagManagementDialog';
 import { DocumentTabs } from '@/components/editor/DocumentTabs';
 import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
 import { AIRewriteSuggestion } from '@/components/editor/AIRewriteSuggestion';
+import { TagBar } from '@/components/editor/TagBar';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
 import { getActiveFileSourceId, setActiveFileSourceId, getActiveFileSource } from '@/lib/fileSources';
 import { loadDocumentsFromSource } from '@/lib/storageLoader';
