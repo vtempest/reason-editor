@@ -16,8 +16,12 @@ import Image from '@tiptap/extension-image';
 import CharacterCount from '@tiptap/extension-character-count';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
+import Youtube from '@tiptap/extension-youtube';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { common, createLowlight } from 'lowlight';
 import { FontSize } from '@/lib/tiptap/fontSize';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
+import { Mermaid } from '@/lib/tiptap/mermaid.tsx';
 import { useEffect, useState, forwardRef as reactForwardRef, useImperativeHandle as reactUseImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -58,6 +62,9 @@ import {
   Trash,
   Plus,
   Merge,
+  Youtube as YoutubeIcon,
+  CodeSquare,
+  Network,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
@@ -115,6 +122,9 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
   const [viewMode, setViewMode] = useState<ViewMode>('formatted');
   const [rawContent, setRawContent] = useState('');
 
+  // Create lowlight instance for code syntax highlighting
+  const lowlight = createLowlight(common);
+
   const editor = useEditor({
     immediatelyRender: false,
     editable: !readOnly,
@@ -123,7 +133,22 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
         heading: {
           levels: [1, 2, 3, 4, 5, 6],
         },
+        codeBlock: false, // Disable default code block to use CodeBlockLowlight
       }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        HTMLAttributes: {
+          class: 'code-block-lowlight',
+        },
+      }),
+      Youtube.configure({
+        controls: true,
+        nocookie: true,
+        HTMLAttributes: {
+          class: 'youtube-embed',
+        },
+      }),
+      Mermaid,
       Placeholder.configure({
         placeholder: 'Start writing... Type / for commands',
       }),
@@ -296,6 +321,24 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
+  };
+
+  const insertYouTube = () => {
+    const url = window.prompt('Enter YouTube URL:');
+    if (url) {
+      editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    }
+  };
+
+  const insertCodeBlock = () => {
+    editor.chain().focus().toggleCodeBlock().run();
+  };
+
+  const insertMermaid = () => {
+    const defaultContent = `graph TD
+    A[Start] --> B[Process]
+    B --> C[End]`;
+    editor.chain().focus().setMermaid(defaultContent).run();
   };
 
   const handleAIRewrite = async (customPrompt?: string, modeId?: string) => {
@@ -708,6 +751,44 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
             title="Insert Image"
           >
             <ImageIcon className="h-4 w-4" />
+          </Button>
+
+          {/* YouTube */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={insertYouTube}
+            className="h-8 w-8 p-0"
+            title="Insert YouTube Video"
+          >
+            <YoutubeIcon className="h-4 w-4" />
+          </Button>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Code Block */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={insertCodeBlock}
+            className={cn(
+              'h-8 w-8 p-0',
+              editor.isActive('codeBlock') && 'bg-muted'
+            )}
+            title="Code Block"
+          >
+            <CodeSquare className="h-4 w-4" />
+          </Button>
+
+          {/* Mermaid Diagram */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={insertMermaid}
+            className="h-8 w-8 p-0"
+            title="Insert Mermaid Diagram"
+          >
+            <Network className="h-4 w-4" />
           </Button>
 
           <Separator orientation="vertical" className="mx-1 h-6" />
@@ -1192,6 +1273,53 @@ export const TiptapEditor = reactForwardRef<any, TiptapEditorProps>(({
 
         .ProseMirror img.ProseMirror-selectednode {
           outline: 3px solid hsl(var(--primary));
+        }
+
+        /* Code block with syntax highlighting */
+        .ProseMirror .code-block-lowlight {
+          background-color: hsl(var(--muted));
+          border-radius: 0.5rem;
+          padding: 0.75rem 1rem;
+          overflow-x: auto;
+          margin: 1rem 0;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-size: 0.875rem;
+          line-height: 1.5;
+        }
+
+        .ProseMirror .code-block-lowlight code {
+          background: none;
+          padding: 0;
+          color: inherit;
+        }
+
+        /* YouTube embed */
+        .ProseMirror .youtube-embed {
+          margin: 1rem 0;
+          border-radius: 0.5rem;
+          overflow: hidden;
+          max-width: 100%;
+        }
+
+        .ProseMirror .youtube-embed iframe {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          border: none;
+        }
+
+        /* Mermaid diagram styles */
+        .mermaid-wrapper {
+          margin: 1rem 0;
+        }
+
+        .mermaid-container {
+          border-radius: 0.5rem;
+          overflow: hidden;
+        }
+
+        .mermaid-display svg {
+          max-width: 100%;
+          height: auto;
         }
       `}</style>
     </div>
