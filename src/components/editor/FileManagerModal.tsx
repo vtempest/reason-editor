@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   ChonkyActions,
   ChonkyFileActionData,
@@ -25,9 +25,6 @@ import {
 import { getData } from "./filemanager-data";
 import { toast } from "sonner";
 
-// Set Chonky defaults
-setChonkyDefaults({ iconComponent: ChonkyIconFA });
-
 interface FileManagerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,6 +32,13 @@ interface FileManagerModalProps {
 
 export function FileManagerModal({ open, onOpenChange }: FileManagerModalProps) {
   const [currentFolderId, setCurrentFolderId] = useState("/");
+
+  // Initialize Chonky defaults on mount (client-side only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setChonkyDefaults({ iconComponent: ChonkyIconFA });
+    }
+  }, []);
 
   // Convert our data format to Chonky format
   const fileMap = useMemo(() => {

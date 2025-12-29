@@ -69,6 +69,9 @@ import {
   Columns,
   Rows,
   MoreHorizontal,
+  Network,
+  Youtube,
+  CodeSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorState, type Editor } from "@tiptap/react";
@@ -467,6 +470,24 @@ export function MarkdownToolbar({
       .run();
   }, [editor]);
 
+  const insertMermaidDiagram = useCallback(() => {
+    const diagramCode = `graph TD
+    A[Start] --> B[Process]
+    B --> C[End]`;
+
+    editor.chain().focus().insertContent({
+      type: 'mermaid',
+      attrs: { code: diagramCode }
+    }).run();
+  }, [editor]);
+
+  const insertYouTubeVideo = useCallback(() => {
+    const url = window.prompt('Enter YouTube URL:');
+    if (url) {
+      editor.chain().focus().setYoutubeVideo({ src: url }).run();
+    }
+  }, [editor]);
+
   // Table control functions
   const addRowBefore = useCallback(() => {
     editor.chain().focus().addRowBefore().run();
@@ -700,6 +721,20 @@ export function MarkdownToolbar({
           <DropdownMenuItem onClick={insertTable}>
             <TableIcon className="mr-2 h-4 w-4" />
             Table
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          >
+            <CodeSquare className="mr-2 h-4 w-4" />
+            Code Block
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={insertMermaidDiagram}>
+            <Network className="mr-2 h-4 w-4" />
+            Graph / Diagram
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={insertYouTubeVideo}>
+            <Youtube className="mr-2 h-4 w-4" />
+            YouTube Video
           </DropdownMenuItem>
           <DropdownMenuSeparator />
 
@@ -979,29 +1014,55 @@ export function MarkdownToolbar({
         </>
       )}
 
-      {/* Insert - only show in main toolbar and floating menu */}
+      {/* Advanced Insert Dropdown - only show in main toolbar and floating menu */}
       {!isBubbleMenu && (
         <>
           <Separator orientation="vertical" className="h-6 mx-1 shrink-0" />
-          <div className="flex items-center shrink-0">
-            <ToolbarButton
-              onClick={insertLink}
-              isActive={isLink}
-              icon={LinkIcon}
-              tooltip="Link"
-              shortcut="⌘K"
-            />
-            <ToolbarButton
-              onClick={openImageDialog}
-              icon={ImageIcon}
-              tooltip="Image"
-            />
-            <ToolbarButton
-              onClick={insertTable}
-              icon={TableIcon}
-              tooltip="Table"
-            />
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="text-xs hidden sm:inline">Insert</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={insertLink}>
+                <LinkIcon className="mr-2 h-4 w-4" />
+                Link
+                <kbd className="ml-auto px-1.5 py-0.5 text-[10px] bg-muted rounded font-mono">
+                  ⌘K
+                </kbd>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={openImageDialog}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Image
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={insertTable}>
+                <TableIcon className="mr-2 h-4 w-4" />
+                Table
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+              >
+                <CodeSquare className="mr-2 h-4 w-4" />
+                Code Block
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={insertMermaidDiagram}>
+                <Network className="mr-2 h-4 w-4" />
+                Graph / Diagram
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={insertYouTubeVideo}>
+                <Youtube className="mr-2 h-4 w-4" />
+                YouTube Video
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </>
       )}
 
