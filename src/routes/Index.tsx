@@ -13,7 +13,8 @@ import { DocumentTabs } from '@/components/editor/DocumentTabs';
 import { OutlineView, type OutlineViewHandle } from '@/components/editor/OutlineView';
 import { AIRewriteSuggestion } from '@/components/editor/AIRewriteSuggestion';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
-import { getActiveFileSourceId, setActiveFileSourceId } from '@/lib/fileSources';
+import { getActiveFileSourceId, setActiveFileSourceId, getActiveFileSource } from '@/lib/fileSources';
+import { loadDocumentsFromSource } from '@/lib/storageLoader';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from 'next-themes';
@@ -442,12 +443,30 @@ const Index = () => {
     setIsTagDialogOpen(true);
   };
 
-  const handleFileSourceChange = (sourceId: string) => {
+  const handleFileSourceChange = async (sourceId: string) => {
     setActiveFileSourceIdState(sourceId);
     setActiveFileSourceId(sourceId);
-    toast.success('File source changed');
-    // TODO: In a real implementation, this would load documents from the selected source
-    // For now, it just updates the UI to show which source is selected
+
+    // Load documents from the selected source
+    const source = getActiveFileSource();
+    try {
+      const loadedDocuments = await loadDocumentsFromSource(source, documents);
+
+      if (source.type !== 'local') {
+        // For non-local sources, replace documents with loaded ones
+        if (loadedDocuments.length > 0) {
+          setDocuments(loadedDocuments);
+          toast.success(`Loaded ${loadedDocuments.length} documents from ${source.name}`);
+        } else {
+          toast.info(`No documents found in ${source.name}`);
+        }
+      } else {
+        toast.success('Switched to local storage');
+      }
+    } catch (error) {
+      console.error('Error loading documents from source:', error);
+      toast.error('Failed to load documents from source');
+    }
   };
 
   const handleUpdateTags = (tags: string[]) => {
