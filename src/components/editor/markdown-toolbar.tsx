@@ -110,7 +110,6 @@ export function MarkdownToolbar({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use Tiptap's proper state hooks for reactive state management
@@ -590,33 +589,28 @@ export function MarkdownToolbar({
     }
   };
 
-  // Mobile toolbar with expandable rows and horizontal scrolling
+  // Mobile toolbar with single scrollable row
   const mobileToolbarContent = (
     <div className="w-full flex flex-col gap-1">
-      {/* Row 1 - Always visible, scrollable */}
+      {/* Single scrollable row with all toolbar buttons */}
       <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-1">
         <div className="flex items-center gap-0.5 shrink-0">
+          {/* Undo/Redo */}
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleBold().run()}
-            isActive={isBold}
-            icon={Bold}
-            tooltip="Bold"
-            shortcut="⌘B"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!canUndo}
+            icon={Undo}
+            tooltip="Undo"
           />
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-            isActive={isItalic}
-            icon={Italic}
-            tooltip="Italic"
-            shortcut="⌘I"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!canRedo}
+            icon={Redo}
+            tooltip="Redo"
           />
-          <ToolbarButton
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-            isActive={isUnderline}
-            icon={UnderlineIcon}
-            tooltip="Underline"
-            shortcut="⌘U"
-          />
+          <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
+
+          {/* Text Style Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -661,6 +655,45 @@ export function MarkdownToolbar({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
+
+          {/* Text Formatting */}
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            isActive={isBold}
+            icon={Bold}
+            tooltip="Bold"
+            shortcut="⌘B"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            isActive={isItalic}
+            icon={Italic}
+            tooltip="Italic"
+            shortcut="⌘I"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            isActive={isUnderline}
+            icon={UnderlineIcon}
+            tooltip="Underline"
+            shortcut="⌘U"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            isActive={isStrike}
+            icon={Strikethrough}
+            tooltip="Strikethrough"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            isActive={isCode}
+            icon={Code}
+            tooltip="Inline Code"
+          />
+          <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
+
+          {/* Lists */}
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={isBulletList}
@@ -673,118 +706,63 @@ export function MarkdownToolbar({
             icon={ListOrdered}
             tooltip="Ordered List"
           />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            isActive={isTaskList}
+            icon={ListTodo}
+            tooltip="Task List"
+          />
+          <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
+
+          {/* Blocks */}
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            isActive={isBlockquote}
+            icon={Quote}
+            tooltip="Quote"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            isActive={isCodeBlock}
+            icon={CodeSquare}
+            tooltip="Code Block"
+          />
+          <ToolbarButton
+            onClick={() => editor.chain().focus().setHorizontalRule().run()}
+            icon={Minus}
+            tooltip="Divider"
+          />
+          <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
+
+          {/* Insert Options */}
+          <ToolbarButton
+            onClick={insertLink}
+            isActive={isLink}
+            icon={LinkIcon}
+            tooltip="Link"
+          />
+          <ToolbarButton
+            onClick={openImageDialog}
+            icon={ImageIcon}
+            tooltip="Image"
+          />
+          <ToolbarButton
+            onClick={insertTable}
+            icon={TableIcon}
+            tooltip="Table"
+          />
+          <ToolbarButton
+            onClick={insertMermaidDiagram}
+            icon={Network}
+            tooltip="Diagram"
+          />
+          <ToolbarButton
+            onClick={insertYouTubeVideo}
+            icon={Youtube}
+            tooltip="YouTube"
+          />
         </div>
-
-        {/* Expand/Collapse button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 shrink-0 ml-auto"
-              onClick={() => setIsMobileExpanded(!isMobileExpanded)}
-            >
-              <ChevronDown className={cn(
-                "h-4 w-4 transition-transform",
-                isMobileExpanded && "rotate-180"
-              )} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {isMobileExpanded ? "Show less" : "Show more"}
-          </TooltipContent>
-        </Tooltip>
       </div>
-
-      {/* Expanded rows - Show when expanded */}
-      {isMobileExpanded && (
-        <>
-          {/* Row 2 - Text formatting & blocks */}
-          <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-1">
-            <div className="flex items-center gap-0.5 shrink-0">
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleStrike().run()}
-                isActive={isStrike}
-                icon={Strikethrough}
-                tooltip="Strikethrough"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleCode().run()}
-                isActive={isCode}
-                icon={Code}
-                tooltip="Inline Code"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleTaskList().run()}
-                isActive={isTaskList}
-                icon={ListTodo}
-                tooltip="Task List"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                isActive={isBlockquote}
-                icon={Quote}
-                tooltip="Quote"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                isActive={isCodeBlock}
-                icon={Code}
-                tooltip="Code Block"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().setHorizontalRule().run()}
-                icon={Minus}
-                tooltip="Divider"
-              />
-            </div>
-          </div>
-
-          {/* Row 3 - Insert options */}
-          <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-1">
-            <div className="flex items-center gap-0.5 shrink-0">
-              <ToolbarButton
-                onClick={insertLink}
-                isActive={isLink}
-                icon={LinkIcon}
-                tooltip="Link"
-              />
-              <ToolbarButton
-                onClick={openImageDialog}
-                icon={ImageIcon}
-                tooltip="Image"
-              />
-              <ToolbarButton
-                onClick={insertTable}
-                icon={TableIcon}
-                tooltip="Table"
-              />
-              <ToolbarButton
-                onClick={insertMermaidDiagram}
-                icon={Network}
-                tooltip="Diagram"
-              />
-              <ToolbarButton
-                onClick={insertYouTubeVideo}
-                icon={Youtube}
-                tooltip="YouTube"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().undo().run()}
-                disabled={!canUndo}
-                icon={Undo}
-                tooltip="Undo"
-              />
-              <ToolbarButton
-                onClick={() => editor.chain().focus().redo().run()}
-                disabled={!canRedo}
-                icon={Redo}
-                tooltip="Redo"
-              />
-            </div>
-          </div>
-        </>
-      )}
 
       {/* Bottom row - Word count & Export */}
       {!isBubbleMenu && !isFloatingMenu && (
