@@ -11,7 +11,6 @@ import { TagManagementDialog } from '@/components/editor/features/TagManagementD
 import { DocumentTabs } from '@/components/editor/documents/DocumentTabs';
 import { OutlineView, type OutlineViewHandle } from '@/components/editor/search/OutlineView';
 import { AIRewriteSuggestion } from '@/components/editor/features/AIRewriteSuggestion';
-import { TagBar } from '@/components/editor/features/TagBar';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
 import { getActiveFileSourceId, setActiveFileSourceId, getActiveFileSource } from '@/lib/fileSources';
 import { loadDocumentsFromSource } from '@/lib/storageLoader';
@@ -795,24 +794,15 @@ const Index = () => {
                       </Panel>
                     </PanelGroup>
                   ) : (
-                    <>
-                      {activeDocument.tags && activeDocument.tags.length > 0 && (
-                        <TagBar
-                          tags={activeDocument.tags}
-                          onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                          onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                        />
-                      )}
-                      <div className="flex-1 overflow-hidden">
-                        <TiptapEditor
-                          content={activeDocument.content}
-                          onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
-                          title={activeDocument.title}
-                          onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                          scrollToHeading={() => { }}
-                        />
-                      </div>
-                    </>
+                    <div className="flex-1 overflow-hidden">
+                      <TiptapEditor
+                        content={activeDocument.content}
+                        onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                        title={activeDocument.title}
+                        onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                        scrollToHeading={() => { }}
+                      />
+                    </div>
                   )}
                 </>
               ) : (
@@ -892,13 +882,6 @@ const Index = () => {
                             <PanelGroup direction="horizontal" className="flex-1">
                               <Panel defaultSize={50} minSize={30}>
                                 <div className="flex flex-col h-full border-r border-border">
-                                  {activeDocument.tags && activeDocument.tags.length > 0 && (
-                                    <TagBar
-                                      tags={activeDocument.tags}
-                                      onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                                      onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                                    />
-                                  )}
                                   <div className="flex-1 overflow-hidden">
                                     <TiptapEditor
                                       ref={editorRef}
@@ -935,13 +918,6 @@ const Index = () => {
                                           <X className="h-3 w-3" />
                                         </Button>
                                       </div>
-                                      {splitDoc.tags && splitDoc.tags.length > 0 && (
-                                        <TagBar
-                                          tags={splitDoc.tags}
-                                          onAddTag={(tag) => handleAddTag(splitDoc.id, tag)}
-                                          onRemoveTag={(tag) => handleRemoveTag(splitDoc.id, tag)}
-                                        />
-                                      )}
                                       <div className="flex-1 overflow-hidden">
                                         <TiptapEditor
                                           content={splitDoc.content}
@@ -957,31 +933,22 @@ const Index = () => {
                               </Panel>
                             </PanelGroup>
                           ) : (
-                            <>
-                              {activeDocument.tags && activeDocument.tags.length > 0 && (
-                                <TagBar
-                                  tags={activeDocument.tags}
-                                  onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                                  onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                                />
-                              )}
-                              <div className="flex-1 overflow-hidden">
-                                <TiptapEditor
-                                  ref={editorRef}
-                                  content={activeDocument.content}
-                                  onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
-                                  title={activeDocument.title}
-                                  onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
-                                  scrollToHeading={() => { }}
-                                  aiSuggestion={aiSuggestion}
-                                  isAiLoading={isAiLoading}
-                                  onAiRewrite={handleAIRewrite}
-                                  onAiApprove={handleAIApprove}
-                                  onAiReject={handleAIReject}
-                                  onAiRegenerate={handleAIRegenerate}
-                                />
-                              </div>
-                            </>
+                            <div className="flex-1 overflow-hidden">
+                              <TiptapEditor
+                                ref={editorRef}
+                                content={activeDocument.content}
+                                onChange={(content) => handleUpdateDocument(activeDocument.id, { content })}
+                                title={activeDocument.title}
+                                onTitleChange={(title) => handleUpdateDocument(activeDocument.id, { title })}
+                                scrollToHeading={() => { }}
+                                aiSuggestion={aiSuggestion}
+                                isAiLoading={isAiLoading}
+                                onAiRewrite={handleAIRewrite}
+                                onAiApprove={handleAIApprove}
+                                onAiReject={handleAIReject}
+                                onAiRegenerate={handleAIRegenerate}
+                              />
+                            </div>
                           )}
                         </>
                       ) : (
@@ -1084,13 +1051,6 @@ const Index = () => {
                         <PanelGroup direction="horizontal" className="flex-1">
                           <Panel defaultSize={50} minSize={30}>
                             <div className="flex flex-col h-full border-r border-border">
-                              {activeDocument.tags && activeDocument.tags.length > 0 && (
-                                <TagBar
-                                  tags={activeDocument.tags}
-                                  onAddTag={(tag) => handleAddTag(activeDocument.id, tag)}
-                                  onRemoveTag={(tag) => handleRemoveTag(activeDocument.id, tag)}
-                                />
-                              )}
                               <div className="flex-1 overflow-hidden">
                                 <TiptapEditor
                                   ref={editorRef}
@@ -1127,13 +1087,6 @@ const Index = () => {
                                       <X className="h-3 w-3" />
                                     </Button>
                                   </div>
-                                  {splitDoc.tags && splitDoc.tags.length > 0 && (
-                                    <TagBar
-                                      tags={splitDoc.tags}
-                                      onAddTag={(tag) => handleAddTag(splitDoc.id, tag)}
-                                      onRemoveTag={(tag) => handleRemoveTag(splitDoc.id, tag)}
-                                    />
-                                  )}
                                   <div className="flex-1 overflow-hidden">
                                     <TiptapEditor
                                       content={splitDoc.content}
