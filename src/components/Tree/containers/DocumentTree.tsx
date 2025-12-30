@@ -257,11 +257,11 @@ function Node({
   // Ensure input maintains focus when entering edit mode
   useEffect(() => {
     if (node.isEditing && inputRef.current) {
-      // Small delay to ensure context menu has fully closed
+      // Delay to ensure context menu has fully closed (matches create new file delay)
       const timer = setTimeout(() => {
         inputRef.current?.focus()
         inputRef.current?.select()
-      }, 50)
+      }, 150)
       return () => clearTimeout(timer)
     }
   }, [node.isEditing])
@@ -341,7 +341,6 @@ function Node({
           {node.isEditing ? (
             <input
               ref={inputRef}
-              autoFocus
               type="text"
               defaultValue={node.data.name}
               onBlur={(e) => node.submit(e.currentTarget.value)}
