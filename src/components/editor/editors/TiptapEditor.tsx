@@ -11,7 +11,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import FloatingMenuExtension from '@tiptap/extension-floating-menu';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import { TableKit } from '@tiptap/extension-table';
-import Image from '@tiptap/extension-image';
+import { ImageExtension, ImageAligner } from '@harshtalks/image-tiptap';
 import CharacterCount from '@tiptap/extension-character-count';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
@@ -64,6 +64,7 @@ import {
   Youtube as YoutubeIcon,
   CodeSquare,
   Network,
+  Search,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { rewriteText, markdownToHtml } from '@/lib/ai/rewrite';
@@ -190,7 +191,7 @@ export const TiptapEditor = forwardRef<any, TiptapEditorProps>(({
           },
         },
       }),
-      Image.configure({
+      ImageExtension.configure({
         inline: false,
         HTMLAttributes: {
           class: 'max-w-full h-auto rounded-md my-4',
@@ -806,6 +807,22 @@ export const TiptapEditor = forwardRef<any, TiptapEditorProps>(({
 
           <Separator orientation="vertical" className="mx-1 h-6" />
 
+          {/* Find and Replace */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            className={cn(
+              'h-8 w-8 p-0',
+              isSearchOpen && 'bg-muted'
+            )}
+            title="Find and Replace (Ctrl+F)"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
           {/* View Mode */}
           <ViewModeDropdown value={viewMode} onChange={handleViewModeChange} />
 
@@ -821,6 +838,23 @@ export const TiptapEditor = forwardRef<any, TiptapEditorProps>(({
         {viewMode === 'formatted' ? (
           <>
             <EditorContent editor={editor} className="h-full" />
+
+            {/* Image Alignment Menu */}
+            <ImageAligner.Root editor={editor}>
+              <ImageAligner.AlignMenu>
+                <ImageAligner.Items className="bg-popover flex items-center gap-1 border border-border rounded-lg p-2 shadow-lg">
+                  <ImageAligner.Item alignment="left" className="px-3 py-1 text-xs hover:bg-muted rounded cursor-pointer">
+                    Left
+                  </ImageAligner.Item>
+                  <ImageAligner.Item alignment="center" className="px-3 py-1 text-xs hover:bg-muted rounded cursor-pointer">
+                    Center
+                  </ImageAligner.Item>
+                  <ImageAligner.Item alignment="right" className="px-3 py-1 text-xs hover:bg-muted rounded cursor-pointer">
+                    Right
+                  </ImageAligner.Item>
+                </ImageAligner.Items>
+              </ImageAligner.AlignMenu>
+            </ImageAligner.Root>
 
             {/* Floating Menu - appears on empty lines */}
             <FloatingMenu
