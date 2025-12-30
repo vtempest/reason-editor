@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FileManager } from "@cubone/react-file-manager";
 import "@cubone/react-file-manager/dist/style.css";
 import {
@@ -10,7 +10,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { getData } from "./filemanager-data";
+import {
+  getFileSystem,
+  toCuboneFormat,
+  renameFileSystemItem,
+  createFileSystemItem,
+  updateFileSystemItem,
+} from "@/lib/fileSystem";
 import { toast } from "sonner";
 
 interface FileManagerModalProps {
@@ -20,19 +26,14 @@ interface FileManagerModalProps {
 
 export function FileManagerModal({ open, onOpenChange }: FileManagerModalProps) {
   const [currentPath, setCurrentPath] = useState("/");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Convert our data format to @cubone/react-file-manager format
+  // Convert our shared file system to @cubone/react-file-manager format
   const files = useMemo(() => {
-    const data = getData();
-
-    return data.map((item) => ({
-      name: item.name,
-      isDirectory: item.type === "folder",
-      path: item.id,
-      updatedAt: item.date ? new Date(item.date).toISOString() : new Date().toISOString(),
-      size: item.size || 0,
-    }));
-  }, []);
+    const fileSystemItems = getFileSystem();
+    return toCuboneFormat(fileSystemItems);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]); // Refresh when refreshKey changes
 
   const handleFolderChange = (path: string) => {
     setCurrentPath(path);
@@ -47,18 +48,31 @@ export function FileManagerModal({ open, onOpenChange }: FileManagerModalProps) 
     }
   };
 
-  const handleRename = (oldPath: string, newName: string) => {
-    toast.info(`Rename: ${oldPath} to ${newName}`);
+  const handleRename = async (oldPath: string, newName: string) => {
+    try {
+      const success = renameFileSystemItem(oldPath, newName);
+      if (success) {
+        toast.success(`Renamed to ${newName}`);
+        setRefreshKey((prev) => prev + 1); // Trigger refresh
+      } else {
+        toast.error("Failed to rename item");
+      }
+    } catch (error) {
+      console.error("Rename error:", error);
+      toast.error("Failed to rename item");
+    }
     return Promise.resolve();
   };
 
   const handleUpload = () => {
-    toast.info("Upload action triggered");
+    // In a real implementation, this would handle file uploads
+    toast.info("Upload functionality - use API route /api/files/upload");
     return {};
   };
 
   const handleRefresh = () => {
-    toast.info("Refreshing file list");
+    setRefreshKey((prev) => prev + 1);
+    toast.success("File list refreshed");
   };
 
   return (
