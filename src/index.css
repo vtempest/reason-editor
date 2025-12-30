@@ -332,4 +332,74 @@ All colors MUST be HSL.
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.3);
   }
+
+  /* Search modal preview content formatting */
+  .preview-content {
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+  }
+
+  .preview-content strong,
+  .preview-content b {
+    @apply font-bold;
+  }
+
+  .preview-content em,
+  .preview-content i {
+    @apply italic;
+  }
+
+  .preview-content h1,
+  .preview-content h2,
+  .preview-content h3,
+  .preview-content h4,
+  .preview-content h5,
+  .preview-content h6 {
+    @apply font-semibold;
+  }
+
+  .preview-content h1 {
+    font-size: 1em;
+  }
+
+  .preview-content h2 {
+    font-size: 0.95em;
+  }
+
+  .preview-content h3,
+  .preview-content h4,
+  .preview-content h5,
+  .preview-content h6 {
+    font-size: 0.9em;
+  }
+
+  .preview-content a {
+    @apply text-primary underline;
+  }
+
+  .preview-content code {
+    @apply bg-muted px-1 rounded text-xs;
+    font-family: monospace;
+  }
+
+  .preview-content ul,
+  .preview-content ol {
+    @apply ml-4;
+  }
+
+  .preview-content li {
+    @apply list-disc;
+  }
+
+  .preview-content ol li {
+    @apply list-decimal;
+  }
+
+  .preview-content p {
+    @apply inline;
+  }
+
+  .preview-content blockquote {
+    @apply border-l-2 border-muted-foreground pl-2 italic;
+  }
 }
