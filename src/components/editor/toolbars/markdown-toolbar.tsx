@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
@@ -113,6 +113,7 @@ export function MarkdownToolbar({
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentColor, setCurrentColor] = useState("#000000");
+  const mobileToolbarScrollRef = useRef<HTMLDivElement>(null);
 
   // Use Tiptap's proper state hooks for reactive state management
   const canUndo = useEditorState({
@@ -245,6 +246,38 @@ export function MarkdownToolbar({
       return editor.storage.characterCount?.words() || 0;
     },
   });
+
+  // Arrow key navigation for mobile toolbar scrolling
+  useEffect(() => {
+    if (!isMobile || !mobileToolbarScrollRef.current) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        const scrollContainer = mobileToolbarScrollRef.current;
+        if (!scrollContainer) return;
+
+        // Check if user is not typing in an input field
+        const activeElement = document.activeElement;
+        const isInputActive = activeElement instanceof HTMLInputElement ||
+                             activeElement instanceof HTMLTextAreaElement;
+
+        if (isInputActive) return;
+
+        e.preventDefault();
+
+        const scrollAmount = 150; // pixels to scroll
+        const direction = e.key === 'ArrowLeft' ? -1 : 1;
+
+        scrollContainer.scrollBy({
+          left: scrollAmount * direction,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobile]);
 
   const handleExport = useCallback(
     async (format: ExportFormat) => {
@@ -600,7 +633,10 @@ export function MarkdownToolbar({
   const mobileToolbarContent = (
     <div className="w-full flex flex-col gap-1">
       {/* Single scrollable row with all toolbar buttons */}
-      <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-1">
+      <div
+        ref={mobileToolbarScrollRef}
+        className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-1"
+      >
         <div className="flex items-center gap-0.5 shrink-0">
           {/* Undo/Redo */}
           <ToolbarButton
