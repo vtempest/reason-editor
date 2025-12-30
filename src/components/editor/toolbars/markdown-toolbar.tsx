@@ -635,9 +635,9 @@ export function MarkdownToolbar({
       {/* Single scrollable row with all toolbar buttons */}
       <div
         ref={mobileToolbarScrollRef}
-        className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-1"
+        className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent pb-1 flex-nowrap"
       >
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0 flex-nowrap">
           {/* Undo/Redo */}
           <ToolbarButton
             onClick={() => editor.chain().focus().undo().run()}
