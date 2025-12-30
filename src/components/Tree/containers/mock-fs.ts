@@ -1,27 +1,23 @@
-export const mockFs: Record<string, { name: string; type: "file" | "dir" }[]> = {
-  "/": [
-    { name: "src", type: "dir" },
-    { name: "public", type: "dir" },
-    { name: "package.json", type: "file" },
-    { name: "README.md", type: "file" },
-  ],
-  src: [
-    { name: "components", type: "dir" },
-    { name: "lib", type: "dir" },
-    { name: "App.tsx", type: "file" },
-    { name: "index.tsx", type: "file" },
-  ],
-  public: [
-    { name: "index.html", type: "file" },
-    { name: "favicon.ico", type: "file" },
-  ],
-  components: [
-    { name: "Button.tsx", type: "file" },
-    { name: "Input.tsx", type: "file" },
-    { name: "Modal.tsx", type: "file" },
-  ],
-  lib: [
-    { name: "utils.ts", type: "file" },
-    { name: "api.ts", type: "file" },
-  ],
-};
+/**
+ * Mock File System
+ *
+ * Now uses the shared file system from localStorage.
+ * This ensures that both the FileManagerModal and DocumentTree
+ * components work with the same data source.
+ */
+
+import { getFileSystem, toMockFsFormat } from "@/lib/fileSystem";
+
+/**
+ * Get the mock file system from shared localStorage
+ */
+export function getMockFs(): Record<string, { name: string; type: "file" | "dir" }[]> {
+  const fileSystemItems = getFileSystem();
+  return toMockFsFormat(fileSystemItems);
+}
+
+/**
+ * Legacy export for backward compatibility
+ * This is now a function that returns the current file system state
+ */
+export const mockFs = getMockFs();

@@ -72,6 +72,7 @@ import {
   Network,
   Youtube,
   CodeSquare,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEditorState, type Editor } from "@tiptap/react";
@@ -111,6 +112,7 @@ export function MarkdownToolbar({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentColor, setCurrentColor] = useState("#000000");
 
   // Use Tiptap's proper state hooks for reactive state management
   const canUndo = useEditorState({
@@ -488,6 +490,11 @@ export function MarkdownToolbar({
     }
   }, [editor]);
 
+  const setTextColor = useCallback((color: string) => {
+    setCurrentColor(color);
+    editor.chain().focus().setColor(color).run();
+  }, [editor]);
+
   // Table control functions
   const addRowBefore = useCallback(() => {
     editor.chain().focus().addRowBefore().run();
@@ -693,6 +700,65 @@ export function MarkdownToolbar({
           />
           <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
 
+          {/* Font Color */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 relative shrink-0"
+              >
+                <Palette className="h-4 w-4" />
+                <div
+                  className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
+                  style={{ backgroundColor: currentColor }}
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <div className="p-2">
+                <div className="grid grid-cols-8 gap-1 mb-2">
+                  {[
+                    '#000000', '#374151', '#6B7280', '#9CA3AF',
+                    '#DC2626', '#EA580C', '#D97706', '#CA8A04',
+                    '#65A30D', '#16A34A', '#059669', '#0D9488',
+                    '#0891B2', '#0284C7', '#2563EB', '#4F46E5',
+                    '#7C3AED', '#9333EA', '#C026D3', '#DB2777',
+                    '#E11D48', '#F43F5E', '#FB923C', '#FBBF24',
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setTextColor(color)}
+                      className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                <DropdownMenuSeparator />
+                <div className="flex items-center gap-2 pt-2">
+                  <Label htmlFor="mobile-custom-color" className="text-xs">Custom:</Label>
+                  <input
+                    id="mobile-custom-color"
+                    type="color"
+                    value={currentColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className="h-8 w-full rounded cursor-pointer"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-2 text-xs"
+                  onClick={() => editor.chain().focus().unsetColor().run()}
+                >
+                  Reset Color
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
+
           {/* Lists */}
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -734,33 +800,51 @@ export function MarkdownToolbar({
           />
           <Separator orientation="vertical" className="h-6 mx-0.5 shrink-0" />
 
-          {/* Insert Options */}
-          <ToolbarButton
-            onClick={insertLink}
-            isActive={isLink}
-            icon={LinkIcon}
-            tooltip="Link"
-          />
-          <ToolbarButton
-            onClick={openImageDialog}
-            icon={ImageIcon}
-            tooltip="Image"
-          />
-          <ToolbarButton
-            onClick={insertTable}
-            icon={TableIcon}
-            tooltip="Table"
-          />
-          <ToolbarButton
-            onClick={insertMermaidDiagram}
-            icon={Network}
-            tooltip="Diagram"
-          />
-          <ToolbarButton
-            onClick={insertYouTubeVideo}
-            icon={Youtube}
-            tooltip="YouTube"
-          />
+          {/* Insert Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 gap-1 shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem onClick={insertLink}>
+                <LinkIcon className="mr-2 h-4 w-4" />
+                Link
+                <kbd className="ml-auto px-1.5 py-0.5 text-[10px] bg-muted rounded font-mono">
+                  ⌘K
+                </kbd>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={openImageDialog}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Image
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={insertTable}>
+                <TableIcon className="mr-2 h-4 w-4" />
+                Table
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+              >
+                <CodeSquare className="mr-2 h-4 w-4" />
+                Code Block
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={insertMermaidDiagram}>
+                <Network className="mr-2 h-4 w-4" />
+                Graph / Diagram
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={insertYouTubeVideo}>
+                <Youtube className="mr-2 h-4 w-4" />
+                YouTube Video
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -969,6 +1053,76 @@ export function MarkdownToolbar({
           </>
         )}
       </div>
+
+      {/* Font Color - only show in main toolbar and floating menu */}
+      {!isBubbleMenu && (
+        <>
+          <Separator orientation="vertical" className="h-6 mx-1 shrink-0" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 relative"
+                  >
+                    <Palette className="h-4 w-4" />
+                    <div
+                      className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full"
+                      style={{ backgroundColor: currentColor }}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <span>Text Color</span>
+                </TooltipContent>
+              </Tooltip>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <div className="p-2">
+                <div className="grid grid-cols-8 gap-1 mb-2">
+                  {[
+                    '#000000', '#374151', '#6B7280', '#9CA3AF',
+                    '#DC2626', '#EA580C', '#D97706', '#CA8A04',
+                    '#65A30D', '#16A34A', '#059669', '#0D9488',
+                    '#0891B2', '#0284C7', '#2563EB', '#4F46E5',
+                    '#7C3AED', '#9333EA', '#C026D3', '#DB2777',
+                    '#E11D48', '#F43F5E', '#FB923C', '#FBBF24',
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setTextColor(color)}
+                      className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    />
+                  ))}
+                </div>
+                <DropdownMenuSeparator />
+                <div className="flex items-center gap-2 pt-2">
+                  <Label htmlFor="custom-color" className="text-xs">Custom:</Label>
+                  <input
+                    id="custom-color"
+                    type="color"
+                    value={currentColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className="h-8 w-full rounded cursor-pointer"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-2 text-xs"
+                  onClick={() => editor.chain().focus().unsetColor().run()}
+                >
+                  Reset Color
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
 
       {/* Lists - only show in main toolbar and floating menu */}
       {!isBubbleMenu && (
