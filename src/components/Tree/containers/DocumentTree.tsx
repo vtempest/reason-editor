@@ -257,11 +257,11 @@ function Node({
   // Ensure input maintains focus when entering edit mode
   useEffect(() => {
     if (node.isEditing && inputRef.current) {
-      // Small delay to ensure context menu has fully closed
+      // Delay to ensure context menu has fully closed and focus is maintained
       const timer = setTimeout(() => {
         inputRef.current?.focus()
         inputRef.current?.select()
-      }, 50)
+      }, 100)
       return () => clearTimeout(timer)
     }
   }, [node.isEditing])
@@ -322,6 +322,9 @@ function Node({
             node.state.isDragging && "opacity-50",
           )}
           onClick={() => {
+            // Don't handle clicks when in edit mode
+            if (node.isEditing) return
+
             if (isFolder) {
               node.toggle()
             } else {
@@ -345,9 +348,24 @@ function Node({
               type="text"
               defaultValue={node.data.name}
               onBlur={(e) => node.submit(e.currentTarget.value)}
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation()
+                // Ensure focus is maintained on mousedown
+                if (inputRef.current && document.activeElement !== inputRef.current) {
+                  e.preventDefault()
+                  inputRef.current.focus()
+                }
+              }}
+              onFocus={(e) => {
+                // Select all text when input receives focus
+                e.currentTarget.select()
+              }}
               onKeyDown={(e) => {
+                e.stopPropagation()
                 if (e.key === "Enter") node.submit(e.currentTarget.value)
                 if (e.key === "Escape") node.reset()
               }}
