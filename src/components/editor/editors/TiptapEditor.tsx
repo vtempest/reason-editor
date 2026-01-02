@@ -536,14 +536,30 @@ export const TiptapEditor = forwardRef<any, TiptapEditorProps>(({
   useEffect(() => {
     if (!editor) return;
 
-    const timer = setTimeout(() => {
-      setDebouncedSentenceCount(getSentenceCount());
-      setDebouncedWordCount(editor.storage.characterCount.words());
-      setDebouncedCharCount(editor.storage.characterCount.characters());
-    }, 10000);
+    let timer: NodeJS.Timeout;
 
-    return () => clearTimeout(timer);
-  }, [editor?.state.doc.content]);
+    const updateCounts = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const text = editor.getText();
+        const sentences = splitSentences(text);
+        setDebouncedSentenceCount(sentences.length);
+        setDebouncedWordCount(editor.storage.characterCount.words());
+        setDebouncedCharCount(editor.storage.characterCount.characters());
+      }, 10000);
+    };
+
+    // Initial update
+    updateCounts();
+
+    // Listen to editor updates
+    editor.on('update', updateCounts);
+
+    return () => {
+      clearTimeout(timer);
+      editor.off('update', updateCounts);
+    };
+  }, [editor]);
 
   return (
     <div className="flex h-full flex-col bg-editor-bg">
