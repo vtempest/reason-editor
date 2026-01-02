@@ -21,7 +21,7 @@ import { common, createLowlight } from 'lowlight';
 import { FontSize } from '@/lib/tiptap/fontSize';
 import { SearchAndReplace } from '@/lib/tiptap/searchAndReplace';
 import { Mermaid } from '@/lib/tiptap/mermaid.tsx';
-import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
@@ -532,15 +532,16 @@ export const TiptapEditor = forwardRef<any, TiptapEditorProps>(({
   const [debouncedSentenceCount, setDebouncedSentenceCount] = useState(0);
   const [debouncedWordCount, setDebouncedWordCount] = useState(0);
   const [debouncedCharCount, setDebouncedCharCount] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!editor) return;
 
-    let timer: NodeJS.Timeout;
-
     const updateCounts = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => {
         const text = editor.getText();
         const sentences = splitSentences(text);
         setDebouncedSentenceCount(sentences.length);
@@ -556,7 +557,9 @@ export const TiptapEditor = forwardRef<any, TiptapEditorProps>(({
     editor.on('update', updateCounts);
 
     return () => {
-      clearTimeout(timer);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
       editor.off('update', updateCounts);
     };
   }, [editor]);

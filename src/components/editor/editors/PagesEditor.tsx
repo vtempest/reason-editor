@@ -25,7 +25,7 @@ import { PageDocument } from '@/lib/tiptap/pages/PageDocument';
 import { Page } from '@/lib/tiptap/pages/Page';
 import { PageFormatName } from '@/lib/tiptap/pages/pageFormat';
 import '@/lib/tiptap/pages/pages.css';
-import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SearchReplaceBar } from '../search/SearchReplaceBar';
@@ -452,15 +452,16 @@ export const PagesEditor = forwardRef<any, PagesEditorProps>(({
   const [debouncedSentenceCount, setDebouncedSentenceCount] = useState(0);
   const [debouncedWordCount, setDebouncedWordCount] = useState(0);
   const [debouncedCharCount, setDebouncedCharCount] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!editor) return;
 
-    let timer: NodeJS.Timeout;
-
     const updateCounts = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      timerRef.current = setTimeout(() => {
         const text = editor.getText();
         const sentences = splitSentences(text);
         setDebouncedSentenceCount(sentences.length);
@@ -476,7 +477,9 @@ export const PagesEditor = forwardRef<any, PagesEditorProps>(({
     editor.on('update', updateCounts);
 
     return () => {
-      clearTimeout(timer);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
       editor.off('update', updateCounts);
     };
   }, [editor]);
