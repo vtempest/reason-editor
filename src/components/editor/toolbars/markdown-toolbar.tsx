@@ -247,6 +247,17 @@ export function MarkdownToolbar({
     },
   });
 
+  // Debounced word count that updates every 10 seconds
+  const [debouncedWordCount, setDebouncedWordCount] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedWordCount(wordCount);
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [wordCount]);
+
   // Arrow key navigation for mobile toolbar scrolling
   useEffect(() => {
     if (!isMobile || !mobileToolbarScrollRef.current) return;
@@ -888,7 +899,7 @@ export function MarkdownToolbar({
       {!isBubbleMenu && !isFloatingMenu && (
         <div className="flex items-center justify-between gap-1.5 pt-1 border-t">
           <span className="text-xs text-muted-foreground tabular-nums">
-            {wordCount} words
+            {debouncedWordCount} words
           </span>
 
           {!hideActions && (
@@ -1346,7 +1357,7 @@ export function MarkdownToolbar({
       {!isBubbleMenu && !isFloatingMenu && (
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
           <span className="hidden md:inline text-xs text-muted-foreground tabular-nums">
-            {wordCount} words
+            {debouncedWordCount} words
           </span>
 
           {!hideActions && (

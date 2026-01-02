@@ -448,6 +448,23 @@ export const PagesEditor = forwardRef<any, PagesEditorProps>(({
     return sentences.length;
   };
 
+  // Debounced counts that update every 10 seconds
+  const [debouncedSentenceCount, setDebouncedSentenceCount] = useState(0);
+  const [debouncedWordCount, setDebouncedWordCount] = useState(0);
+  const [debouncedCharCount, setDebouncedCharCount] = useState(0);
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const timer = setTimeout(() => {
+      setDebouncedSentenceCount(getSentenceCount());
+      setDebouncedWordCount(editor.storage.characterCount.words());
+      setDebouncedCharCount(editor.storage.characterCount.characters());
+    }, 10000);
+
+    return () => clearTimeout(timer);
+  }, [editor?.state.doc.content]);
+
   return (
     <div className="flex h-full flex-col bg-editor-bg">
       {/* Search and Replace Bar */}
@@ -1044,13 +1061,13 @@ export const PagesEditor = forwardRef<any, PagesEditorProps>(({
       {/* Status Bar with Sentence, Word and Character Count */}
       <div className="border-t border-border bg-muted/50 px-4 py-1.5 text-xs text-muted-foreground flex items-center gap-4">
         <span>
-          Sentences: {getSentenceCount()}
+          Sentences: {debouncedSentenceCount}
         </span>
         <span>
-          Words: {editor.storage.characterCount.words()}
+          Words: {debouncedWordCount}
         </span>
         <span>
-          Characters: {editor.storage.characterCount.characters()}
+          Characters: {debouncedCharCount}
         </span>
       </div>
 
